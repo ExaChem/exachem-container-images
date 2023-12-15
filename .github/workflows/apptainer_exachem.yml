@@ -32,7 +32,12 @@ jobs:
         echo "simd=$(./travis/guess_simd.sh)" >> $GITHUB_ENV
     - name: exachem version tag
       run: |
-        echo "exachemversion=${{ matrix.branch }}" >> $GITHUB_ENV
+        if [[ ${{ matrix.branch }} !=  main ]]; then
+          myversion=-${{ matrix.branch }}
+        else
+          myversion=""
+        fi
+        echo "exachemversion=$myversion" >> $GITHUB_ENV
         if [[ ${{ matrix.armci_network }} !=  MPI-PR ]]; then
           net_tag=$(echo ${{ matrix.armci_network }} | tr '[:upper:]' '[:lower:]')
           echo "armci_network="${net_tag}"." >> $GITHUB_ENV
@@ -40,14 +45,14 @@ jobs:
     - name: tag
       run: |
         if [[ ${{ matrix.cxx }} == "g++" ]]; then
-          echo "tag=oras://ghcr.io/${{ github.repository }}/exachem-${{ env.exachemversion}}.${{ env.armci_network}}ompi41x" >> $GITHUB_ENV
+          echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer-${{ env.exachemversion}}.${{ env.armci_network}}ompi41x" >> $GITHUB_ENV
         else
-          echo "tag=oras://ghcr.io/${{ github.repository }}/exachem-${{ env.exachemversion}}.${{ env.armci_network}}ompi41x.${{ matrix.cxx }}" >> $GITHUB_ENV
+          echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer-${{ env.exachemversion}}.${{ env.armci_network}}ompi41x.${{ matrix.cxx }}" >> $GITHUB_ENV
         fi
     - name: echo-tag
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'
-    - name: Checkout ingularity source
+    - name: Checkout image source
       uses: actions/checkout@v4
       with:
         clean: false
