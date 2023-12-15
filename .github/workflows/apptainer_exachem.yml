@@ -47,10 +47,9 @@ jobs:
     - name: echo-tag
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'
-    - name: Checkout nwchem-singularity source
+    - name: Checkout ingularity source
       uses: actions/checkout@v4
       with:
-        repository: edoapra/nwchem-singularity
         clean: false
     - name: pkg cleanup
       run: |
