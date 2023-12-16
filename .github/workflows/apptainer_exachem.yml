@@ -132,6 +132,7 @@ jobs:
       run: |
         echo "date=$(TZ=America/Los_Angeles date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
     - name: push to ghcr.io
+      if: ${{ github.actor == github.repository_owner }}
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${{ github.actor }} --password-stdin oras://ghcr.io
         apptainer remote list

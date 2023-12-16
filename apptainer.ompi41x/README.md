@@ -6,6 +6,7 @@ FC=gfortran BRANCH=master ARMCI_NETWORK=MPI-PR MPI_IMPL=ompi  apptainer build --
 
 * How to run on Azure
 
+```
 srun --mpi=pmix  \
 -u \
  --gpus-per-node 8 --gpu-bind=closest    \
@@ -15,3 +16,4 @@ srun --mpi=pmix  \
  oras://ghcr.io/ExaChem/exachem-container-images/apptainer.ompi41x:latest \
  /opt/install/CC/bin/ExaChem \
  ~/exachem_inputs/ubiquitin_dgrtl.json
+ ```
