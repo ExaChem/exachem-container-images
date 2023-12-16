@@ -25,7 +25,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        shell: bash
       - name: pkg cleanup
         run: |
           df -h
@@ -48,7 +47,7 @@ jobs:
           dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n
           df -h
           fi
-          shell: bash
+        shell: bash
       - name:  cache key
         run: |
           echo "cache_key=${{ matrix.folder }}-${{ matrix.branch }}${{ env.fc }}-cache-v000" >> $GITHUB_ENV
