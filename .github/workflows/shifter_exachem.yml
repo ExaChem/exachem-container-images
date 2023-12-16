@@ -1,0 +1,146 @@
+name: exachem_shifter
+
+on:
+  repository_dispatch:
+    types: [backend_automation]
+  workflow_dispatch:
+
+jobs:
+  shifter_schedule:
+    if: (github.event_name == 'workflow_dispatch') || (github.event_name == 'schedule')
+    strategy:
+        fail-fast: false
+        matrix:
+          folder:
+            - shifter.nersc
+          branch: [main]
+          fc: [ gfortran]
+          sysv:
+            - Y
+            - N
+          cpu:
+            - N
+            - Y
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        shell: bash
+    - name: pkg cleanup
+      run: |
+        df -h
+        if [[ $(uname -s) == "Linux" ]]; then
+        ubuntu_ver=$(cat /etc/os-release | grep VERSION_ID |cut -d \" -f 2)
+        dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n
+        sudo apt-get purge -y azure-cli || true
+        sudo apt-get purge -y google-cloud-cli microsoft-edge-stable dotnet-sdk-7.0 dotnet-sdk-6.0 google-chrome-stable firefox
+        sudo apt-get purge -y temurin-17-jdk temurin-11-jdk temurin-8-jdk
+        if [[ $ubuntu_ver == "20.04" ]]; then
+        sudo apt-get purge -y llvm-12-dev llvm-11-dev llvm-10-dev
+        sudo apt-get purge -y hhvm
+        sudo apt-get purge -y libgl1-mesa-dri
+        fi
+        if [[ $ubuntu_ver == "22.04" ]]; then
+        sudo apt-get purge -y llvm-13-dev llvm-14-dev llvm-15-dev
+        fi
+        sudo apt-get -y clean
+        sudo apt-get autoremove -y 
+        dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n
+        df -h
+        fi
+      shell: bash
+      - name:  cache key
+        run: |
+          echo "cache_key=${{ matrix.folder }}-${{ matrix.branch }}${{ env.fc }}-cache-v000" >> $GITHUB_ENV
+      - name: Setup cache
+        id: setup-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/cache
+          key: ${{ env.cache_key }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Container Registry
+        if: ${{ github.actor == github.repository_owner }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: fetch cache
+        if: (steps.setup-cache.outputs.cache-hit == 'true')
+        run: |
+          cd ${{ matrix.folder }}
+          ls -lrta
+          if [[ -f ~/cache/libint.tar.bz2 ]]; then \
+          echo "libext cache present" ; \
+          mkdir -p cache|| true ; \
+          rsync -av ~/cache/libint* cache/. ; \
+          echo "libint cache fetched" ; \
+          fi
+          if [[ -f ~/cache/mpich.tar.bz2 ]]; then \
+          echo "mpich cache present" ; \
+          mkdir -p cache|| true ; \
+          rsync -av ~/cache/mpich* cache/. ; \
+          echo "mpich cache fetched" ; \
+          ls -l cache/ ; \
+          echo "======" ; \
+          fi
+      - name: image version tag
+        run: |
+          extratag=""
+          if [[ ${{ matrix.sysv }} ==  Y ]]; then extratag+="_sysv" ;fi
+          if [[ ${{ matrix.cpu }} ==  Y ]]; then extratag+="_cpu" ;fi
+          echo "extratag is $extratag"
+          if [[ ${{ matrix.branch }} ==  master ]]; then
+          echo "longnwversion=${{ matrix.folder }}$extratag" >> $GITHUB_ENV
+          else
+          echo "longnwversion=${{ matrix.folder }}$extratag${{ matrix.branch }}" >> $GITHUB_ENV
+          fi
+        shell: bash
+      - name: docker tag
+        id: docker-tag
+        run: |
+          echo "tag=ghcr.io/${{ github.actor }}/${{ env.longnwversion}}" >>  $GITHUB_ENV
+        shell: bash
+      - name: builddate
+        id: build-date
+        run: |
+          echo "date=$(TZ=America/Los_Angeles date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
+      - name: build_docker
+        uses: docker/build-push-action@v5
+        with:
+          push: ${{ github.actor == github.repository_owner }}
+          context: ${{ matrix.folder }}
+          tags: |
+            ${{ env.tag }}:latest
+            ${{ env.tag }}:${{ env.date }}
+          build-args: |
+            FC=${{ matrix.fc }}
+            USE_SYSV=${{ matrix.sysv }}
+            USE_CPU=${{ matrix.cpu }}
+            CACHE_HIT=${{ env.cache_hit }}
+            GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }}
+            TAMM_BRANCH=${{ matrix.branch }}
+      - name: load and test image
+        if:  ( github.actor == github.repository_owner )
+        run: |
+          sleep 30s
+          docker pull ${{ env.tag }}
+          export MYLDPATH=/usr/local/lib:/opt/lib
+          docker run -e LD_LIBRARY_PATH="$MYLDPATH" --entrypoint=ldd --rm \
+          ${{ env.tag }} /opt/install/CC/bin/ExaChem
+      - name: store cache
+        if:  ( github.actor == github.repository_owner )
+        run: |
+            mkdir -p ~/cache/
+            docker run --privileged --user 0 --rm \
+            --entrypoint='/bin/cp' -v ~/cache:/data \
+            ${{ env.tag }} \
+            -rp /opt/cache/libint.tar.bz2 /data/.  || true
+            docker run --privileged --user 0 --rm \
+            --entrypoint='/bin/cp' -v ~/cache:/data \
+            ${{ env.tag }} \
+            -rp /opt/cache/mpich.tar.bz2 /data/.  || true
+            ls -Ralrt ~/cache || true
