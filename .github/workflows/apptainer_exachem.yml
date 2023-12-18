@@ -139,6 +139,7 @@ jobs:
         apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:${{ env.date }}
         apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:latest
     - name: test image with apptainer
+      if: ${{ github.actor == github.repository_owner }}
       run: |
         pwd
         ls -la
