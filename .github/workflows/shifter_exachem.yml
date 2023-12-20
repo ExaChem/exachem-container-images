@@ -107,10 +107,19 @@ jobs:
         id: build-date
         run: |
           echo "date=$(TZ=America/Los_Angeles date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
+      - name: push_truefalse
+        id: push_truefalse
+        run: |
+          if [[ ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} ]]; then
+          echo "push_truefalse=true" >> $GITHUB_ENV
+          else
+          echo "push_truefalse=false" >> $GITHUB_ENV
+          fi
+        shell: bash
       - name: build_docker
         uses: docker/build-push-action@v5
         with:
-          push:  (${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}})
+          push:  ${{ env.push_truefalse }}
           context: ${{ matrix.folder }}
           tags: |
             ${{ env.tag }}:latest
