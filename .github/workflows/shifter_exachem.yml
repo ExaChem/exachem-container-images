@@ -110,7 +110,7 @@ jobs:
       - name: build_docker
         uses: docker/build-push-action@v5
         with:
-          push:  ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} 
+          push:  (${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}})
           context: ${{ matrix.folder }}
           tags: |
             ${{ env.tag }}:latest
