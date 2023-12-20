@@ -57,7 +57,6 @@ export `cat ./fc.txt`
 export `cat ./armci_network.txt`
 export `cat ./mpi_impl.txt`
 export `cat ./branch.txt`
-export `cat ./myusername.txt`
 echo FC is $FC
 echo ARMCI_NETWORK is $ARMCI_NETWORK
 echo MPI_IMPL is $MPI_IMPL
@@ -197,16 +196,17 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
 	    && if [ -f /opt/install/CC/lib/libint2.a ]; then echo 'found libint cache' ;\
 	    mkdir -p /opt/CoupledCluster/build/stage/opt || true ; \
 	    rsync -av /opt/install /opt/CoupledCluster/build/stage/opt/. ; fi \
-            && CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/CC -DMODULES=CC  -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3 " \
+            && CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/CC -DMODULES=CC " \
             && if [ ${USE_SYSV} = "Y" ]; then echo "sysv enabled"; CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_ENABLE_SYSV=ON "; fi \
             && if [ ${USE_CPU} = "N" ]; then echo "gpu code"; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_CUDA=ON" ; else echo "cpu code" ;fi \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
-            && make -j3 \
+            && make -j3 || { echo "Compilation failure"; exit 1; } \
 	    && echo exit code for compilation $? \
             && make install \
 	    && echo exit code for make install $? \
+	    && bash -c "if [[ -f /opt/install/CC/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi" \
 	    && echo git describe --always `git describe --always`  >> /opt/install/info.txt \
 	    && echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt \
             && echo 'clean unnecessary source to reduce docker size' \
