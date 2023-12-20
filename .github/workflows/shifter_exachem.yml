@@ -61,7 +61,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to GitHub Container Registry
-        if: ${{ github.actor == github.repository_owner }}
+        if: ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} 
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -110,7 +110,7 @@ jobs:
       - name: build_docker
         uses: docker/build-push-action@v5
         with:
-          push: ${{ github.actor == github.repository_owner }}
+          push:  ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} 
           context: ${{ matrix.folder }}
           tags: |
             ${{ env.tag }}:latest
@@ -123,7 +123,7 @@ jobs:
             GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }}
             TAMM_BRANCH=${{ matrix.branch }}
       - name: load and test image
-        if:  ( github.actor == github.repository_owner )
+        if: ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} 
         run: |
           sleep 30s
           docker pull ${{ env.tag }}
@@ -131,7 +131,7 @@ jobs:
           docker run -e LD_LIBRARY_PATH="$MYLDPATH" --entrypoint=ldd --rm \
           ${{ env.tag }} /opt/install/CC/bin/ExaChem
       - name: store cache
-        if:  ( github.actor == github.repository_owner )
+        if: ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} 
         run: |
             mkdir -p ~/cache/
             docker run --privileged --user 0 --rm \
