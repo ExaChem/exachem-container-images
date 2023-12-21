@@ -117,8 +117,17 @@ jobs:
       run: |
         cd ${{ matrix.folder }}
         CXX=${{ matrix.cxx }} MYUSERNAME=${{ github.actor}} BRANCH=${{ matrix.branch}} ARMCI_NETWORK=${{ matrix.armci_network}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
+    - name: push_truefalse
+      id: push_truefalse
+      run: |
+        if [[ ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} ]]; then
+        echo "push_truefalse=true" >> $GITHUB_ENV
+        else
+        echo "push_truefalse=false" >> $GITHUB_ENV
+        fi
+      shell: bash
     - name: store cache
-      if: ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} 
+      if: ${{ env.push_truefalse }}
       run: |
         mkdir -p ~/cache || true
         cd ${{ matrix.folder }}
@@ -133,14 +142,14 @@ jobs:
       run: |
         echo "date=$(TZ=America/Los_Angeles date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
     - name: push to ghcr.io
-      if: ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} 
+      if: ${{ env.push_truefalse }}
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${{ github.actor }} --password-stdin oras://ghcr.io
         apptainer remote list
         apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:${{ env.date }}
         apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:latest
     - name: test image with apptainer
-      if: ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} 
+      if: ${{ env.push_truefalse }}
       run: |
         pwd
         ls -la
