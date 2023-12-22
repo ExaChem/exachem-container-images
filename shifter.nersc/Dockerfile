@@ -119,7 +119,7 @@ RUN         apt-get -q=2 update \
 	    && echo " USE_CPU is " $USE_CPU \
             && CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/CC -DMODULES=CC  -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3 " \
             && if [[ $USE_SYSV == Y ]]; then echo "sysv enabled"; CMAKE_OPTIONS+="-DGA_ENABLE_SYSV=ON "; fi \
-            && if [[ $USE_CPU == N ]]; then echo "gpu code"; CMAKE_OPTIONS+="-DUSE_CUDA=ON" ; else echo "cpu code" ;fi \
+            && if [[ $USE_CPU == N ]]; then echo "gpu code"; CMAKE_OPTIONS+="-DUSE_CUDA=ON -DGPU_ARCH=80" ; else echo "cpu code" ;fi \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
