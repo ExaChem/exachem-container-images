@@ -124,7 +124,7 @@ jobs:
         docker tag alpine ghcr.io/${{ github.repository }}/shifter.nersc:mytest 
         echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
         exit_code=0
-        docker push ghcr.io/${{ github.repository }}/shifter.nersc:mytest || exit_code=$?
+        docker push ghcr.iops/${{ github.repository }}/shifter.nersc:mytest || exit_code=$?
         echo "docker push exit code is $exit_code"
         if [[ $exit_code == 0 ]]; then
         echo "push_truefalse=true" >> $GITHUB_ENV
@@ -133,7 +133,7 @@ jobs:
         fi
       shell: bash
     - name: store cache
-      if: ${{ env.push_truefalse }}
+      if: ${{ env.push_truefalse == 'true' }}
       run: |
         mkdir -p ~/cache || true
         cd ${{ matrix.folder }}
@@ -148,14 +148,14 @@ jobs:
       run: |
         echo "date=$(TZ=America/Los_Angeles date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
     - name: push to ghcr.io
-      if: ${{ env.push_truefalse }}
+      if: ${{ env.push_truefalse == 'true' }}
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${{ github.actor }} --password-stdin oras://ghcr.io
         apptainer remote list
         apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:${{ env.date }}
         apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:latest
     - name: test image with apptainer
-      if: ${{ env.push_truefalse }}
+      if: ${{ env.push_truefalse == 'true' }}
       run: |
         pwd
         ls -la
