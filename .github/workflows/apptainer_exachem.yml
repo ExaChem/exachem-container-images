@@ -123,6 +123,7 @@ jobs:
         docker pull -q alpine
         docker tag alpine ghcr.io/${{ github.repository }}/shifter.nersc:mytest 
         echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        exit_code=0
         docker push ghcr.io/${{ github.repository }}/shifter.nersc:mytest || exit_code=$?
         echo "docker push exit code is $exit_code"
         if [[ $exit_code == 0 ]]; then
