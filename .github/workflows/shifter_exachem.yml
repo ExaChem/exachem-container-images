@@ -83,7 +83,7 @@ jobs:
           docker pull -q alpine
           echo 'tag ghcr.io/${{ github.repository }}/alpine:mytest'
           docker tag alpine ${{ env.tag }}:mytest 
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.iops -u ${{ github.actor }} --password-stdin
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.iops -u ${{ github.actor }} --password-stdin || true
           exit_code=0
           docker push ${{ env.tag }}:mytest || exit_code=$?
           echo "docker push exit code is $exit_code"
