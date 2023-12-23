@@ -58,17 +58,23 @@ jobs:
           path: |
             ~/cache
           key: ${{ env.cache_key }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: push_truefalse
         id: push_truefalse
         run: |
-          if [[ ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} ]]; then
+          docker pull -q alpine
+          echo 'tag ghcr.io/${{ github.repository }}/alpine:mytest'
+          docker tag alpine ghcr.io/${{ github.repository }}/shifter.nersc:mytest 
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push ghcr.io/${{ github.repository }}/shifter.nersc:mytest || exit_code=$?
+          echo "docker push exit code is $exit_code"
+          if [[ $exit_code == 0 ]]; then
           echo "push_truefalse=true" >> $GITHUB_ENV
           else
           echo "push_truefalse=false" >> $GITHUB_ENV
           fi
         shell: bash
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
       - name: Login to GitHub Container Registry
         if: ${{ env.push_truefalse }}
         uses: docker/login-action@v3
@@ -101,7 +107,7 @@ jobs:
           if [[ ${{ matrix.sysv }} ==  Y ]]; then extratag+="_sysv" ;fi
           if [[ ${{ matrix.cpu }} ==  Y ]]; then extratag+="_cpu" ;fi
           echo "extratag is $extratag"
-          if [[ ${{ matrix.branch }} ==  master ]]; then
+          if [[ ${{ matrix.branch }} ==  main ]]; then
           echo "longnwversion=${{ matrix.folder }}$extratag" >> $GITHUB_ENV
           else
           echo "longnwversion=${{ matrix.folder }}$extratag${{ matrix.branch }}" >> $GITHUB_ENV

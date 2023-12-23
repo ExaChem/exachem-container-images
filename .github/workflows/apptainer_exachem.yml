@@ -120,7 +120,12 @@ jobs:
     - name: push_truefalse
       id: push_truefalse
       run: |
-        if [[ ${{ github.actor == github.repository_owner }} || ${{ github.actor == 'ajaypanyala'}} || ${{ github.actor == 'exachem23'}} ]]; then
+        docker pull -q alpine
+        docker tag alpine ghcr.io/${{ github.repository }}/shifter.nersc:mytest 
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        docker push ghcr.io/${{ github.repository }}/shifter.nersc:mytest || exit_code=$?
+        echo "docker push exit code is $exit_code"
+        if [[ $exit_code == 0 ]]; then
         echo "push_truefalse=true" >> $GITHUB_ENV
         else
         echo "push_truefalse=false" >> $GITHUB_ENV
