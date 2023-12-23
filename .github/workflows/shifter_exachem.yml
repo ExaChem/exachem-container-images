@@ -60,6 +60,23 @@ jobs:
           key: ${{ env.cache_key }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+      - name: image version tag
+        run: |
+          extratag=""
+          if [[ ${{ matrix.sysv }} ==  Y ]]; then extratag+="_sysv" ;fi
+          if [[ ${{ matrix.cpu }} ==  Y ]]; then extratag+="_cpu" ;fi
+          echo "extratag is $extratag"
+          if [[ ${{ matrix.branch }} ==  main ]]; then
+          echo "longnwversion=${{ matrix.folder }}$extratag" >> $GITHUB_ENV
+          else
+          echo "longnwversion=${{ matrix.folder }}$extratag${{ matrix.branch }}" >> $GITHUB_ENV
+          fi
+        shell: bash
+      - name: docker tag
+        id: docker-tag
+        run: |
+          echo "tag=ghcr.io/${{ github.actor }}/${{ env.longnwversion}}" >>  $GITHUB_ENV
+        shell: bash
       - name: push_truefalse
         id: push_truefalse
         run: |
@@ -67,7 +84,7 @@ jobs:
           echo 'tag ghcr.io/${{ github.repository }}/alpine:mytest'
           docker tag alpine ghcr.io/${{ github.repository }}/shifter.nersc:mytest 
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker push ghcr.io/${{ github.repository }}/shifter.nersc:mytest || exit_code=$?
+          docker push ${{ env.tag }}:mytest || exit_code=$?
           echo "docker push exit code is $exit_code"
           if [[ $exit_code == 0 ]]; then
           echo "push_truefalse=true" >> $GITHUB_ENV
@@ -101,23 +118,6 @@ jobs:
           ls -l cache/ ; \
           echo "======" ; \
           fi
-      - name: image version tag
-        run: |
-          extratag=""
-          if [[ ${{ matrix.sysv }} ==  Y ]]; then extratag+="_sysv" ;fi
-          if [[ ${{ matrix.cpu }} ==  Y ]]; then extratag+="_cpu" ;fi
-          echo "extratag is $extratag"
-          if [[ ${{ matrix.branch }} ==  main ]]; then
-          echo "longnwversion=${{ matrix.folder }}$extratag" >> $GITHUB_ENV
-          else
-          echo "longnwversion=${{ matrix.folder }}$extratag${{ matrix.branch }}" >> $GITHUB_ENV
-          fi
-        shell: bash
-      - name: docker tag
-        id: docker-tag
-        run: |
-          echo "tag=ghcr.io/${{ github.actor }}/${{ env.longnwversion}}" >>  $GITHUB_ENV
-        shell: bash
       - name: builddate
         id: build-date
         run: |
