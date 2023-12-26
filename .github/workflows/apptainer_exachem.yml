@@ -117,21 +117,22 @@ jobs:
       run: |
         cd ${{ matrix.folder }}
         CXX=${{ matrix.cxx }} MYUSERNAME=${{ github.actor}} BRANCH=${{ matrix.branch}} ARMCI_NETWORK=${{ matrix.armci_network}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
-    - name: push_truefalse
-      id: push_truefalse
+    - name: builddate
+      id: build-date
       run: |
-        docker pull -q alpine
-        docker tag alpine ghcr.io/${{ github.repository }}/shifter.nersc:mytest 
-        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        echo "date=$(TZ=America/Los_Angeles date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
+    - name: push to ghcr.io
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${{ github.actor }} --password-stdin oras://ghcr.io
+        apptainer remote list
         exit_code=0
-        docker push ghcr.io/${{ github.repository }}/shifter.nersc:mytest || exit_code=$?
-        echo "docker push exit code is $exit_code"
+        apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:${{ env.date }} || exit_code=$?
+        apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:latest|| exit_code+=$?
         if [[ $exit_code == 0 ]]; then
         echo "push_truefalse=true" >> $GITHUB_ENV
         else
         echo "push_truefalse=false" >> $GITHUB_ENV
         fi
-      shell: bash
     - name: store cache
       if: ${{ env.push_truefalse == 'true' }}
       run: |
@@ -143,17 +144,6 @@ jobs:
         apptainer exec ${{ matrix.folder }}.simg tar cjf ~/cache/libint.tar.bz2 /opt/install/CC/include/libint2/  /opt/install/CC/include/libint2.hpp /opt/install/CC/include/libint2.h  /opt/install/CC/share/libint /opt/install/CC/lib/cmake/libint2 /opt/install/CC/lib/libint2.a  /opt/install/CC/lib/pkgconfig/libint2.pc 
         echo "cache stored"
         ls -l ~/cache
-    - name: builddate
-      id: build-date
-      run: |
-        echo "date=$(TZ=America/Los_Angeles date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
-    - name: push to ghcr.io
-      if: ${{ env.push_truefalse == 'true' }}
-      run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${{ github.actor }} --password-stdin oras://ghcr.io
-        apptainer remote list
-        apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:${{ env.date }}
-        apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:latest
     - name: test image with apptainer
       if: ${{ env.push_truefalse == 'true' }}
       run: |
