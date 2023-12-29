@@ -62,7 +62,7 @@ echo ROCM_PATH is ${ROCM_PATH}
 echo ARMCI_NETWORK is $ARMCI_NETWORK
 echo MPI_IMPL is $MPI_IMPL
 echo TAMM_BRANCH is $TAMM_BRANCH
- if [ "$GPU" = amd ]; then export FC=gfortran ; export CC=amdclang; export CXX=amdclang++; \
+ if [ "$GPU" = amd ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
  else export FC=gfortran ; export CC=gcc; export CXX=g++; fi
  echo 'FC is' "$FC" 
  echo ' CC is ' "$CC" 
