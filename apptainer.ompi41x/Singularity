@@ -217,8 +217,7 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } \
-	    && export MAKEFLAGS=" -j 1 --no-print-directory " \
-            && make -j1 -l0.001 || { echo "Compilation failure"; \
+            && make -j3 || { echo "Compilation failure"; \
 	    cat /opt/CoupledCluster/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeOutput.log || true ; \
             cat /opt/CoupledCluster/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeError.log || true; exit 1; } \
 	    && echo exit code for compilation $? \
