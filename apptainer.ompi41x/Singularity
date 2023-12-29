@@ -90,6 +90,7 @@ cd / \
  libnuma-dev libslurm-dev libpmi2-0-dev libpmi0-dev  libnl-3-dev libnl-route-3-dev udev \
  librdmacm-dev librdmacm1 rdma-core libibverbs-dev  ibverbs-providers \
  pkg-config gawk  software-properties-common linux-headers-generic \
+ libopenblas-serial-dev \
             && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION"   make ssh patch curl rsync wget git file  bzip2 tar gnupg2 cmake \
             && apt-get install  -q=2 -y  autoconf automake libtool git \
 && bash -o  pipefail -c "if [[ $GPU == nvidia ]]; then  \	    
@@ -194,6 +195,8 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$
 export PATH=$PATH:"$ROCM_PATH"/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$ROCM_PATH"/lib
 #export ARMCI_NETWORK=MPI-PR
+echo "which mpicc is" $(which mpicc)
+echo "mpicc -show is " $(mpicc -show)
 echo ARMCI_NETWORK is $ARMCI_NETWORK \
 	    && echo TAMM_BRANCH is ${TAMM_BRANCH} \
 	    && echo 'cloning tamm source *** ' || true \
@@ -208,7 +211,7 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
 	    rsync -av /opt/install /opt/CoupledCluster/build/stage/opt/. ; fi \
             && CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/CC -DMODULES=CC " \
             && if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_CUDA=ON -DGPU_ARCH=70" ; fi \
-            && if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=gfx90a -DGCCROOT=/usr  -DBLIS_CONFIG=zen2 -DMARCH_FLAGS=-march=znver2" ; fi \
+            && if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=gfx90a -DGCCROOT=/usr -DLINALG_VENDOR=OpenBLAS -DLINALG_PREFIX=/usr/lib/x86_64-linux-gnu/openblas-serial" ; fi \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } \
@@ -235,12 +238,12 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
             &&  apt-get -q=2 -y purge   patch curl  wget  make git cpp-"$GCC_VERSION" gfortran-"$GCC_VERSION" gcc-"$GCC_VERSION" libicu-dev libpython"$PY_VERSION"-dev libstdc++-"$GCC_VERSION"-dev libc6-dev libgcc-"$GCC_VERSION"-dev libgfortran-"$GCC_VERSION"-dev  || true \
             && apt-get -q=2 -y install libgfortran5 libgomp1 && apt-get clean \
 	    && if [ "$GPU" = nvidia ]; then apt-get purge -y cuda-cccl-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" ; fi\
-	    && if [ "$GPU" = amd ]; then  apt-get install -y hip-runtime-amd rocblas ;\
-	    apt-get  purge -y  cmake git-man openmp-extras \
+	    && if [ "$GPU" = amd ]; then  apt-get  purge -y  cmake git-man openmp-extras \
 	    lib32gcc-11-dev  libc6-dev-i386 libx32gcc-11-dev libc6-dev-x32 lib32gcc-11-dev  \
 	    lib32asan6 lib32atomic1 lib32gcc-s1 lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++6 lib32ubsan1 libc6-i386 \
 	    libc6-x32 libx32asan6 libx32atomic1 libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0 libx32stdc++6 libx32ubsan1 \
-	    javascript-common less liberror-perl libjs-jquery libjs-sphinxdoc libjs-underscore libltdl-dev libltdl7 libpython3.10 linux-headers-* ; fi  \
+	    javascript-common less liberror-perl libjs-jquery libjs-sphinxdoc libjs-underscore libltdl-dev libltdl7 libpython3.10 linux-headers-* ; \
+	    apt-get install -y hip-runtime-amd rocblas openmp-extras-runtime;fi  \
 	    && rm -rf "$ROCM_PATH"/bin  "$ROCM_PATH"/llvm/bin  \
 	    && echo '*** ls -l CC/bin **' \
 	    && ls -l /opt/install/CC/bin/ || true \
