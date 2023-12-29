@@ -173,7 +173,8 @@ echo 'Configuring openmpi ..........' &&\
  --without-sge --without-alps --without-lustre --disable-memchecker \
  --without-hcoll --disable-static  \
 --disable-mpi-java --enable-dlopen --without-cuda --without-verbs \
---disable-mpi-cxx --disable-cxx-exceptions FC=$FC >& config.log && tail -50 config.log && \
+--disable-mpi-cxx --disable-cxx-exceptions FC=$FC >& ompi_config.log || { echo 'OpenMPI config failure'; tail -500 ompi_config.log; exit 1; } &&\
+tail -50 ompi_config.log && \
 echo 'Compiling openmpi ..........' &&\
 make FC=$FC -j 4 >& make.log && tail -50 make.log                                  && \
 echo 'Installing openmpi ..........' &&\
@@ -195,8 +196,9 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$
 export PATH=$PATH:"$ROCM_PATH"/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$ROCM_PATH"/lib
 #export ARMCI_NETWORK=MPI-PR
-echo "which mpicc is" $(which mpicc)
-echo "mpicc -show is " $(mpicc -show)
+if [ $(command -v mpicc) ]; then echo mpicc present; else echo mpicc missing; exit 1; fi
+echo "which mpicc is" $(which mpicc) 
+echo "mpicc -show is " $(mpicc -show)  || { tail -700 $ompi_prefix/config.log ;echo "mpi compilation failed"; exit 1; }
 echo ARMCI_NETWORK is $ARMCI_NETWORK \
 	    && echo TAMM_BRANCH is ${TAMM_BRANCH} \
 	    && echo 'cloning tamm source *** ' || true \
@@ -215,7 +217,8 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } \
-            && make -j3 || { echo "Compilation failure"; exit 1; } \
+	    && export MAKEFLAGS=" -j 1 --no-print-directory " \
+            && make -j1 -l0.001 || { echo "Compilation failure"; exit 1; } \
 	    && echo exit code for compilation $? \
             && make install \
 	    && echo exit code for make install $? \
