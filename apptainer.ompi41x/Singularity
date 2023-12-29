@@ -12,7 +12,7 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 #    echo '@@@ ls -l $SINGULARITY_ROOTFS'
 #    ls -l ${SINGULARITY_ROOTFS}
     rm -f ${SINGULARITY_ROOTFS}/*.txt || true
-    bash -c "if [[ -z '${FC}' ]]; then echo 'FC=gfortran ' >> ${SINGULARITY_ROOTFS}/fc.txt ; else echo 'FC is ${FC}'; echo 'FC=${FC} ' >> ${SINGULARITY_ROOTFS}/fc.txt ; fi"
+    bash -c "if [[ -z '${GPU}' ]]; then echo 'GPU=nvidia ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; else echo 'GPU is ${GPU}'; echo 'GPU=${GPU} ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; fi"
     bash -c "if [[ -z '${ARMCI_NETWORK}' ]]; then echo 'ARMCI_NETWORK=MPI-PR ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; else echo 'ARMCI_NETWORK is ${ARMCI_NETWORK}'; echo 'ARMCI_NETWORK=${ARMCI_NETWORK} ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; fi"
     bash -c "if [[ -z '${MPI_IMPL}' ]]; then echo 'MPI_IMPL=ompi ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; else echo 'MPI_IMPL is ${MPI_IMPL}'; echo 'MPI_IMPL=${MPI_IMPL} ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; fi"
     bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/branch.txt ; fi"
@@ -43,24 +43,29 @@ export SINGULARITY_ompi=$ompi
 export SINGULARITY_ompi_prefix=ompi-$ompi
 export CUDA_VERSION_MAJOR=11 
 export CUDA_VERSION_MINOR=7
+export ROCM_VERSION=5.7.3
+export ROCM_PATH=/opt/rocm-${ROCM_VERSION}
 export GCC_VERSION=11
-export PY_VERSION=3.11
 export TAMM_BRANCH=main
-export USE_CPU=N
-export USE_SYSV=N
 
-export PATH=$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin 
-export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib
+export PATH=$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
+export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:"$ROCM_PATH"/lib
 export SINGULARITY_PATH=$PATH
 export SINGULARITY_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-export `cat ./fc.txt`
+export `cat ./gpu.txt`
 export `cat ./armci_network.txt`
 export `cat ./mpi_impl.txt`
 export `cat ./branch.txt`
-echo FC is $FC
+echo GPU is $GPU
+echo ROCM_PATH is ${ROCM_PATH}
 echo ARMCI_NETWORK is $ARMCI_NETWORK
 echo MPI_IMPL is $MPI_IMPL
 echo TAMM_BRANCH is $TAMM_BRANCH
+ if [ "$GPU" = amd ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
+ else export FC=gfortran ; export CC=gcc; export CXX=g++; fi
+ echo 'FC is' "$FC" 
+ echo ' CC is ' "$CC" 
+ echo ' CXX is ' "$CXX" 
 cd / \
 && pwd \
 && apt-get -y update \
@@ -69,7 +74,7 @@ cd / \
 && chmod +x /usr/bin/curl \
 && echo ca_certificate=/etc/ssl/certs/ca-certificates.crt >  ~/.wgetrc \
 && echo        "cacert=/etc/ssl/certs/ca-certificates.crt" >> ~/.curlrc \
-&& bash -o  pipefail -c "if [[ $(echo $FC | cut -c -8) == gfortran ]]; then apt-get -y install -y  ${FC}; fi" \
+&& apt-get -y install -y  gfortran \
 && pwd \
 && echo '@@ ls -lart ' \
 && ls -lart  \
@@ -84,30 +89,36 @@ cd / \
  libnuma-dev libslurm-dev libpmi2-0-dev libpmi0-dev  libnl-3-dev libnl-route-3-dev udev \
  librdmacm-dev librdmacm1 rdma-core libibverbs-dev  ibverbs-providers \
  pkg-config gawk  software-properties-common linux-headers-generic \
-            && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION"   make ssh patch curl rsync wget git file python"$PY_VERSION" libpython"$PY_VERSION"-dev python"$PY_VERSION"-dev bzip2 tar gnupg2 cmake \
+            && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION"   make ssh patch curl rsync wget git file  bzip2 tar gnupg2 cmake \
             && apt-get install  -q=2 -y  autoconf automake libtool git \
-	    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 100 \
-	    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 100 \
-	    && update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-"$GCC_VERSION" 100 \
-	    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 100 \
-	    && update-alternatives --install /usr/bin/python3-config python3-config /usr/bin/python3.11-config 100 \
- && curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg \
+&& bash -o  pipefail -c "if [[ $GPU == nvidia ]]; then  \	    
+ update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 100 \
+&& update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 100 \
+&& update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-"$GCC_VERSION" 100 \
+&& curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg \
  && cp cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg \
- && echo "deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /" |  tee /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.list \
+ && echo 'deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /' |  tee /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.list \
  &&  curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin \
  && mv cuda-*.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
  && apt-get -q=2 update \
- && apt-get -q=2 -y install cuda-nvcc-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" cuda-cudart-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR"  \
+ && apt-get -q=2 -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-cudart-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} libcublas-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} ; fi " \
+&& bash -o  pipefail -c "if [[ $GPU == amd ]]; then mkdir --parents --mode=0755 /etc/apt/keyrings \
+&& wget  https://repo.radeon.com/rocm/rocm.gpg.key -O - |  gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null \
+&& echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${ROCM_VERSION} jammy main' | tee --append /etc/apt/sources.list.d/rocm.list \
+&& echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' |  tee /etc/apt/preferences.d/rocm-pin-600 \
+&& apt-get  update -y &&  apt-get -y install hipcc hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras ; fi "  \
 && export kernelv=$(dpkg-query -W linux-headers-generic|cut -f2 ) \
 && echo kernelv is $kernelv \
-&& export k1=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d "." -f 1)\
-&& export k2=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d "." -f 2)\
-&& export k3=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d "." -f 3)\
-&& export k4=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d "." -f 4)\
+&& export k1=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d '.' -f 1)\
+&& export k2=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d '.' -f 2)\
+&& export k3=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d '.' -f 3)\
+&& export k4=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d '.' -f 4)\
 &&  export ktag=$k1.$k2.$k3-$k4-generic \
 && echo ktag is $ktag \
 && ls /lib/modules/$ktag  || true
-
+ echo 'FC -v ' `$FC -v` 
+ echo 'CC -v ' `$CC -v` 
+ echo 'CXX -v ' `$CXX -v` 
  apt-get clean 
  echo TTTTT 
  df -h 
@@ -115,9 +126,6 @@ cd / \
  echo "PATH" $PATH 
  echo "LD_LIBRARY_PATH" $LD_LIBRARY_PATH 
  echo FFFFF 
- echo 'FC -v ' `$FC -v` 
- echo ' CC is ' "$CC" 
- echo 	 ' CXX is ' "$CXX" || true 
  echo 'ls -l /opt/ompi/lib/libmpi.so' $(ls -l /opt/ompi/lib/libmpi.so) || true 
  bash -o pipefail -c "if [[ ! -f /opt/ompi/lib/libmpi.so ]]; then  \
 $FC -v \
@@ -142,6 +150,7 @@ $FC -v \
 && mkdir build && cd build \
 && echo 'Configuring ucx ..........' \
 && ../configure --prefix=$OMPI_DIR --disable-logging --disable-debug --disable-assertions --disable-params-check \
+ --without-cuda --without-rocm \
  --with-xpmem=$OMPI_DIR --with-knem=$OMPI_DIR  >& config.log && tail -50 config.log \
 && echo 'Checking xpmem .........' $(grep -i xpmem conf*) \
 && echo 'Checking knem ..........' $(grep -i knem conf*) \
@@ -180,7 +189,9 @@ echo ' check ucx' \
 export PATH=$OMPI_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$OMPI_DIR/lib:$LD_LIBRARY_PATH
 export PATH=$PATH:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin
-export LD_LIBRARY_PATH=$$LD_LIBRARY_PATHL/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64
+export PATH=$PATH:"$ROCM_PATH"/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$ROCM_PATH"/lib
 #export ARMCI_NETWORK=MPI-PR
 echo ARMCI_NETWORK is $ARMCI_NETWORK \
 	    && echo TAMM_BRANCH is ${TAMM_BRANCH} \
@@ -189,19 +200,17 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
             && git clone -b ${TAMM_BRANCH} --depth 20  https://github.com/ExaChem/exachem.git CoupledCluster  \
             && cd CoupledCluster \
 	    && mkdir build && cd build \
-	    && echo " USE_SYSV is " $USE_SYSV \
-	    && echo " USE_CPU is " $USE_CPU \
 	    && echo ' === ls -l /opt/install/CC ===' $(ls -l /opt/install/CC) \
 	    && echo ' === ls -l /opt/install/CC/lib ===' $(ls -l /opt/install/CC/lib) \
 	    && if [ -f /opt/install/CC/lib/libint2.a ]; then echo 'found libint cache' ;\
 	    mkdir -p /opt/CoupledCluster/build/stage/opt || true ; \
 	    rsync -av /opt/install /opt/CoupledCluster/build/stage/opt/. ; fi \
             && CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/CC -DMODULES=CC " \
-            && if [ ${USE_SYSV} = "Y" ]; then echo "sysv enabled"; CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_ENABLE_SYSV=ON "; fi \
-            && if [ ${USE_CPU} = "N" ]; then echo "gpu code"; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_CUDA=ON -DGPU_ARCH=70" ; else echo "cpu code" ;fi \
+            && if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_CUDA=ON -DGPU_ARCH=70" ; fi \
+            && if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=gfx90a -DGCCROOT=/usr  -DBLIS_CONFIG=zen2 -DMARCH_FLAGS=-march=znver2" ; fi \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
-	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
+	    && CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } \
             && make -j3 || { echo "Compilation failure"; exit 1; } \
 	    && echo exit code for compilation $? \
             && make install \
@@ -224,7 +233,14 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
 	    && rm -rf /usr/share/doc \
             &&  apt-get -q=2 -y purge   patch curl  wget  make git cpp-"$GCC_VERSION" gfortran-"$GCC_VERSION" gcc-"$GCC_VERSION" libicu-dev libpython"$PY_VERSION"-dev libstdc++-"$GCC_VERSION"-dev libc6-dev libgcc-"$GCC_VERSION"-dev libgfortran-"$GCC_VERSION"-dev  || true \
             && apt-get -q=2 -y install libgfortran5 libgomp1 && apt-get clean \
-	    && apt-get purge -y cuda-cccl-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" \
+	    && if [ "$GPU" = nvidia ]; then apt-get purge -y cuda-cccl-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" ; fi\
+	    && if [ "$GPU" = amd ]; then  apt-get install -y hip-runtime-amd rocblas ;\
+	    apt-get  purge -y  cmake git-man openmp-extras \
+	    lib32gcc-11-dev  libc6-dev-i386 libx32gcc-11-dev libc6-dev-x32 lib32gcc-11-dev  \
+	    lib32asan6 lib32atomic1 lib32gcc-s1 lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++6 lib32ubsan1 libc6-i386 \
+	    libc6-x32 libx32asan6 libx32atomic1 libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0 libx32stdc++6 libx32ubsan1 \
+	    javascript-common less liberror-perl libjs-jquery libjs-sphinxdoc libjs-underscore libltdl-dev libltdl7 libpython3.10 linux-headers-* ; fi  \
+	    && rm -rf "$ROCM_PATH"/bin  "$ROCM_PATH"/llvm/bin  \
 	    && echo '*** ls -l CC/bin **' \
 	    && ls -l /opt/install/CC/bin/ || true \
 	    && echo '*** ldd ***'  \
@@ -260,9 +276,9 @@ export SINGULARITY_OMPI_DIR=$OMPI_DIR
 export CUDA_VERSION_MAJOR=11 
 export CUDA_VERSION_MINOR=7
 export PATH=/opt/install/CC/bin:$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:$PATH
-export LD_LIBRARY_PATH=$OMPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:$LD_LIBRARY_PATH
-export SINGULARITYENV_APPEND_PATH=/opt/install/CC/bin:$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin
-export SINGULARITYENV_APPEND_LD_LIBRARY_PATH=$OMPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib
+export LD_LIBRARY_PATH=$OMPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:$ROCM_PATH/lib:$LD_LIBRARY_PATH:
+export SINGULARITYENV_APPEND_PATH=/opt/install/CC/bin:$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin
+export SINGULARITYENV_APPEND_LD_LIBRARY_PATH=$OMPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:$ROCM_PATH/lib
 export COMEX_MAX_NB_OUTSTANDING=12
 export SINGULARITY_COMEX_MAX_NB_OUTSTANDING=12
 #%runscript
