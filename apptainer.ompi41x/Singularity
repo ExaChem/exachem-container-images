@@ -90,7 +90,6 @@ cd / \
  libnuma-dev libslurm-dev libpmi2-0-dev libpmi0-dev  libnl-3-dev libnl-route-3-dev udev \
  librdmacm-dev librdmacm1 rdma-core libibverbs-dev  ibverbs-providers \
  pkg-config gawk  software-properties-common linux-headers-generic \
- libopenblas-serial-dev \
             && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION" libgfortran-"$GCC_VERSION"-dev  make ssh patch curl rsync wget git file  bzip2 tar gnupg2 cmake \
 && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 100 \
 && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 100 \
@@ -212,8 +211,9 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
 	    mkdir -p /opt/CoupledCluster/build/stage/opt || true ; \
 	    rsync -av /opt/install /opt/CoupledCluster/build/stage/opt/. ; fi \
             && CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/CC -DMODULES=CC " \
+	    && CMAKE_OPTIONS+=" -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3" \
             && if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_CUDA=ON -DGPU_ARCH=70" ; fi \
-            && if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=gfx90a -DGCCROOT=/usr -DLINALG_VENDOR=OpenBLAS -DLINALG_PREFIX=/usr/lib/x86_64-linux-gnu/openblas-serial" ; fi \
+            && if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=gfx90a -DGCCROOT=/usr " ; fi \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } \
