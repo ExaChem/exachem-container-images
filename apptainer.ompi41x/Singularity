@@ -91,13 +91,13 @@ cd / \
  librdmacm-dev librdmacm1 rdma-core libibverbs-dev  ibverbs-providers \
  pkg-config gawk  software-properties-common linux-headers-generic \
  libopenblas-serial-dev \
-            && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION"   make ssh patch curl rsync wget git file  bzip2 tar gnupg2 cmake \
-            && apt-get install  -q=2 -y  autoconf automake libtool git \
-&& bash -o  pipefail -c "if [[ $GPU == nvidia ]]; then  \	    
- update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 100 \
+            && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION" libgfortran-"$GCC_VERSION"-dev  make ssh patch curl rsync wget git file  bzip2 tar gnupg2 cmake \
+&& update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 100 \
 && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 100 \
 && update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-"$GCC_VERSION" 100 \
-&& curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg \
+            && apt-get install  -q=2 -y  autoconf automake libtool git \
+&& bash -o  pipefail -c "if [[ $GPU == nvidia ]]; then  \	    
+ curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg \
  && cp cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg \
  && echo 'deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /' |  tee /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.list \
  &&  curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin \
