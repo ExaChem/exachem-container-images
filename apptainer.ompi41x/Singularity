@@ -217,11 +217,11 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
 	    && CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3" \
 	    && CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_Fortran_FLAGS=-O0\ -g" \
             && if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_CUDA=ON -DGPU_ARCH=70" ; fi \
-            && if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=gfx90a -DGCCROOT=/usr " ; fi \
+            && if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=gfx90a -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h ; fi \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } \
-            && make -j3 || { echo "Compilation failure"; \
+            && make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; \
 	    cat /opt/CoupledCluster/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeOutput.log || true ; \
             cat /opt/CoupledCluster/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeError.log || true; exit 1; } \
 	    && echo exit code for compilation $? \
