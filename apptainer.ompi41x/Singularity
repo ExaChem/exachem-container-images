@@ -167,7 +167,7 @@ $FC -v \
 && echo 'Cleaning up ucx ..........' \
 && make clean >& makec.log \
 && cd ../.. \
-&& wget --progress=dot:giga https://github.com/open-mpi/ompi/archive/v$ompi.tar.gz -O - | tar xzf -   && \
+&& wget --progress=dot:giga https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-$ompi.tar.gz -O - | tar xzf -   && \
 cd $ompi_prefix                                                        && \
 echo './autogen.pl openmpi ..........' &&\
 ./autogen.pl   >& autogen.log && tail -50 autogen.log                  && \
