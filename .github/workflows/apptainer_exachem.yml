@@ -22,7 +22,10 @@ jobs:
             - MPI-PR
           gpu:
             - nvidia
-            - amd
+            - amd_rocm6.0
+            - amd_rocm5.7.3
+            - amd_rocm5.6.1
+            - amd_rocm5.5.1
     steps:
     - name: Get Instruction
       id: get-simd
