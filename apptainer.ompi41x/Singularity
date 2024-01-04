@@ -207,6 +207,7 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
 	    && echo 'cloning tamm source *** ' || true \
             && cd /opt || { echo "Failure"; exit 1; } \
             && git clone --depth 100 https://github.com/NWChemEx/TAMM.git \
+	    && cd TAMM \
             && git reset --hard 2033f021e0ff20c983a7ba2e9bd7e7cb2441bec6 \
 	    && mkdir build && cd build \
 	    && echo ' === ls -l /opt/install/CC ===' $(ls -l /opt/install/CC) \
