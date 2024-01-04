@@ -206,6 +206,7 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
 	     echo TAMM_BRANCH is ${TAMM_BRANCH} 
 	     echo 'cloning tamm source *** ' || true 
              cd /opt || { echo "Failure"; exit 1; } 
+             git clone -b ${TAMM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git CoupledCluster  
              git clone --depth 100 https://github.com/NWChemEx/TAMM.git 
 	     cd TAMM 
              git reset --hard 2033f021e0ff20c983a7ba2e9bd7e7cb2441bec6 
@@ -230,7 +231,6 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
              make install 
 	     echo exit code for TAMM make install $? 
              cd /opt 
-             git clone -b ${TAMM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git CoupledCluster  
              cd CoupledCluster 
              git reset --hard eb5181c6fd8aa046388d82e01ee485d92ab78fa9 
 	     mkdir build && cd build 
