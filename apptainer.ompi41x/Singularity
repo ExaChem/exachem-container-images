@@ -113,7 +113,7 @@ cd / \
 && wget --quiet https://repo.radeon.com/rocm/rocm.gpg.key -O - |  gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null \
 && echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${ROCM_VERSION} jammy main' | tee --append /etc/apt/sources.list.d/rocm.list \
 && echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' |  tee /etc/apt/preferences.d/rocm-pin-600 \
-&& apt-get  update -y &&  apt-get -y install hipcc hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras \
+&& apt-get  update -y &&  apt-get -y install hip-dev hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras \
 && wget --quiet https://download.amd.com/developer/eula/blis/blis-4-1/aocl-blis-linux-aocc-4.1.0.tar.gz -O - | tar xzf - -C /opt ; fi "  \
 && export kernelv=$(dpkg-query -W linux-headers-generic|cut -f2 ) \
 && echo kernelv is $kernelv \
