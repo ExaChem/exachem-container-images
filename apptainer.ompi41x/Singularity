@@ -231,19 +231,19 @@ if [ $(command -v mpicc) ]; then echo mpicc present; else echo mpicc missing; ex
 &&              git reset --hard eb5181c6fd8aa046388d82e01ee485d92ab78fa9  \
 && 	     mkdir build && cd build  \
 && 	     echo ' === ls -l /opt/install/CC ===' $(ls -l /opt/install/CC)  \
-&& 	     echo ' === ls -l /opt/install/CC/lib ===' $(ls -l /opt/install/CC/lib)  \
-&& 	     if [ -f /opt/install/CC/lib/libint2.a ]; then echo 'found libint cache' ; \ 
+&& 	     echo ' === ls -l /opt/install/CC/lib ===' $(ls -l /opt/install/CC/lib)  
+	     if [ -f /opt/install/CC/lib/libint2.a ]; then echo 'found libint cache' ; \
              mkdir -p /opt/CoupledCluster/build/stage/opt || true ; \
-	     rsync -av /opt/install /opt/CoupledCluster/build/stage/opt/. ; fi  \
-&&              export CMAKE_OPTIONS  \
-&& 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
-&& 	     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
-&&              make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; exit 1; }  \
-&& 	     echo exit code for compilation $?  \
-&&              make install  \
-&& 	     echo exit code for make install $?  \
-&& 	     bash -c "if [[ -f /opt/install/CC/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi"  \
-&& 	     echo git describe --always `git describe --always`  >> /opt/install/info.txt \ 
+	     rsync -av /opt/install /opt/CoupledCluster/build/stage/opt/. ; fi 
+             export CMAKE_OPTIONS 
+	     echo CMAKE_OPTIONS $CMAKE_OPTIONS 
+	     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } 
+             make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; exit 1; } 
+	     echo exit code for compilation $? 
+             make install 
+	     echo exit code for make install $? 
+	     bash -c "if [[ -f /opt/install/CC/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi" 
+	     echo git describe --always `git describe --always`  >> /opt/install/info.txt \
 	    && echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt \
             && echo 'clean unnecessary source to reduce docker size' \
             && cd /opt && rm  -rf CoupledCluster \
