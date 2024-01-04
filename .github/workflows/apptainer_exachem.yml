@@ -26,6 +26,8 @@ jobs:
             - amd_rocm5.7.3
             - amd_rocm5.6.1
             - amd_rocm5.5.1
+            - amd_rocm5.4.6
+            - amd_rocm5.3.3
     steps:
     - name: Get Instruction
       id: get-simd
