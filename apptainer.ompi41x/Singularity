@@ -226,10 +226,10 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
              make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; 
 	    cat /opt/CoupledCluster/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeOutput.log || true ; \
             cat /opt/CoupledCluster/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeError.log || true; exit 1; } 
-	     echo exit code for compilation $? 
+	     echo exit code for TAMM compilation $? 
              make install 
-	     echo exit code for make install $? 
-             cd /opt \
+	     echo exit code for TAMM make install $? 
+             cd /opt 
              git clone -b ${TAMM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git CoupledCluster  
              cd CoupledCluster 
              git reset --hard eb5181c6fd8aa046388d82e01ee485d92ab78fa9 
