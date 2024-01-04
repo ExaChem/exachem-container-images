@@ -225,7 +225,7 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
 	     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } 
              make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; 
 	    cat /opt/CoupledCluster/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeOutput.log || true ; \
-            cat /opt/CoupledCluster/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeError.log || true; exit 1; } \
+            cat /opt/CoupledCluster/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeError.log || true; exit 1; } 
 	     echo exit code for compilation $? 
              make install 
 	     echo exit code for make install $? 
