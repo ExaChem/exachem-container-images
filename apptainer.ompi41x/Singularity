@@ -43,14 +43,18 @@ export SINGULARITY_ompi=$ompi
 export SINGULARITY_ompi_prefix=ompi-$ompi
 export CUDA_VERSION_MAJOR=11 
 export CUDA_VERSION_MINOR=7
-export GPU3=$(echo  $GPU| cut -c 1-3)
-echo GPU3 is $GPU3
-if [ $GPU3 = amd ]; then
-    echo gpus is amd
-    ROCM_VERSION=`echo $GPU | cut -c 9-`
-    export GPU="amd"
-fi
+bash -o  pipefail -c "if [[ $GPU == 'amd*' ]]; then  \	    
+echo gpus is amd ;\
+ROCM_VERSION=`echo $GPU | cut -c 9-`; \
+export GPU=amd;\
+rm -f gpu.txt  rocmv.txt ;\
+echo 'GPU=${GPU} ' >  gpu.txt  ; \
+echo 'ROCM_VERSION=${ROCM_VERSION} ' >  rocm_version.txt  ; fi"
+export `cat ./gpu.txt`
+export `cat ./rocm_version.txt`
 export ROCM_PATH=/opt/rocm-${ROCM_VERSION}
+echo GPU is $GPU
+echo ROCM_PATH is $ROCM_PATH
 if [ "$ROCM_VERSION" = 6.0 ]; then export ROCM_PATH=/opt/rocm-${ROCM_VERSION}.0; fi
 export GCC_VERSION=11
 export TAMM_BRANCH=main
