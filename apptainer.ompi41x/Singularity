@@ -43,6 +43,7 @@ export SINGULARITY_ompi=$ompi
 export SINGULARITY_ompi_prefix=ompi-$ompi
 export CUDA_VERSION_MAJOR=11 
 export CUDA_VERSION_MINOR=7
+export `cat ./gpu.txt`
 bash -o  pipefail -c "if [[ $(echo $GPU | cut -c 1-3)  == 'amd' ]]; then echo gpus is amd;
 echo 'ROCM_VERSION='`echo $GPU | cut -c 9-` > rocm_version.txt ;
 echo 'GPU=amd ' >  gpu.txt  ; fi"
@@ -59,7 +60,6 @@ export PATH=$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_M
 export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:"$ROCM_PATH"/lib
 export SINGULARITY_PATH=$PATH
 export SINGULARITY_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-export `cat ./gpu.txt`
 export `cat ./armci_network.txt`
 export `cat ./mpi_impl.txt`
 export `cat ./branch.txt`
