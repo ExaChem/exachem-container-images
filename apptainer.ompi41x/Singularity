@@ -230,19 +230,19 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK \
              make install 
 	     echo exit code for make install $? 
              cd /opt \
-            && git clone -b ${TAMM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git CoupledCluster  \
-            && cd CoupledCluster \
-            && git reset --hard eb5181c6fd8aa046388d82e01ee485d92ab78fa9 \
-	    && mkdir build && cd build \
-            && export CMAKE_OPTIONS \
-	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
-	    && CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } \
-            && make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; exit 1 } \
-	    && echo exit code for compilation $? \
-            && make install \
-	    && echo exit code for make install $? \
-	    && bash -c "if [[ -f /opt/install/CC/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi" \
-	    && echo git describe --always `git describe --always`  >> /opt/install/info.txt \
+             git clone -b ${TAMM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git CoupledCluster  
+             cd CoupledCluster 
+             git reset --hard eb5181c6fd8aa046388d82e01ee485d92ab78fa9 
+	     mkdir build && cd build 
+             export CMAKE_OPTIONS 
+	     echo CMAKE_OPTIONS $CMAKE_OPTIONS 
+	     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } 
+             make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; exit 1 } 
+	     echo exit code for compilation $? 
+             make install 
+	     echo exit code for make install $? 
+	     bash -c "if [[ -f /opt/install/CC/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi" 
+	     echo git describe --always `git describe --always`  >> /opt/install/info.txt \
 	    && echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt \
             && echo 'clean unnecessary source to reduce docker size' \
             && cd /opt && rm  -rf CoupledCluster \
