@@ -18,12 +18,16 @@ jobs:
             - apptainer.ompi41x
           branch:
             - main
-          cxx:
-            - g++
           armci_network:
             - MPI-PR
-    env:
-        CXX: ${{ matrix.cxx }}
+          gpu:
+            - nvidia
+            - amd_gfx908_rocm5.5.1
+            - amd_gfx90a_rocm5.5.1
+            - amd_gfx908_rocm6.0
+            - amd_gfx90a_rocm6.0
+            - amd_gfx908_rocm5.7.3
+            - amd_gfx90a_rocm5.7.3
     steps:
     - name: Get Instruction
       id: get-simd
@@ -37,6 +41,9 @@ jobs:
         else
           myversion=""
         fi
+        if [[ ${{ matrix.gpu }} !=  nvidia ]]; then
+          myversion+=.${{ matrix.gpu }}
+        fi
         echo "exachemversion=$myversion" >> $GITHUB_ENV
         if [[ ${{ matrix.armci_network }} !=  MPI-PR ]]; then
           net_tag=$(echo ${{ matrix.armci_network }} | tr '[:upper:]' '[:lower:]')
@@ -44,11 +51,7 @@ jobs:
         fi
     - name: tag
       run: |
-        if [[ ${{ matrix.cxx }} == "g++" ]]; then
-          echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}.${{ env.armci_network}}ompi41x" >> $GITHUB_ENV
-        else
-          echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}.${{ env.armci_network}}ompi41x.${{ matrix.cxx }}" >> $GITHUB_ENV
-        fi
+        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}.${{ env.armci_network}}ompi41x" >> $GITHUB_ENV
     - name: echo-tag
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'
@@ -85,7 +88,7 @@ jobs:
       with:
         path: |
           ~/cache
-        key: ${{ matrix.folder}}-${{ env.exachemversion}}-exachemcache-${{ matrix.cxx}}-v001
+        key: ${{ matrix.folder}}-${{ env.exachemversion}}-exachemcache-v001
     - name: fetch cache
       if: steps.setup-cache.outputs.cache-hit == 'true'
       run: |
@@ -116,7 +119,7 @@ jobs:
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        CXX=${{ matrix.cxx }} MYUSERNAME=${{ github.actor}} BRANCH=${{ matrix.branch}} ARMCI_NETWORK=${{ matrix.armci_network}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
+        MYUSERNAME=${{ github.actor}} BRANCH=${{ matrix.branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |
