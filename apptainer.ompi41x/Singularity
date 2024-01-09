@@ -71,11 +71,11 @@ echo ARMCI_NETWORK is $ARMCI_NETWORK
 echo MPI_IMPL is $MPI_IMPL
 echo TAMM_BRANCH is $TAMM_BRANCH
  if [ "$GPU" = "amd" ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
- else export FC=gfortran ; export CC=gcc; export CXX=g++; fi
- echo 'FC is' "$FC" 
- echo ' CC is ' "$CC" 
- echo ' CXX is ' "$CXX" 
-cd / \
+ else export FC=gfortran ; export CC=gcc; export CXX=g++; fi \
+&& echo 'FC is' "$FC"  \
+&& echo ' CC is ' "$CC" \
+&& echo ' CXX is ' "$CXX" \
+&& cd / \
 && pwd \
 && apt-get -y update \
 && apt-get -y install -y tzdata git moreutils  wget rsync  sudo ca-certificates \
@@ -127,19 +127,13 @@ cd / \
 && export k4=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d '.' -f 4)\
 &&  export ktag=$k1.$k2.$k3-$k4-generic \
 && echo ktag is $ktag \
-&& ls /lib/modules/$ktag  || true
- echo 'FC -v ' `$FC -v` 
- echo 'CC -v ' `$CC -v` 
- echo 'CXX -v ' `$CXX -v` || { echo "CXX not installed"; exit  1; }
- apt-get clean 
- echo TTTTT 
- df -h 
- echo TTTTT 
- echo "PATH" $PATH 
- echo "LD_LIBRARY_PATH" $LD_LIBRARY_PATH 
- echo FFFFF 
- echo 'ls -l /opt/ompi/lib/libmpi.so' $(ls -l /opt/ompi/lib/libmpi.so) || true 
- bash -o pipefail -c "if [[ ! -f /opt/ompi/lib/libmpi.so ]]; then  \
+&& ls /lib/modules/$ktag  || true \
+&& echo 'FC -v ' `$FC -v`  \
+&& echo 'CC -v ' `$CC -v`  \
+&& echo 'CXX -v ' `$CXX -v` || { echo "CXX not installed"; exit  1; } \
+&& apt-get clean  \
+&& echo 'ls -l /opt/ompi/lib/libmpi.so' $(ls -l /opt/ompi/lib/libmpi.so) || true  \
+&& bash -o pipefail -c "if [[ ! -f /opt/ompi/lib/libmpi.so ]]; then  \
 $FC -v \
 && wget --progress=dot:giga https://github.com/openucx/xpmem/archive/refs/tags/v$xpmem.tar.gz -O - |tar xzf - \
 && cd xpmem-$xpmem \
@@ -212,9 +206,8 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 &&              git clone --depth 100 https://github.com/NWChemEx/TAMM.git   \
 && 	     cd TAMM   \
 && 	     mkdir build && cd build  \
-&&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/CC -DMODULES=CC "  \
+&&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/CC -DMODULES='CC;DFT' "  \
 && 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3"  \
-&& 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_Fortran_FLAGS=-O0"  \
 &&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_CUDA=ON -DGPU_ARCH=70" ; fi  \
 &&              if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  \
 &&              export CMAKE_OPTIONS   \
@@ -244,7 +237,8 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 &&	     echo git describe --always `git describe --always`  >> /opt/install/info.txt \
 	    && echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt \
             && echo 'clean unnecessary source to reduce docker size' \
-            && cd /opt && rm  -rf CoupledCluster \
+            && rm  -rf /opt/CoupledCluster \
+            && rm  -rf /opt/TAMM \
 	    && cd /opt/install/CC/share/libint/2.7.2/basis/ \
 	    && wget -O aug-cc-pvdz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvdz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
 	    && wget -O aug-cc-pvtz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvtz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
@@ -263,9 +257,11 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 	    lib32gcc-11-dev  libc6-dev-i386 libx32gcc-11-dev libc6-dev-x32 lib32gcc-11-dev  \
 	    lib32asan6 lib32atomic1 lib32gcc-s1 lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++6 lib32ubsan1 libc6-i386 \
 	    libc6-x32 libx32asan6 libx32atomic1 libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0 libx32stdc++6 libx32ubsan1 \
-	    javascript-common less liberror-perl libjs-jquery libjs-sphinxdoc libjs-underscore libltdl-dev libltdl7 libpython3.10 linux-headers-* ; \
-	    apt-get install -y hip-runtime-amd rocblas openmp-extras-runtime;fi  \
-	    && rm -rf "$ROCM_PATH"/bin  "$ROCM_PATH"/llvm/bin  \
+	    javascript-common less liberror-perl libjs-jquery libjs-sphinxdoc libjs-underscore libltdl-dev libltdl7 libpython3.10 linux-headers-generic ; \
+	    apt-get install -y hip-runtime-amd rocblas openmp-extras-runtime;  \
+	    cd $ROCM_PATH/lib/rocblas/ ; mkdir keep ; mv library/*"$GPU_ARCH"* keep/.  ; \
+	    rm -rf library ; mv keep library ; \
+	    rm -rf "$ROCM_PATH"/bin  "$ROCM_PATH"/llvm/bin  ; fi\
 	    && echo '*** ls -l CC/bin **' \
 	    && ls -l /opt/install/CC/bin/ || true \
 	    && echo '*** ldd ***'  \
