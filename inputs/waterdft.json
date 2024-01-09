@@ -1,0 +1,19 @@
+{
+  "geometry": {
+    "coordinates": [
+	" O    0.0    0.0    -0.02",
+        " H   -0.74   0.0    -0.76",
+        " H    0.74   0.0    -0.76"
+    ],
+    "units": "angstrom"
+  },
+  "basis": {
+    "basisset": "sto-3g"
+  },
+  "SCF": {
+      "xc_type": ["gga_x_pbe", "gga_c_pbe"]
+  },
+  "TASK": {
+    "scf": true
+  }  
+}
