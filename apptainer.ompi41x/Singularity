@@ -48,6 +48,9 @@ bash -o  pipefail -c "if [[ $(echo $GPU | cut -c 1-3)  == 'amd' ]]; then echo gp
 echo 'ROCM_VERSION='`echo $GPU | cut -c 16-` > rocm_version.txt ;
 echo 'GPU_ARCH='`echo $GPU | cut -c 5-10` > gpu_arch.txt ;
 echo 'GPU=amd ' >  gpu.txt  ; fi"
+bash -o  pipefail -c "if [[ $(echo $GPU | cut -c 1-6)  == 'nvidia' ]]; then echo gpus is nvidia;
+echo 'GPU_ARCH='`echo $GPU | cut -c 8-9` > gpu_arch.txt ;
+echo 'GPU=nvidia ' >  gpu.txt  ; fi"
 export `cat ./gpu.txt`
 export `cat ./rocm_version.txt`
 export `cat ./gpu_arch.txt`
@@ -208,7 +211,7 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 && 	     mkdir build && cd build  \
 &&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/CC -DMODULES='CC;DFT' "  \
 && 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3"  \
-&&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_CUDA=ON -DGPU_ARCH=70" ; fi  \
+&&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}" ; fi  \
 &&              if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \

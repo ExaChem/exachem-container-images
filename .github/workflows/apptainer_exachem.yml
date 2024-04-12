@@ -22,7 +22,8 @@ jobs:
             - MPI-PR
           gpu:
             - cpu
-            - nvidia
+            - nvidia_70
+            - nvidia_80
             - amd_gfx908_rocm5.5.1
             - amd_gfx90a_rocm5.5.1
             - amd_gfx908_rocm6.0
@@ -44,7 +45,7 @@ jobs:
         else
           myversion=""
         fi
-        if [[ ${{ matrix.gpu }} !=  nvidia ]]; then
+        if [[ ${{ matrix.gpu }} !=  nvidia_70 ]]; then
           myversion+=.${{ matrix.gpu }}
         fi
         echo "exachemversion=$myversion" >> $GITHUB_ENV
