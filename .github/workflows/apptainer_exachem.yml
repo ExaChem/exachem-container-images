@@ -24,6 +24,7 @@ jobs:
             - cpu
             - nvidia_70
             - nvidia_80
+            - nvidia_90
             - amd_gfx908_rocm5.5.1
             - amd_gfx90a_rocm5.5.1
             - amd_gfx908_rocm6.0
