@@ -14,6 +14,6 @@ srun --mpi=pmix  \
  --nv \
  --bind /anfhome,/mnt,/etc,/sched,/run \
  oras://ghcr.io/ExaChem/exachem-container-images/apptainer.ompi41x:latest \
- /opt/install/CC/bin/ExaChem \
+ /opt/install/exachem/bin/ExaChem \
  ~/exachem_inputs/ubiquitin_dgrtl.json
  ```

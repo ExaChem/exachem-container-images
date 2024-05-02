@@ -208,14 +208,14 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 && 	     echo TAMM_BRANCH is ${TAMM_BRANCH}   \
 && 	     echo 'cloning tamm source *** ' || true   \
 &&            cd /opt || { echo "Failure"; exit 1; }  \
-&&              git clone -b ${TAMM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git CoupledCluster    \
+&&              git clone -b ${TAMM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git exachem    \
 &&              git clone --depth 100 https://github.com/NWChemEx/TAMM.git   \
 && 	     cd TAMM   \
 && 	     mkdir build && cd build  \
-&&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/CC -DMODULES='CC;DFT' "  \
+&&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC;DFT' "  \
 && 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3"  \
-&&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}" ; fi  \
-&&              if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  \
+&&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}" ; fi  \
+&&              if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
@@ -225,13 +225,13 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 && 	     echo exit code for TAMM compilation $?   \
 &&              make install   \
 && 	     echo exit code for TAMM make install $?   \
-&&              cd /opt/CoupledCluster   \
+&&              cd /opt/exachem   \
 && 	     mkdir build && cd build   \
-&& 	     echo ' === ls -l /opt/install/CC ===' $(ls -l /opt/install/CC)   \
-&& 	     echo ' === ls -l /opt/install/CC/lib ===' $(ls -l /opt/install/CC/lib)   \
-&&	     if [ -f /opt/install/CC/lib/libint2.a ]; then echo 'found libint cache' ; \
-             mkdir -p /opt/CoupledCluster/build/stage/opt || true ; \
-	     rsync -av /opt/install /opt/CoupledCluster/build/stage/opt/. ; fi \
+&& 	     echo ' === ls -l /opt/install/exachem ===' $(ls -l /opt/install/exachem)   \
+&& 	     echo ' === ls -l /opt/install/exachem/lib ===' $(ls -l /opt/install/exachem/lib)   \
+&&	     if [ -f /opt/install/exachem/lib/libint2.a ]; then echo 'found libint cache' ; \
+             mkdir -p /opt/exachem/build/stage/opt || true ; \
+	     rsync -av /opt/install /opt/exachem/build/stage/opt/. ; fi \
 &&             export CMAKE_OPTIONS  \
 &&	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 &&	     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
@@ -239,13 +239,13 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 &&	     echo exit code for compilation $?  \
 &&             make install  \
 &&	     echo exit code for make install $?  \
-&&	     bash -c "if [[ -f /opt/install/CC/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi"  \
+&&	     bash -c "if [[ -f /opt/install/exachem/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi"  \
 &&	     echo git describe --always `git describe --always`  >> /opt/install/info.txt \
 	    && echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt \
             && echo 'clean unnecessary source to reduce docker size' \
-            && rm  -rf /opt/CoupledCluster \
+            && rm  -rf /opt/exachem \
             && rm  -rf /opt/TAMM \
-	    && cd /opt/install/CC/share/libint/2.7.2/basis/ \
+	    && cd /opt/install/exachem/share/libint/2.9.0/basis/ \
 	    && wget -O aug-cc-pvdz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvdz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
 	    && wget -O aug-cc-pvtz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvtz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
 	    && wget -O aug-cc-pvqz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
@@ -269,9 +269,9 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 	    rm -rf library ; mv keep library ; \
 	    rm -rf "$ROCM_PATH"/bin  "$ROCM_PATH"/llvm/bin  ; fi\
 	    && echo '*** ls -l CC/bin **' \
-	    && ls -l /opt/install/CC/bin/ || true \
+	    && ls -l /opt/install/exachem/bin/ || true \
 	    && echo '*** ldd ***'  \
-	    && LD_LIBRARY_PATH=/usr/local/lib:/opt/lib ldd /opt/install/CC/bin/ExaChem || true \
+	    && LD_LIBRARY_PATH=/usr/local/lib:/opt/lib ldd /opt/install/exachem/bin/ExaChem || true \
 && DEBIAN_FRONTEND=noninteractive apt-get clean -y \
 && DEBIAN_FRONTEND=noninteractive apt-get -y install localepurge \
 && echo MANDELETE >  /etc/locale.nopurge \
@@ -285,9 +285,9 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 && echo "dddddddddddd" \
 &&  du -sk /tmp/* || true \
 &&  ls -lart /tmp ||true \
-&& ls -Rlart  /opt/install/CC || true \
-&& ls -lart  /opt/install/CC/include || true \
-&& ls -lart  /opt/install/CC || true 
+&& ls -Rlart  /opt/install/exachem || true \
+&& ls -lart  /opt/install/exachem/include || true \
+&& ls -lart  /opt/install/exachem || true 
 
 #&&  apt-get  -y purge cmake git  gcc-11  g++-11  gfortran-11  libstdc++-11-dev  libgcc-11-dev git \
 #&& apt-get -y install libgcc-s1 libgfortran5 \
@@ -302,9 +302,9 @@ export OMPI_DIR=/opt/ompi
 export SINGULARITY_OMPI_DIR=$OMPI_DIR
 export CUDA_VERSION_MAJOR=11 
 export CUDA_VERSION_MINOR=7
-export PATH=/opt/install/CC/bin:$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:$PATH
+export PATH=/opt/install/exachem/bin:$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:$PATH
 export LD_LIBRARY_PATH=$OMPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:$ROCM_PATH/lib:$LD_LIBRARY_PATH:
-export SINGULARITYENV_APPEND_PATH=/opt/install/CC/bin:$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin
+export SINGULARITYENV_APPEND_PATH=/opt/install/exachem/bin:$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin
 export SINGULARITYENV_APPEND_LD_LIBRARY_PATH=$OMPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:$ROCM_PATH/lib
 export COMEX_MAX_NB_OUTSTANDING=12
 export SINGULARITY_COMEX_MAX_NB_OUTSTANDING=12

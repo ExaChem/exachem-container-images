@@ -145,7 +145,7 @@ jobs:
           docker pull ${{ env.tag }}
           export MYLDPATH=/usr/local/lib:/opt/lib
           docker run -e LD_LIBRARY_PATH="$MYLDPATH" --entrypoint=ldd --rm \
-          ${{ env.tag }} /opt/install/CC/bin/ExaChem
+          ${{ env.tag }} /opt/install/exachem/bin/ExaChem
       - name: store cache
         if: ${{ env.push_truefalse == 'true' }}
         run: |

@@ -33,7 +33,7 @@ ARG mpich=4.0.2
 ARG mpich_prefix=mpich-$mpich
 ARG	    CUDA_VERSION_MAJOR=11 \
 	    CUDA_VERSION_MINOR=7
-ARG	    PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:/opt/install/CC/bin:/usr/local/bin \
+ARG	    PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:/opt/install/exachem/bin:/usr/local/bin \
 	    LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib  
 WORKDIR     /opt
 #ENV CRAYPE_LINK_TYPE=dynamic
@@ -109,17 +109,17 @@ RUN         apt-get -q=2 update \
             && rm -f mpicc.show && /usr/local/bin/mpicc -show >& mpicc.show && echo "mpicc show" `cat mpicc.show` && rm -f mpicc.show \
 	    && echo TAMM_BRANCH is ${TAMM_BRANCH} \
 	    && echo 'cloning tamm source *** ' || true \
-	    && mkdir -p /opt/install/CC/ /opt/cache\
-            && if [[ -f /tmp/libint.tar.bz2 ]]; then cd /opt/install/CC; tar xjvf /tmp/libint.tar.bz2; rm -rf /tmp/libint.tar.bz2 ; export FETCHED_LIBINT=1; fi \
+	    && mkdir -p /opt/install/exachem/ /opt/cache\
+            && if [[ -f /tmp/libint.tar.bz2 ]]; then cd /opt/install/exachem; tar xjvf /tmp/libint.tar.bz2; rm -rf /tmp/libint.tar.bz2 ; export FETCHED_LIBINT=1; fi \
             && cd /opt || { echo "Failure"; exit 1; } \
-            && git clone -b ${TAMM_BRANCH} --depth 20  https://github.com/ExaChem/exachem.git CoupledCluster  \
-            && cd CoupledCluster \
+            && git clone -b ${TAMM_BRANCH} --depth 20  https://github.com/ExaChem/exachem.git exachem  \
+            && cd exachem \
 	    && mkdir build && cd build \
 	    && echo " USE_SYSV is " $USE_SYSV \
 	    && echo " USE_CPU is " $USE_CPU \
-            && CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/CC -DMODULES=CC  -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3 " \
+            && CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES=CC  -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3 " \
             && if [[ $USE_SYSV == Y ]]; then echo "sysv enabled"; CMAKE_OPTIONS+="-DGA_ENABLE_SYSV=ON "; fi \
-            && if [[ $USE_CPU == N ]]; then echo "gpu code"; CMAKE_OPTIONS+="-DUSE_CUDA=ON -DGPU_ARCH=80" ; else echo "cpu code" ;fi \
+            && if [[ $USE_CPU == N ]]; then echo "gpu code"; CMAKE_OPTIONS+="-DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=80" ; else echo "cpu code" ;fi \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
@@ -130,11 +130,11 @@ RUN         apt-get -q=2 update \
 	    && echo git describe --always `git describe --always`  >> /opt/install/info.txt \
 	    && echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt \
 	    && echo 'caching libint' \
-	    && cd /opt/install/CC/ \
+	    && cd /opt/install/exachem/ \
 	    && if [[ $FETCHED_LIBINT == 1 ]]; then rm -f /opt/cache/libint.tar.bz2 || true; else tar cjvf /opt/cache/libint.tar.bz2 ./include/libint* ./share/libint* ./lib/pkgconfig/libint*.pc ./lib/cmake/libint* ./lib/libint*  || true ; fi  \
             && echo 'clean unnecessary source to reduce docker size' \
-            && cd /opt && rm  -rf CoupledCluster \
-	    && cd /opt/install/CC/share/libint/2.7.2/basis/ \
+            && cd /opt && rm -rf exachem \
+	    && cd /opt/install/exachem/share/libint/2.9.0/basis/ \
 	    && wget --progress=dot:giga -O aug-cc-pvdz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvdz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
 	    && wget --progress=dot:giga -O aug-cc-pvtz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvtz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
 	    && wget --progress=dot:giga -O aug-cc-pvqz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
@@ -150,14 +150,14 @@ RUN         apt-get -q=2 update \
             && apt-get -q=2 -y install libgfortran5 libgomp1 && apt-get clean \
 	    && apt-get purge -y cuda-cccl-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" \
 	    && echo '*** ls -l CC/bin **' \
-	    && ls -l /opt/install/CC/bin/ || true \
+	    && ls -l /opt/install/exachem/bin/ || true \
 	    && echo '*** ldd ***'  \
-	    && LD_LIBRARY_PATH=/usr/local/lib:/opt/lib ldd /opt/install/CC/bin/ExaChem || true \
+	    && LD_LIBRARY_PATH=/usr/local/lib:/opt/lib ldd /opt/install/exachem/bin/ExaChem || true \
 	    && dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
 ENV	    CUDA_VERSION_MAJOR=11 
 ENV	    CUDA_VERSION_MINOR=7
 ENV	    LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/opt/lib \
-	    PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:/opt/install/CC/bin:/usr/local/bin
+	    PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:/opt/install/exachem/bin:/usr/local/bin
 
 #clean unnecessary packages
 #RUN         apt-get -y remove  make  unzip cmake   &&  apt-get -y autoremove && apt-get clean
