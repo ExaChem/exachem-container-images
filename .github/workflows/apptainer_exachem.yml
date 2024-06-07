@@ -20,6 +20,8 @@ jobs:
             - main
           armci_network:
             - MPI-PR
+          elpa:
+            - N
           gpu:
             - cpu
             - nvidia_70
@@ -31,6 +33,22 @@ jobs:
             - amd_gfx90a_rocm6.0
             - amd_gfx908_rocm5.7.3
             - amd_gfx90a_rocm5.7.3
+          include:
+            - gpu: nvidia_70
+              armci_network: MPI-PR
+              folder: apptainer.ompi41x
+              branch: main
+              elpa: Y
+            - gpu: nvidia_80
+              armci_network: MPI-PR
+              folder: apptainer.ompi41x
+              branch: main
+              elpa: Y
+            - gpu: nvidia_90
+              armci_network: MPI-PR
+              folder: apptainer.ompi41x
+              branch: main
+              elpa: Y
     steps:
     - name: Get Instruction
       id: get-simd
@@ -54,9 +72,12 @@ jobs:
           net_tag=$(echo ${{ matrix.armci_network }} | tr '[:upper:]' '[:lower:]')
           echo "armci_network="${net_tag}"." >> $GITHUB_ENV
         fi
+        if [[ ${{ matrix.elpa }} ==  Y ]]; then
+          echo "elpa="elpa"." >> $GITHUB_ENV
+        fi
     - name: tag
       run: |
-        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}.${{ env.armci_network}}ompi41x" >> $GITHUB_ENV
+        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}.${{ env.armci_network}}${{ env.elpa}}ompi41x" >> $GITHUB_ENV
     - name: echo-tag
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'
@@ -124,7 +145,7 @@ jobs:
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        MYUSERNAME=${{ github.actor}} BRANCH=${{ matrix.branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
+        MYUSERNAME=${{ github.actor}} BRANCH=${{ matrix.branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}} ELPA=${{ matrix.elpa}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |
