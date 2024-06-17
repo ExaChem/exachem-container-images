@@ -12,7 +12,7 @@ LABEL org.opencontainers.image.licenses "Apache-2.0"
 
 #create user exachem
 RUN           groupadd -r exachem -g 1994 \
-              && useradd  -u 1994 -r -g exachem -c 'Exachem user' -m -d /opt/exachem -s /bin/bash exachem 
+              && useradd  -u 1994 -r -g exachem -c 'Exachem user' -m -d /opt/install/exachem -s /bin/bash exachem 
 
 #caching from host cache dir
 COPY Dockerfile cache* /tmp/
