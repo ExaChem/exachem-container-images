@@ -22,6 +22,8 @@ jobs:
             - MPI-PR
           elpa:
             - Y
+          FC:
+            - gfortran
           gpu:
             - cpu
             - amd_gfx90a_rocm6.0
