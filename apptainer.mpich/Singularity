@@ -76,7 +76,7 @@ echo ROCM_PATH is ${ROCM_PATH}
 echo ARMCI_NETWORK is $ARMCI_NETWORK
 echo MPI_IMPL is $MPI_IMPL
 echo TAMM_BRANCH is $TAMM_BRANCH
- if [ "$GPU" = "amd" ]; then export FC=gfortran ; export CC=amdclang; export CXX=amdclang++; \
+ if [ "$GPU" = "amd" ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
  else export FC=gfortran ; export CC=gcc; export CXX=g++; fi \
 && echo 'FC is' "$FC"  \
 && echo ' CC is ' "$CC" \
@@ -138,7 +138,16 @@ echo TAMM_BRANCH is $TAMM_BRANCH
 && bash -o pipefail -c "if [[ ! -f /opt/mpich/lib/libmpi.a ]]; then  \
 $FC -v \
 && wget  --progress=dot:giga https://www.mpich.org/static/downloads/$MPICH/mpich-'$MPICH'.tar.gz  -O - | tar xzf -   \
-&& cd $mpich_prefix                                                        \
+&& cd $mpich_prefix     \
+&& mv autogen.sh autogen.sh.org \
+&& wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/autogen.sh \
+&& chmod +x autogen.sh \
+&& chmod +x install-autotools.sh \
+&& wget https://github.com/pmodels/mpich/commit/3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch \
+&& patch -p1 < 3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch \
+&& wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/flang.patch \
+&& mv flang.patch ./maint/patches/optional/confdb/flang.patch\ 
+&& sh ./autogen.sh \
 && ./configure  --prefix=$MPICH_DIR   \
 $mpich_options \
 --with-device=ch4:ofi  \
