@@ -26,7 +26,7 @@ jobs:
             - cpu
             - amd_gfx90a_rocm6.0
             - amd_gfx90a_rocm5.7.1
-            - amd_gfx90a_rocm5.6.0
+            - amd_gfx90a_rocm5.6
             - amd_gfx90a_rocm5.5.1
     steps:
     - name: Get Instruction

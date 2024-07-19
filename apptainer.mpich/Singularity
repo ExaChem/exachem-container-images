@@ -127,32 +127,26 @@ echo TAMM_BRANCH is $TAMM_BRANCH
 && ls -lrt /opt \
 && ls -lrt  /opt/rocm* || true \
 && wget --quiet https://download.amd.com/developer/eula/blis/blis-4-1/aocl-blis-linux-aocc-4.1.0.tar.gz -O - | tar xzf - -C /opt ; fi "  \
-&& export kernelv=$(dpkg-query -W linux-headers-generic|cut -f2 ) \
-&& echo kernelv is $kernelv \
-&& export k1=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d '.' -f 1)\
-&& export k2=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d '.' -f 2)\
-&& export k3=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d '.' -f 3)\
-&& export k4=$(dpkg-query -W linux-headers-generic|cut -f2 | cut -d '.' -f 4)\
-&&  export ktag=$k1.$k2.$k3-$k4-generic \
-&& echo ktag is $ktag \
-&& ls /lib/modules/$ktag  || true \
 && echo 'FC -v ' `$FC -v`  \
 && echo 'CC -v ' `$CC -v`  \
 && echo 'CXX -v ' `$CXX -v` || { echo "CXX not installed"; exit  1; } \
 && apt-get clean  \
 && echo 'ls -l /opt/mpich/lib/libmpi.a' $(ls -l /opt/mpich/lib/libmpi.a) || true  \
+&& if [ $FC = gfortran ]; then export mpich_options=" FFLAGS=-fallow-argument-mismatch  FCFLAGS=-fallow-argument-mismatch " ; fi  \
+&& echo FC is $FC \
+&& echo mpich_options is $mpich_options \
 && bash -o pipefail -c "if [[ ! -f /opt/mpich/lib/libmpi.a ]]; then  \
 $FC -v \
 && wget  --progress=dot:giga https://www.mpich.org/static/downloads/$MPICH/mpich-'$MPICH'.tar.gz  -O - | tar xzf -   \
-&& cd $mpich_prefix                                                        && \
-./configure  --prefix=$MPICH_DIR   \
+&& cd $mpich_prefix                                                        \
+&& wget --progress=dot:giga https://github.com/pmodels/mpich/commit/3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch \
+&&  patch -p1 < 3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch \
+&& ./configure  --prefix=$MPICH_DIR   \
 $mpich_options \
 --with-device=ch4:ofi  \
 --enable-fortran=all \
 --disable-opencl --enable-silent-rules \
 --disable-cuda \
- FFLAGS=' -fallow-argument-mismatch ' \
- FCFLAGS=' -fallow-argument-mismatch ' \
   FC=$FC \
 && head config.log \
 && tail -300 config.log \
