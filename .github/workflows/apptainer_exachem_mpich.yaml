@@ -1,0 +1,181 @@
+name: exachem_apptainer_mpich
+
+on:
+  schedule:
+    - cron: '0 0 * * SUN'
+  repository_dispatch:
+    types: [backend_automation]
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build_image:
+    runs-on: ubuntu-22.04
+    strategy:
+        fail-fast: false
+        matrix:
+          folder:
+            - apptainer.mpich
+          branch:
+            - main
+          armci_network:
+            - MPI-PR
+          elpa:
+            - Y
+          gpu:
+            - cpu
+            - amd_gfx90a_rocm6.0
+            - amd_gfx90a_rocm5.7.1
+            - amd_gfx90a_rocm5.6.0
+            - amd_gfx90a_rocm5.5.1
+    steps:
+    - name: Get Instruction
+      id: get-simd
+      run: |
+        /usr/bin/lscpu
+        curl -LJO https://raw.githubusercontent.com/nwchemgit/nwchem/master/travis/guess_simd.sh
+        chmod +x guess_simd.sh
+        echo "simd=$(./guess_simd.sh)" >> $GITHUB_ENV
+    - name: exachem version tag
+      run: |
+        if [[ ${{ matrix.branch }} !=  main ]]; then
+          myversion=-${{ matrix.branch }}
+        else
+          myversion=""
+        fi
+        if [[ ${{ matrix.gpu }} !=  nvidia_70 ]]; then
+          myversion+=.${{ matrix.gpu }}
+        fi
+        echo "exachemversion=$myversion" >> $GITHUB_ENV
+        if [[ ${{ matrix.armci_network }} !=  MPI-PR ]]; then
+          net_tag=$(echo ${{ matrix.armci_network }} | tr '[:upper:]' '[:lower:]')
+          echo "armci_network="${net_tag}"." >> $GITHUB_ENV
+        fi
+        if [[ ${{ matrix.elpa }} ==  Y ]]; then
+          echo "elpa="elpa"." >> $GITHUB_ENV
+        fi
+    - name: tag
+      run: |
+        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}.${{ env.armci_network}}${{ env.elpa}}mpich" >> $GITHUB_ENV
+    - name: echo-tag
+      run: |
+        echo ' the apptainer tag is ' '${{ env.tag }}'
+    - name: Checkout image source
+      uses: actions/checkout@v4
+      with:
+        clean: false
+    - name: pkg cleanup
+      run: |
+        df -h
+        if [[ $(uname -s) == "Linux" ]]; then
+        ubuntu_ver=$(cat /etc/os-release | grep VERSION_ID |cut -d \" -f 2)
+        dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n
+        sudo apt-get purge -y azure-cli || true
+        sudo apt-get purge -y google-cloud-cli microsoft-edge-stable dotnet-sdk-7.0 dotnet-sdk-6.0 google-chrome-stable firefox
+        sudo apt-get purge -y temurin-17-jdk temurin-11-jdk temurin-8-jdk
+        if [[ $ubuntu_ver == "20.04" ]]; then
+        sudo apt-get purge -y llvm-12-dev llvm-11-dev llvm-10-dev
+        sudo apt-get purge -y hhvm
+        sudo apt-get purge -y libgl1-mesa-dri
+        fi
+        if [[ $ubuntu_ver == "22.04" ]]; then
+        sudo apt-get purge -y llvm-13-dev llvm-14-dev llvm-15-dev
+        fi
+        sudo apt-get -y clean
+        sudo apt-get autoremove -y 
+        dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n
+        df -h
+        fi
+      shell: bash
+    - name: Setup cache
+      id: setup-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/cache
+        key: ${{ matrix.folder}}-${{ env.exachemversion}}-exachemcache-v001
+    - name: fetch cache
+      if: steps.setup-cache.outputs.cache-hit == 'true'
+      run: |
+        ls -lart ~/cache
+        if [[ -f ~/cache/mpich/lib/libmpi.a ]]; then \
+        echo "mpich cache present" ; \
+        fi
+        if [[ -f ~/cache/libint.tar.bz2 ]]; then \
+        echo "libint cache present" ; \
+        fi
+    - name: Install apptainer
+      env:
+        APP_VER: 1.2.3
+      run: |
+        sudo apt-get install -y  libfuse2 libseccomp2 zlib1g uidmap squashfs-tools squashfuse fuse2fs fuse-overlayfs fakeroot
+        wget -q  https://github.com/apptainer/apptainer/releases/download/v${APP_VER}/apptainer_${APP_VER}_amd64.deb 
+        sudo dpkg -i apptainer_${APP_VER}_amd64.deb
+        which apptainer
+        apptainer version
+    - name: Checkout exachem source
+      uses: actions/checkout@v4
+      with:
+        repository: Exachem/exachem
+        ref: ${{ matrix.branch}}
+        clean: false
+        fetch-depth: 0
+        path: exachem
+    - name: build an apptainer container
+      run: |
+        cd ${{ matrix.folder }}
+        MYUSERNAME=${{ github.actor}} BRANCH=${{ matrix.branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}} ELPA=${{ matrix.elpa}} MPI_IMPL=mpich MPICH=3.4.2  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
+    - name: builddate
+      id: build-date
+      run: |
+        echo "date=$(TZ=America/Los_Angeles date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
+    - name: push to ghcr.io
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${{ github.actor }} --password-stdin oras://ghcr.io
+        apptainer remote list
+        exit_code=0
+        apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:${{ env.date }} || exit_code=$?
+        apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:latest|| exit_code+=$?
+        if [[ $exit_code == 0 ]]; then
+        echo "push_truefalse=true" >> $GITHUB_ENV
+        else
+        echo "push_truefalse=false" >> $GITHUB_ENV
+        fi
+    - name: store cache
+      if: ${{ env.push_truefalse == 'true' }}
+      run: |
+        mkdir -p ~/cache || true
+        cd ${{ matrix.folder }}
+        apptainer exec ${{ matrix.folder }}.simg cp -r /opt/mpich ~/cache
+        apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem/include || true
+        apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem || true
+        apptainer exec ${{ matrix.folder }}.simg tar cjf ~/cache/libint.tar.bz2 /opt/install/exachem/include/libint2/  /opt/install/exachem/include/libint2.hpp /opt/install/exachem/include/libint2.h  /opt/install/exachem/share/libint /opt/install/exachem/lib/cmake/libint2 /opt/install/exachem/lib/libint2.a  /opt/install/exachem/lib/pkgconfig/libint2.pc
+        echo "cache stored"
+        ls -l ~/cache
+    - name: ldd check
+      if: ${{ env.push_truefalse == 'true' }}
+      run: |
+        pwd
+        ls -la
+        apptainer pull -F ${{ env.tag }}:${{ env.date }}
+        export UCX_TLS=tcp,self
+        export UCX_POSIX_USE_PROC_LINK=n
+        export MPIRUN_NPOPT="-x UCX_POSIX_USE_PROC_LINK=n -x UCX_TLS=tcp,self -n"
+        sudo apt-get install -y openmpi-bin openmpi-common libopenmpi-dev
+        which mpirun
+        ldd `which mpirun`
+        apptainer exec ${{ env.tag }}:latest ldd /opt/install/exachem/bin/ExaChem
+    - name: test cpu image with apptainer
+      if: ${{ (env.push_truefalse == 'true') && (matrix.gpu == 'cpu') }}
+      run: |
+        pwd
+        ls -la
+        apptainer pull -F ${{ env.tag }}:${{ env.date }}
+        export UCX_TLS=tcp,self
+        export UCX_POSIX_USE_PROC_LINK=n
+        sudo apt-get install -y openmpi-bin openmpi-common libopenmpi-dev
+        which mpirun
+        ldd `which mpirun`
+        mpirun -np 2 apptainer exec ${{ env.tag }}:${{ env.date }} \
+        /opt/install/exachem/bin/ExaChem \
+        inputs/waterdft.json
