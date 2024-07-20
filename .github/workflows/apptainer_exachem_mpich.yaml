@@ -22,8 +22,6 @@ jobs:
             - MPI-PR
           elpa:
             - Y
-          FC:
-            - gfortran
           gpu:
             - cpu
             - amd_gfx90a_rocm6.0
@@ -160,10 +158,7 @@ jobs:
         pwd
         ls -la
         apptainer pull -F ${{ env.tag }}:${{ env.date }}
-        export UCX_TLS=tcp,self
-        export UCX_POSIX_USE_PROC_LINK=n
-        export MPIRUN_NPOPT="-x UCX_POSIX_USE_PROC_LINK=n -x UCX_TLS=tcp,self -n"
-        sudo apt-get install -y openmpi-bin openmpi-common libopenmpi-dev
+        sudo apt-get install -y libmpich-dev mpich
         which mpirun
         ldd `which mpirun`
         apptainer exec ${{ env.tag }}:latest ldd /opt/install/exachem/bin/ExaChem
@@ -173,9 +168,6 @@ jobs:
         pwd
         ls -la
         apptainer pull -F ${{ env.tag }}:${{ env.date }}
-        export UCX_TLS=tcp,self
-        export UCX_POSIX_USE_PROC_LINK=n
-        sudo apt-get install -y openmpi-bin openmpi-common libopenmpi-dev
         which mpirun
         ldd `which mpirun`
         mpirun -np 2 apptainer exec ${{ env.tag }}:${{ env.date }} \
