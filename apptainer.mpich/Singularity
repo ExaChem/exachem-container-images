@@ -13,8 +13,6 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 #    ls -l ${SINGULARITY_ROOTFS}
     rm -f ${SINGULARITY_ROOTFS}/*.txt || true
     bash -c "if [[ -z '${GPU}' ]]; then echo 'GPU=nvidia ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; else echo 'GPU is ${GPU}'; echo 'GPU=${GPU} ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; fi"
-    bash -c "echo 'ELPA is ${ELPA}'; echo 'ELPA=${ELPA} ' >> ${SINGULARITY_ROOTFS}/elpa.txt "
-    cat ${SINGULARITY_ROOTFS}/elpa.txt
     bash -c "if [[ -z '${ARMCI_NETWORK}' ]]; then echo 'ARMCI_NETWORK=MPI-PR ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; else echo 'ARMCI_NETWORK is ${ARMCI_NETWORK}'; echo 'ARMCI_NETWORK=${ARMCI_NETWORK} ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; fi"
     bash -c "if [[ -z '${MPI_IMPL}' ]]; then echo 'MPI_IMPL=mpich ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; else echo 'MPI_IMPL is ${MPI_IMPL}'; echo 'MPI_IMPL=${MPI_IMPL} ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; fi"
     bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/branch.txt ; fi"
@@ -42,7 +40,6 @@ export MPICH_DIR=/opt/mpich
 export SINGULARITY_mpich=$mpich
 export SINGULARITY_mpich_prefix=mpich-$mpich
 export `cat ./gpu.txt`
-export `cat ./elpa.txt`
 bash -o  pipefail -c "if [[ $(echo $GPU | cut -c 1-3)  == 'amd' ]]; then echo gpus is amd;
 echo 'ROCM_VERSION='`echo $GPU | cut -c 16-` > rocm_version.txt ;
 echo 'GPU_ARCH='`echo $GPU | cut -c 5-10` > gpu_arch.txt ;
@@ -187,7 +184,8 @@ $FC -v \
 && 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3"  \
 &&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}" ; fi  \
 &&              if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  \
-&&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_SCALAPACK=ON -DTAMM_ENABLE_ELPA=ON "   \
+&&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_SCALAPACK=ON "   \
+&&              if [ ${CC} = "gcc*" ]; then CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_ELPA=ON " ; fi  \
 &&              if [ ${CC} = "amdclang" ]; then echo "scalapack workaround for clang "; CMAKE_OPTIONS="$CMAKE_OPTIONS  -DCMAKE_C_FLAGS_INIT='-Wno-error=implicit-function-declaration' 	" ; fi  \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
