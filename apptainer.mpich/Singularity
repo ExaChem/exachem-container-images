@@ -103,6 +103,7 @@ echo TAMM_BRANCH is $TAMM_BRANCH
  librdmacm-dev librdmacm1 rdma-core libibverbs-dev  ibverbs-providers \
  libhwloc-dev   \
  pkg-config gawk  software-properties-common  \
+&& add-apt-repository -y ppa:ubuntu-toolchain-r/test && apt-get update \
             && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION" libgfortran-"$GCC_VERSION"-dev  make ssh patch curl rsync wget git file  bzip2 tar gnupg2 cmake \
 && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 100 \
 && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 100 \
