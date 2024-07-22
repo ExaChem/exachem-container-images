@@ -18,10 +18,10 @@ jobs:
             - apptainer.mpich
           branch:
             - main
+          mpich:
+            - 3.4.2
           armci_network:
             - MPI-PR
-          elpa:
-            - Y
           gpu:
             - cpu
             - amd_gfx90a_rocm6.0
@@ -38,11 +38,7 @@ jobs:
         echo "simd=$(./guess_simd.sh)" >> $GITHUB_ENV
     - name: exachem version tag
       run: |
-        if [[ ${{ matrix.branch }} !=  main ]]; then
-          myversion=-${{ matrix.branch }}
-        else
-          myversion=""
-        fi
+        myversion=-${{ matrix.branch }}
         if [[ ${{ matrix.gpu }} !=  nvidia_70 ]]; then
           myversion+=.${{ matrix.gpu }}
         fi
@@ -51,12 +47,9 @@ jobs:
           net_tag=$(echo ${{ matrix.armci_network }} | tr '[:upper:]' '[:lower:]')
           echo "armci_network="${net_tag}"." >> $GITHUB_ENV
         fi
-        if [[ ${{ matrix.elpa }} ==  Y ]]; then
-          echo "elpa="elpa"." >> $GITHUB_ENV
-        fi
     - name: tag
       run: |
-        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}.${{ env.armci_network}}${{ env.elpa}}mpich" >> $GITHUB_ENV
+        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}.${{ env.armci_network}}" >> $GITHUB_ENV
     - name: echo-tag
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'
@@ -124,7 +117,7 @@ jobs:
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        MYUSERNAME=${{ github.actor}} BRANCH=${{ matrix.branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}} ELPA=${{ matrix.elpa}} MPI_IMPL=mpich MPICH=3.4.2  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
+        MYUSERNAME=${{ github.actor}} BRANCH=${{ matrix.branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}}  MPI_IMPL=mpich MPICH=3.4.2  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |
