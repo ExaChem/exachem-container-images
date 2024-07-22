@@ -82,12 +82,15 @@ echo TAMM_BRANCH is $TAMM_BRANCH
 && cd / \
 && pwd \
 && apt-get -y update \
-&& apt-get -y install -y tzdata git moreutils  wget rsync  sudo ca-certificates \
+&& apt-get -y install -y tzdata git moreutils  wget rsync  sudo ca-certificates  \
 && wget https://github.com/moparisthebest/static-curl/releases/download/v8.1.2/curl-amd64 -O /usr/bin/curl \
 && chmod +x /usr/bin/curl \
 && echo ca_certificate=/etc/ssl/certs/ca-certificates.crt >  ~/.wgetrc \
 && echo        "cacert=/etc/ssl/certs/ca-certificates.crt" >> ~/.curlrc \
-&& apt-get -y install -y  gfortran \
+&& export CMAKE_VER=3.29.5 \
+&& curl -LJO https://github.com/Kitware/CMake/releases/download/v"$CMAKE_VER"/cmake-"$CMAKE_VER"-linux-x86_64.tar.gz && tar xzf cmake-"$CMAKE_VER"-linux-x86_64.tar.gz \
+&& export PATH=/cmake-"$CMAKE_VER"-linux-x86_64/bin:$PATH \
+&& cmake --version \
 && pwd \
 && echo '@@ ls -lart ' \
 && ls -lart  \
@@ -97,14 +100,18 @@ echo TAMM_BRANCH is $TAMM_BRANCH
 && pwd \
 && echo pwd $(pwd) \
 && apt-get -y install -y coreutils  tar libnl-3-200 libnl-route-3-200 libgomp1 libnuma1 \
- g++ gfortran   make ssh patch   unzip perl-base file \
- python3 python3-dev cmake  unzip zip perl automake libtool autoconf flex  \
+ g++ gfortran   make  patch   unzip perl-base file \
+ python3 python3-dev   unzip zip perl automake libtool autoconf flex  \
  libnuma-dev libslurm-dev libpmi2-0-dev libpmi0-dev  libnl-3-dev libnl-route-3-dev udev \
  librdmacm-dev librdmacm1 rdma-core libibverbs-dev  ibverbs-providers \
- libhwloc-dev   \
+ libhwloc-dev  lsb-release \
  pkg-config gawk  software-properties-common  \
+&& export UBUNTU_CODE=$(lsb_release -c |cut -d : -f 2 | sed 's/\t//') \
+&& echo UBUNTU_CODE is $UBUNTU_CODE \
+&& export UBUNTU_RELEASE=$(lsb_release -r |cut -d : -f 2 | sed 's/\t//') \
+&& echo UBUNTU_RELEASE is $UBUNTU_RELEASE \
 && add-apt-repository -y ppa:ubuntu-toolchain-r/test && apt-get update \
-            && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION" libgfortran-"$GCC_VERSION"-dev  make ssh patch curl rsync wget git file  bzip2 tar gnupg2 cmake \
+            && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION" libgfortran-"$GCC_VERSION"-dev  make patch curl rsync wget git file  bzip2 tar gnupg2  \
 && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 100 \
 && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 100 \
 && update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-"$GCC_VERSION" 100 \
@@ -117,14 +124,13 @@ echo TAMM_BRANCH is $TAMM_BRANCH
  && mv cuda-*.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
  && apt-get  update \
 && apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-cudart-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} libcublas-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} ; fi " \
-&& bash -o  pipefail -c "if [[ $GPU == "amd" ]]; then mkdir --parents --mode=0755 /etc/apt/keyrings \
+&& if [ $GPU = "amd" ]; then mkdir --parents --mode=0755 /etc/apt/keyrings \
 && wget --quiet https://repo.radeon.com/rocm/rocm.gpg.key -O - |  gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null \
-&& echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${ROCM_VERSION} focal main' | tee --append /etc/apt/sources.list.d/rocm.list \
-&& echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' |  tee /etc/apt/preferences.d/rocm-pin-600 \
+&& echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/'$ROCM_VERSION $UBUNTU_CODE 'main' | tee --append /etc/apt/sources.list.d/rocm.list \
 && apt-get  update -y &&  apt-get -y install hip-dev hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras \
 && ls -lrt /opt \
 && ls -lrt  /opt/rocm* || true \
-&& wget --quiet https://download.amd.com/developer/eula/blis/blis-4-1/aocl-blis-linux-aocc-4.1.0.tar.gz -O - | tar xzf - -C /opt ; fi "  \
+&& wget --quiet https://download.amd.com/developer/eula/blis/blis-4-1/aocl-blis-linux-aocc-4.1.0.tar.gz -O - | tar xzf - -C /opt ; fi   \
 && echo 'FC -v ' `$FC -v`  \
 && echo 'CC -v ' `$CC -v`  \
 && echo 'CXX -v ' `$CXX -v` || { echo "CXX not installed"; exit  1; } \
@@ -231,7 +237,7 @@ $FC -v \
             &&  apt-get -q=2 -y purge   patch curl  wget  make git cpp-"$GCC_VERSION" gfortran-"$GCC_VERSION" gcc-"$GCC_VERSION" libicu-dev libpython"$PY_VERSION"-dev libstdc++-"$GCC_VERSION"-dev libc6-dev libgcc-"$GCC_VERSION"-dev libgfortran-"$GCC_VERSION"-dev  || true \
             && apt-get -q=2 -y install libgfortran5 libgomp1 && apt-get clean \
 	    && if [ "$GPU" = nvidia ]; then apt-get purge -y cuda-cccl-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" ; fi\
-	    && if [ "$GPU" = "amd" ]; then  apt-get  purge -y  cmake git-man openmp-extras \
+	    && if [ "$GPU" = "amd" ]; then  apt-get  purge -y   git-man openmp-extras \
 	    lib32gcc-11-dev  libc6-dev-i386 libx32gcc-11-dev libc6-dev-x32 lib32gcc-11-dev  \
 	    lib32asan6 lib32atomic1 lib32gcc-s1 lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++6 lib32ubsan1 libc6-i386 \
 	    libc6-x32 libx32asan6 libx32atomic1 libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0 libx32stdc++6 libx32ubsan1 \
@@ -261,7 +267,7 @@ $FC -v \
 && ls -lart  /opt/install/exachem/include || true \
 && ls -lart  /opt/install/exachem || true 
 
-#&&  apt-get  -y purge cmake git  gcc-11  g++-11  gfortran-11  libstdc++-11-dev  libgcc-11-dev git \
+#&&  apt-get  -y purge  git  gcc-11  g++-11  gfortran-11  libstdc++-11-dev  libgcc-11-dev git \
 #&& apt-get -y install libgcc-s1 libgfortran5 \
 #&& apt-get -y autoremove && apt-get clean
 
