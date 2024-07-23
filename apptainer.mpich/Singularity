@@ -245,6 +245,7 @@ $FC -v \
 	    apt-get install -y hip-runtime-amd rocblas openmp-extras-runtime;  \
 	    cd $ROCM_PATH/lib/rocblas/ ; mkdir keep ; mv library/*"$GPU_ARCH"* keep/.  ; \
 	    rm -rf library ; mv keep library ; \
+	    ln -sf "$ROCM_PATH"/ /opt/rocm ;\
 	    rm -rf   "$ROCM_PATH"/llvm/bin  ; fi\
 	    && echo '*** ls -l CC/bin **' \
 	    && ls -l /opt/install/exachem/bin/ || true \
