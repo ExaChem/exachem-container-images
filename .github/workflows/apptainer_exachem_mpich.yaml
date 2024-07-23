@@ -166,3 +166,4 @@ jobs:
         mpirun -np 2 apptainer exec ${{ env.tag }}:${{ env.date }} \
         /opt/install/exachem/bin/ExaChem \
         inputs/waterdft.json
+        echo exit code is $?
