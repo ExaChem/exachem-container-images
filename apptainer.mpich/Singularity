@@ -8,8 +8,7 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
     echo "$(readlink /proc/$$/exe) is the shell in use"
     env|egrep SHELL
     ls -la  ${GITHUB_WORKSPACE}
-    export CACHEDIR=${GITHUB_WORKSPACE}/../../../cache
-#    export CACHEDIR=$(pwd)/cache
+    if [ -f ${GITHUB_WORKSPACE}/../../../cache ]; then export CACHEDIR=${GITHUB_WORKSPACE}/../../../cache; else  export CACHEDIR=$(pwd)/cache; fi
 #    echo '@@@ ls -l $SINGULARITY_ROOTFS'
 #    ls -l ${SINGULARITY_ROOTFS}
     rm -f ${SINGULARITY_ROOTFS}/*.txt || true
@@ -180,6 +179,9 @@ $FC -v \
 && if [ $(command -v mpicc) ]; then echo mpicc present; else echo mpicc missing; exit 1; fi  \
 && echo "which mpicc is" $(which mpicc)  \
 && echo "mpicc -show is " $(mpicc -show)  || { tail -700 $mpich_prefix/config.log ;echo "mpi compilation failed"; exit 1; } \
+&& wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.xz && tar -xf autoconf-2.71.tar.xz \
+&& cd autoconf-2.71/ && ./configure --prefix=/usr && make -j3 && make -j3 install \
+&& echo autoconf $(autoconf --version) \
 && echo ARMCI_NETWORK is $ARMCI_NETWORK  \
 && 	     echo TAMM_BRANCH is ${TAMM_BRANCH}   \
 && 	     echo 'cloning tamm source *** ' || true   \
@@ -195,7 +197,7 @@ $FC -v \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_SCALAPACK=ON "   \
 &&              if [ ${CC} = "gcc" ]; then CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_ELPA=ON " ; fi  \
 &&              if [ ${CC} = "amdclang" ]; then echo "scalapack workaround for clang "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_SCALAPACK=ON -DCMAKE_C_FLAGS_INIT='-Wno-error=implicit-function-declaration' 	" ; fi  \
-&&              echo "disable HDF5 for Cray Lustre error "; CMAKE_OPTIONS="$CMAKE_OPTIONS  -DTAMM_ENABLE_HDF5=OFF 	"  \
+&&              echo "disable HDF5 for Cray Lustre error "; CMAKE_OPTIONS="$CMAKE_OPTIONS  -DUSE_HDF5=OFF 	"  \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     USE_SCALAPACK=ON CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
@@ -284,8 +286,10 @@ export SINGULARITY_MPICH_DIR=$MPICH_DIR
 export CUDA_VERSION_MAJOR=11 
 export CUDA_VERSION_MINOR=7
 if [ -f /rocm_version.txt ]; then echo 'found rocm_version.txt' ; export `cat /rocm_version.txt` ; fi
-export PATH=/opt/rocm/bin:$PATH ; export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH; fi
-export PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:$PATH ; export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:$ROCM_PATH/lib:$LD_LIBRARY_PATH: ; fi
+export PATH=/opt/rocm/bin:$PATH
+export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
+export PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:$ROCM_PATH/lib:$LD_LIBRARY_PATH: ; fi
 
 export PATH=/opt/install/exachem/bin:$MPICH_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$MPICH_DIR/lib:/usr/local/lib:$LD_LIBRARY_PATHs
