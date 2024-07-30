@@ -32,7 +32,7 @@ MAKE_JNUM=4
 M4_VERSION=1.4.19
 LIBTOOL_VERSION=2.4.4
 AUTOCONF_VERSION=2.69
-AUTOMAKE_VERSION=1.16
+AUTOMAKE_VERSION=1.15
 
 # check whether we can reach ftp.gnu.org
 TIMEOUT=timeout
@@ -89,7 +89,7 @@ FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
 URL=http://ftp.gnu.org/gnu/${TOOL}/${FILE}
 if [ "x$FTP_OK" = "xno" ] ; then
-    URL=https://github.com/GlobalArrays/autotools/blob/master/${FILE}?raw=true
+    URL=https://github.com/edoapra/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
 fi
 if [ -f ${FILE} ] ; then
     echo ${FILE} already exists! Using existing copy.
@@ -130,7 +130,7 @@ FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
 URL=http://ftp.gnu.org/gnu/${TOOL}/${FILE}
 if [ "x$FTP_OK" = "xno" ] ; then
-    URL=https://github.com/GlobalArrays/autotools/blob/master/${FILE}?raw=true
+    URL=https://github.com/edoapra/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
 fi
 if [ ! -f ${FILE} ] ; then
     ${download} ${FILE} ${URL}
@@ -185,7 +185,7 @@ FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
 URL=http://ftp.gnu.org/gnu/${TOOL}/${FILE}
 if [ "x$FTP_OK" = "xno" ] ; then
-    URL=https://github.com/GlobalArrays/autotools/blob/master/${FILE}?raw=true
+    URL=https://github.com/edoapra/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
 fi
 if [ ! -f ${FILE} ] ; then
     ${download} ${FILE} ${URL}
@@ -228,7 +228,7 @@ FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
 URL=http://ftp.gnu.org/gnu/${TOOL}/${FILE}
 if [ "x$FTP_OK" = "xno" ] ; then
-    URL=https://github.com/GlobalArrays/autotools/blob/master/${FILE}?raw=true
+    URL=https://github.com/edoapra/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
 fi
 if [ ! -f ${FILE} ] ; then
     ${download} ${FILE} ${URL}

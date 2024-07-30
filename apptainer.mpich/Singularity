@@ -179,7 +179,7 @@ $FC -v \
 && if [ $(command -v mpicc) ]; then echo mpicc present; else echo mpicc missing; exit 1; fi  \
 && echo "which mpicc is" $(which mpicc)  \
 && echo "mpicc -show is " $(mpicc -show)  || { tail -700 $mpich_prefix/config.log ;echo "mpi compilation failed"; exit 1; } \
-&& wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.xz && tar -xf autoconf-2.71.tar.xz \
+&& wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/autoconf-2.71.tar.xz && tar -xf autoconf-2.71.tar.xz \
 && cd autoconf-2.71/ && ./configure --prefix=/usr && make -j3 && make -j3 install \
 && echo autoconf $(autoconf --version) \
 && echo ARMCI_NETWORK is $ARMCI_NETWORK  \
