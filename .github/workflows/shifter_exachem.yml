@@ -3,6 +3,7 @@ name: exachem_shifter
 on:
   repository_dispatch:
     types: [backend_automation]
+  pull_request:
   workflow_dispatch:
 
 jobs:

@@ -3,6 +3,7 @@ name: exachem_apptainer_mpich
 on:
   schedule:
     - cron: '0 0 * * SUN'
+  pull_request:
   repository_dispatch:
     types: [backend_automation]
   workflow_dispatch:
