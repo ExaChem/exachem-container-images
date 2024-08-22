@@ -1,5 +1,5 @@
-Bootstrap: docker
-From: ubuntu:20.04
+Bootstrap: localimage
+From: ubuntu_focal.sif
 %labels
 MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 
@@ -15,7 +15,8 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
     bash -c "if [[ -z '${GPU}' ]]; then echo 'GPU=nvidia ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; else echo 'GPU is ${GPU}'; echo 'GPU=${GPU} ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; fi"
     bash -c "if [[ -z '${ARMCI_NETWORK}' ]]; then echo 'ARMCI_NETWORK=MPI-PR ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; else echo 'ARMCI_NETWORK is ${ARMCI_NETWORK}'; echo 'ARMCI_NETWORK=${ARMCI_NETWORK} ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; fi"
     bash -c "if [[ -z '${MPI_IMPL}' ]]; then echo 'MPI_IMPL=mpich ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; else echo 'MPI_IMPL is ${MPI_IMPL}'; echo 'MPI_IMPL=${MPI_IMPL} ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; fi"
-    bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/branch.txt ; fi"
+    bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main' >> ${SINGULARITY_ROOTFS}/tamm_branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/tamm_branch.txt ; fi"
+    bash -c "if [[ -z '${EXACHEM_BRANCH}' ]]; then echo 'EXACHEM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/exachem_branch.txt ; else echo 'EXACHEM_BRANCH is ${EXACHEM_BRANCH}'; echo 'EXACHEM_BRANCH=${EXACHEM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/exachem_branch.txt ; fi"
     bash -c "if [[ -z '${MPICH}' ]]; then echo 'MPICH=3.4.2 ' >> ${SINGULARITY_ROOTFS}/MPICH.txt ; else echo 'MPICH is ${MPICH}'; echo 'MPICH=${MPICH} ' >> ${SINGULARITY_ROOTFS}/mpich.txt ; fi"
     ls -lrt ${CACHEDIR} || true
     ls -la  ${CACHEDIR}/ || true
@@ -59,7 +60,6 @@ if [ ${#ROCM_VERSION} = 3 ]; then export ROCM_PATH="$ROCM_PATH".0; fi
 echo ROCM_PATH is $ROCM_PATH
 echo GPU is $GPU
 export GCC_VERSION=11
-export TAMM_BRANCH=main
 
 export PATH=$MPICH_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
 export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:"$ROCM_PATH"/lib
@@ -67,11 +67,13 @@ export SINGULARITY_PATH=$PATH
 export SINGULARITY_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 export `cat ./armci_network.txt`
 export `cat ./mpi_impl.txt`
-export `cat ./branch.txt`
+export `cat ./exachem_branch.txt`
+export `cat ./tamm_branch.txt`
 echo GPU is $GPU
 echo ROCM_PATH is ${ROCM_PATH}
 echo ARMCI_NETWORK is $ARMCI_NETWORK
 echo MPI_IMPL is $MPI_IMPL
+echo EXACHEM_BRANCH is $EXACHEM_BRANCH
 echo TAMM_BRANCH is $TAMM_BRANCH
  if [ "$GPU" = "amd" ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
  else export FC=gfortran ; export CC=gcc; export CXX=g++; fi \
@@ -105,7 +107,7 @@ echo TAMM_BRANCH is $TAMM_BRANCH
  libnuma-dev libslurm-dev libpmi2-0-dev libpmi0-dev  libnl-3-dev libnl-route-3-dev udev \
  librdmacm-dev librdmacm1 rdma-core libibverbs-dev  ibverbs-providers \
  libhwloc-dev  lsb-release \
- pkg-config gawk  software-properties-common  \
+ pkg-config gawk  software-properties-common  gdb \
 && export UBUNTU_CODE=$(lsb_release -c |cut -d : -f 2 | sed 's/\t//') \
 && echo UBUNTU_CODE is $UBUNTU_CODE \
 && export UBUNTU_RELEASE=$(lsb_release -r |cut -d : -f 2 | sed 's/\t//') \
@@ -127,7 +129,7 @@ echo TAMM_BRANCH is $TAMM_BRANCH
 && if [ $GPU = "amd" ]; then mkdir --parents --mode=0755 /etc/apt/keyrings \
 && wget --quiet https://repo.radeon.com/rocm/rocm.gpg.key -O - |  gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null \
 && echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/'$ROCM_VERSION $UBUNTU_CODE 'main' | tee --append /etc/apt/sources.list.d/rocm.list \
-&& apt-get  update -y &&  apt-get -y install hip-dev hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi \
+&& apt-get  update -y &&  apt-get -y install hip-dev hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib \
 && ls -lrt /opt \
 && ls -lrt  /opt/rocm* || true \
 && wget --quiet https://download.amd.com/developer/eula/blis/blis-4-1/aocl-blis-linux-aocc-4.1.0.tar.gz -O - | tar xzf - -C /opt ; fi   \
@@ -186,8 +188,8 @@ $FC -v \
 && 	     echo TAMM_BRANCH is ${TAMM_BRANCH}   \
 && 	     echo 'cloning tamm source *** ' || true   \
 &&            cd /opt || { echo "Failure"; exit 1; }  \
-&&              git clone -b ${TAMM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git exachem    \
-&&              git clone --depth 100 https://github.com/NWChemEx/TAMM.git   \
+&&              git clone -b ${EXACHEM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git exachem    \
+&&              git clone -b ${TAMM_BRANCH} --depth 100 https://github.com/NWChemEx/TAMM.git   \
 && 	     cd TAMM   \
 && 	     mkdir build && cd build  \
 &&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC;DFT' "  \
@@ -239,13 +241,13 @@ $FC -v \
 	    && rm -rf /usr/share/doc \
             &&  apt-get -q=2 -y purge   patch curl  wget  make git cpp-"$GCC_VERSION" gfortran-"$GCC_VERSION" gcc-"$GCC_VERSION" libicu-dev libpython"$PY_VERSION"-dev libstdc++-"$GCC_VERSION"-dev libc6-dev libgcc-"$GCC_VERSION"-dev libgfortran-"$GCC_VERSION"-dev  || true \
             && apt-get -q=2 -y install libgfortran5 libgomp1 && apt-get clean \
-	    && if [ "$GPU" = nvidia ]; then apt-get purge -y cuda-cccl-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" ; fi\
+	    && if [ "$GPU" = nvidia ]; then apt-get purge -y cuda-cccl-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" cuda-nvml-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} ; fi\
 	    && if [ "$GPU" = "amd" ]; then  apt-get  purge -y   git-man openmp-extras \
 	    lib32gcc-11-dev  libc6-dev-i386 libx32gcc-11-dev libc6-dev-x32 lib32gcc-11-dev  \
 	    lib32asan6 lib32atomic1 lib32gcc-s1 lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++6 lib32ubsan1 libc6-i386 \
 	    libc6-x32 libx32asan6 libx32atomic1 libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0 libx32stdc++6 libx32ubsan1 \
 	    javascript-common less liberror-perl libjs-jquery libjs-sphinxdoc libjs-underscore libltdl-dev libltdl7 libpython3.10  ; \
-	    apt-get install -y hip-runtime-amd rocblas openmp-extras-runtime;  \
+	    apt-get install -y hip-runtime-amd rocblas openmp-extras-runtime rocm-smi-lib;  \
 	    cd $ROCM_PATH/lib/rocblas/ ; mkdir keep ; mv library/*"$GPU_ARCH"* keep/.  ; \
 	    rm -rf library ; mv keep library ; \
 	    ln -sf "$ROCM_PATH"/ /opt/rocm ;\

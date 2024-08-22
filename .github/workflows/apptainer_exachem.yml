@@ -17,7 +17,9 @@ jobs:
         matrix:
           folder:
             - apptainer.ompi41x
-          branch:
+          tamm_branch:
+            - main
+          exachem_branch:
             - main
           armci_network:
             - MPI-PR
@@ -38,17 +40,17 @@ jobs:
             - gpu: nvidia_70
               armci_network: MPI-PR
               folder: apptainer.ompi41x
-              branch: main
+              exachem_branch: main
               elpa: Y
             - gpu: nvidia_80
               armci_network: MPI-PR
               folder: apptainer.ompi41x
-              branch: main
+              exachem_branch: main
               elpa: Y
             - gpu: nvidia_90
               armci_network: MPI-PR
               folder: apptainer.ompi41x
-              branch: main
+              exachem_branch: main
               elpa: Y
     steps:
     - name: Get Instruction
@@ -60,8 +62,8 @@ jobs:
         echo "simd=$(./guess_simd.sh)" >> $GITHUB_ENV
     - name: exachem version tag
       run: |
-        if [[ ${{ matrix.branch }} !=  main ]]; then
-          myversion=-${{ matrix.branch }}
+        if [[ ${{ matrix.exachem_branch }} !=  main ]]; then
+          myversion=-${{ matrix.exachem_branch }}
         else
           myversion=""
         fi
@@ -135,18 +137,18 @@ jobs:
         sudo dpkg -i apptainer_${APP_VER}_amd64.deb
         which apptainer
         apptainer version
-    - name: Checkout exachem source
-      uses: actions/checkout@v4
-      with:
-        repository: Exachem/exachem
-        ref: ${{ matrix.branch}}
-        clean: false
-        fetch-depth: 0
-        path: exachem
+    - name: create sif from docker
+      run: |
+        if [  -f ~/cache/ubuntu_jammy.sif ]; then \                                                                                                    echo "sif found"
+           cp ~/cache/ubuntu_jammy.sif ${{ matrix.folder }}/.
+        else
+           cd ${{ matrix.folder }} ;\
+        apptainer pull docker://ubuntu:jammy ; \
+        fi
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        MYUSERNAME=${{ github.actor}} BRANCH=${{ matrix.branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}} ELPA=${{ matrix.elpa}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
+        MYUSERNAME=${{ github.actor}} EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}} ELPA=${{ matrix.elpa}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |
@@ -172,6 +174,7 @@ jobs:
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem/include || true
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem || true
         apptainer exec ${{ matrix.folder }}.simg tar cjf ~/cache/libint.tar.bz2 /opt/install/exachem/include/libint2/  /opt/install/exachem/include/libint2.hpp /opt/install/exachem/include/libint2.h  /opt/install/exachem/share/libint /opt/install/exachem/lib/cmake/libint2 /opt/install/exachem/lib/libint2.a  /opt/install/exachem/lib/pkgconfig/libint2.pc
+        cp ubuntu_jammy.sif ~/cache/.
         echo "cache stored"
         ls -l ~/cache
     - name: ldd check

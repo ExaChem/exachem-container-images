@@ -17,7 +17,9 @@ jobs:
         matrix:
           folder:
             - apptainer.mpich
-          branch:
+          exachem_branch:
+            - main
+          tamm_branch:
             - main
           mpich:
             - 3.4.2
@@ -39,7 +41,7 @@ jobs:
         echo "simd=$(./guess_simd.sh)" >> $GITHUB_ENV
     - name: exachem version tag
       run: |
-        myversion=-${{ matrix.branch }}
+        myversion=-${{ matrix.exachem_branch }}
         if [[ ${{ matrix.gpu }} !=  nvidia_70 ]]; then
           myversion+=.${{ matrix.gpu }}
         fi
@@ -107,18 +109,18 @@ jobs:
         sudo dpkg -i apptainer_${APP_VER}_amd64.deb
         which apptainer
         apptainer version
-    - name: Checkout exachem source
-      uses: actions/checkout@v4
-      with:
-        repository: Exachem/exachem
-        ref: ${{ matrix.branch}}
-        clean: false
-        fetch-depth: 0
-        path: exachem
+    - name: create sif from docker
+      run: |
+        if [  -f ~/cache/ubuntu_focal.sif ]; then \                                                                                                    echo "sif found"
+           cp ~/cache/ubuntu_focal.sif ${{ matrix.folder }}/.
+        else
+           cd ${{ matrix.folder }} ;\
+        apptainer pull docker://ubuntu:focal ; \
+        fi
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        MYUSERNAME=${{ github.actor}} BRANCH=${{ matrix.branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
+        MYUSERNAME=${{ github.actor}} EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |
@@ -144,6 +146,7 @@ jobs:
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem/include || true
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem || true
         apptainer exec ${{ matrix.folder }}.simg tar cjf ~/cache/libint.tar.bz2 /opt/install/exachem/include/libint2/  /opt/install/exachem/include/libint2.hpp /opt/install/exachem/include/libint2.h  /opt/install/exachem/share/libint /opt/install/exachem/lib/cmake/libint2 /opt/install/exachem/lib/libint2.a  /opt/install/exachem/lib/pkgconfig/libint2.pc
+        cp ubuntu_focal.sif ~/cache/.
         echo "cache stored"
         ls -l ~/cache
     - name: ldd check

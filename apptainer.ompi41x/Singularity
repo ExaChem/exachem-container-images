@@ -1,5 +1,5 @@
-Bootstrap: docker
-From: ubuntu:22.04
+Bootstrap: localimage
+From: ubuntu_jammy.sif
 %labels
 MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 
@@ -17,7 +17,8 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
     cat ${SINGULARITY_ROOTFS}/elpa.txt
     bash -c "if [[ -z '${ARMCI_NETWORK}' ]]; then echo 'ARMCI_NETWORK=MPI-PR ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; else echo 'ARMCI_NETWORK is ${ARMCI_NETWORK}'; echo 'ARMCI_NETWORK=${ARMCI_NETWORK} ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; fi"
     bash -c "if [[ -z '${MPI_IMPL}' ]]; then echo 'MPI_IMPL=ompi ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; else echo 'MPI_IMPL is ${MPI_IMPL}'; echo 'MPI_IMPL=${MPI_IMPL} ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; fi"
-    bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/branch.txt ; fi"
+    bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/tamm_branch.txt ; fi"
+    bash -c "if [[ -z '${EXACHEM_BRANCH}' ]]; then echo 'EXACHEM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'EXACHEM_BRANCH is ${EXACHEM_BRANCH}'; echo 'EXACHEM_BRANCH=${EXACHEM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/exachem_branch.txt ; fi"
 #    bash -c "if [[ -z '${MYUSERNAME}' ]]; then echo 'MYUSERNAME=edoapra ' >> ${SINGULARITY_ROOTFS}/myusername.txt ; else echo 'MYUSERNAME is ${MYUSERNAME}'; echo 'MYUSERNAME=${MYUSERNAME} ' >> ${SINGULARITY_ROOTFS}/myusername.txt ; fi"
     ls -lrt ${CACHEDIR} || true
     ls -la  ${CACHEDIR}/ || true
@@ -64,7 +65,8 @@ if [ ${#ROCM_VERSION} = 3 ]; then export ROCM_PATH="$ROCM_PATH".0; fi
 echo ROCM_PATH is $ROCM_PATH
 echo GPU is $GPU
 export GCC_VERSION=11
-export TAMM_BRANCH=main
+export EXACHEM_BRANCH=main
+export TAMM_BRANCH=smilib
 
 export PATH=$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
 export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:"$ROCM_PATH"/lib
@@ -72,11 +74,13 @@ export SINGULARITY_PATH=$PATH
 export SINGULARITY_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 export `cat ./armci_network.txt`
 export `cat ./mpi_impl.txt`
-export `cat ./branch.txt`
+export `cat ./exachem_branch.txt`
+export `cat ./tamm_branch.txt`
 echo GPU is $GPU
 echo ROCM_PATH is ${ROCM_PATH}
 echo ARMCI_NETWORK is $ARMCI_NETWORK
 echo MPI_IMPL is $MPI_IMPL
+echo EXACHEM_BRANCH is $EXACHEM_BRANCH
 echo TAMM_BRANCH is $TAMM_BRANCH
  if [ "$GPU" = "amd" ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
  else export FC=gfortran ; export CC=gcc; export CXX=g++; fi \
@@ -119,12 +123,12 @@ echo TAMM_BRANCH is $TAMM_BRANCH
  &&  curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin \
  && mv cuda-*.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
  && apt-get  update \
-&& apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-cudart-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} libcublas-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} ; fi " \
+&& apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-cudart-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} libcublas-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-nvml-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} ; fi " \
 && bash -o  pipefail -c "if [[ $GPU == "amd" ]]; then mkdir --parents --mode=0755 /etc/apt/keyrings \
 && wget --quiet https://repo.radeon.com/rocm/rocm.gpg.key -O - |  gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null \
 && echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${ROCM_VERSION} jammy main' | tee --append /etc/apt/sources.list.d/rocm.list \
 && echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' |  tee /etc/apt/preferences.d/rocm-pin-600 \
-&& apt-get  update -y &&  apt-get -y install hip-dev hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras \
+&& apt-get  update -y &&  apt-get -y install hip-dev hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib \
 && ls -lrt /opt \
 && ls -lrt  /opt/rocm* || true \
 && wget --quiet https://download.amd.com/developer/eula/blis/blis-4-1/aocl-blis-linux-aocc-4.1.0.tar.gz -O - | tar xzf - -C /opt ; fi "  \
@@ -208,11 +212,12 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 && echo "which mpicc is" $(which mpicc)  \
 && echo "mpicc -show is " $(mpicc -show)  || { tail -700 $ompi_prefix/config.log ;echo "mpi compilation failed"; exit 1; } \
 && echo ARMCI_NETWORK is $ARMCI_NETWORK  \
+&& 	     echo EXACHEM_BRANCH is ${EXACHEM_BRANCH}   \
 && 	     echo TAMM_BRANCH is ${TAMM_BRANCH}   \
 && 	     echo 'cloning tamm source *** ' || true   \
 &&            cd /opt || { echo "Failure"; exit 1; }  \
-&&              git clone -b ${TAMM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git exachem    \
-&&              git clone --depth 100 https://github.com/NWChemEx/TAMM.git   \
+&&              git clone -b ${EXACHEM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git exachem    \
+&&              git clone -b ${TAMM_BRANCH} --depth 100 https://github.com/NWChemEx/TAMM.git   \
 && 	     cd TAMM   \
 && 	     mkdir build && cd build  \
 &&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC;DFT' "  \
@@ -271,7 +276,9 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 	    apt-get install -y hip-runtime-amd rocblas openmp-extras-runtime;  \
 	    cd $ROCM_PATH/lib/rocblas/ ; mkdir keep ; mv library/*"$GPU_ARCH"* keep/.  ; \
 	    rm -rf library ; mv keep library ; \
-	    rm -rf "$ROCM_PATH"/bin  "$ROCM_PATH"/llvm/bin  ; fi\
+	    cp "$ROCM_PATH"/bin/rocm-smi /tmp/rocm-smi ;\
+	    rm -rf "$ROCM_PATH"/bin  "$ROCM_PATH"/llvm/bin  ; \
+	    mkdir -p "$ROCM_PATH"/bin  && cp /tmp/rocm-smi "$ROCM_PATH"/bin/. ; fi\
 	    && echo '*** ls -l CC/bin **' \
 	    && ls -l /opt/install/exachem/bin/ || true \
 	    && echo '*** ldd ***'  \
@@ -306,8 +313,8 @@ export OMPI_DIR=/opt/ompi
 export SINGULARITY_OMPI_DIR=$OMPI_DIR
 export CUDA_VERSION_MAJOR=11 
 export CUDA_VERSION_MINOR=7
-export PATH=/opt/install/exachem/bin:$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:$PATH
-export LD_LIBRARY_PATH=$OMPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:$ROCM_PATH/lib:$LD_LIBRARY_PATH:
+export PATH=/opt/install/exachem/bin:$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin/:$PATH
+export LD_LIBRARY_PATH=$OMPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:"$ROCM_PATH"/lib:$LD_LIBRARY_PATH:
 export SINGULARITYENV_APPEND_PATH=/opt/install/exachem/bin:$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin
 export SINGULARITYENV_APPEND_LD_LIBRARY_PATH=$OMPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:$ROCM_PATH/lib
 export COMEX_MAX_NB_OUTSTANDING=12
