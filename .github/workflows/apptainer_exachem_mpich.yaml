@@ -1,4 +1,4 @@
-name: exachem_apptainer
+name: exachem_apptainer_mpich
 
 on:
   schedule:
@@ -16,42 +16,21 @@ jobs:
         fail-fast: false
         matrix:
           folder:
-            - apptainer.ompi41x
-          tamm_branch:
-            - main
+            - apptainer.mpich
           exachem_branch:
             - main
+          tamm_branch:
+            - main
+          mpich:
+            - 3.4.2
           armci_network:
             - MPI-PR
-          elpa:
-            - N
           gpu:
             - cpu
-            - nvidia_70
-            - nvidia_80
-            - nvidia_90
-            - amd_gfx908_rocm5.5.1
-            - amd_gfx90a_rocm5.5.1
-            - amd_gfx908_rocm6.0
             - amd_gfx90a_rocm6.0
-            - amd_gfx908_rocm5.7.3
-            - amd_gfx90a_rocm5.7.3
-          include:
-            - gpu: nvidia_70
-              armci_network: MPI-PR
-              folder: apptainer.ompi41x
-              exachem_branch: main
-              elpa: Y
-            - gpu: nvidia_80
-              armci_network: MPI-PR
-              folder: apptainer.ompi41x
-              exachem_branch: main
-              elpa: Y
-            - gpu: nvidia_90
-              armci_network: MPI-PR
-              folder: apptainer.ompi41x
-              exachem_branch: main
-              elpa: Y
+            - amd_gfx90a_rocm5.7.1
+            - amd_gfx90a_rocm5.6
+            - amd_gfx90a_rocm5.5.1
     steps:
     - name: Get Instruction
       id: get-simd
@@ -62,25 +41,18 @@ jobs:
         echo "simd=$(./guess_simd.sh)" >> $GITHUB_ENV
     - name: exachem version tag
       run: |
-        if [[ ${{ matrix.exachem_branch }} !=  main ]]; then
-          myversion=-${{ matrix.exachem_branch }}
-        else
-          myversion=""
-        fi
+        myversion=-${{ matrix.exachem_branch }}
         if [[ ${{ matrix.gpu }} !=  nvidia_70 ]]; then
           myversion+=.${{ matrix.gpu }}
         fi
-        echo "exachemversion=$myversion" >> $GITHUB_ENV
         if [[ ${{ matrix.armci_network }} !=  MPI-PR ]]; then
           net_tag=$(echo ${{ matrix.armci_network }} | tr '[:upper:]' '[:lower:]')
-          echo "armci_network="${net_tag}"." >> $GITHUB_ENV
+          myversion+=.${net_tag}
         fi
-        if [[ ${{ matrix.elpa }} ==  Y ]]; then
-          echo "elpa="elpa"." >> $GITHUB_ENV
-        fi
+        echo "exachemversion=$myversion" >> $GITHUB_ENV
     - name: tag
       run: |
-        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}.${{ env.armci_network}}${{ env.elpa}}ompi41x" >> $GITHUB_ENV
+        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer.mpich${{ matrix.mpich }}${{ env.exachemversion}}" >> $GITHUB_ENV
     - name: echo-tag
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'
@@ -122,15 +94,15 @@ jobs:
       if: steps.setup-cache.outputs.cache-hit == 'true'
       run: |
         ls -lart ~/cache
-        if [[ -f ~/cache/ompi/lib/libmpi.so ]]; then \
-        echo "ompi cache present" ; \
+        if [[ -f ~/cache/mpich/lib/libmpi.a ]]; then \
+        echo "mpich cache present" ; \
         fi
         if [[ -f ~/cache/libint.tar.bz2 ]]; then \
         echo "libint cache present" ; \
         fi
     - name: Install apptainer
       env:
-        APP_VER: 1.2.3
+        APP_VER: 1.3.2
       run: |
         sudo apt-get install -y  libfuse2 libseccomp2 zlib1g uidmap squashfs-tools squashfuse fuse2fs fuse-overlayfs fakeroot
         wget -q  https://github.com/apptainer/apptainer/releases/download/v${APP_VER}/apptainer_${APP_VER}_amd64.deb 
@@ -139,23 +111,23 @@ jobs:
         apptainer version
     - name: create sif from docker
       run: |
-        if [  -f ~/cache/ubuntu_jammy.sif ]; then \                                                                                                    echo "sif found"
-           cp ~/cache/ubuntu_jammy.sif ${{ matrix.folder }}/.
+        if [  -f ~/cache/ubuntu_focal.sif ]; then \                                                                                                    echo "sif found"
+           cp ~/cache/ubuntu_focal.sif ${{ matrix.folder }}/.
         else
            cd ${{ matrix.folder }} ;\
-        apptainer pull docker://ubuntu:jammy ; \
+        apptainer pull docker://ubuntu:focal ; \
         fi
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        MYUSERNAME=${{ github.actor}} EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}} ELPA=${{ matrix.elpa}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
+        MYUSERNAME=${{ github.actor}} EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |
         echo "date=$(TZ=America/Los_Angeles date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
     - name: push to ghcr.io
       run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${{ github.actor }} --password-stdin oras://ghcr.io
+        echo ${{ secrets.GITHUB_TOKEN }} | apptainer registry login -u ${{ github.actor }} --password-stdin oras://ghcr.io
         apptainer remote list
         exit_code=0
         apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:${{ env.date }} || exit_code=$?
@@ -170,11 +142,11 @@ jobs:
       run: |
         mkdir -p ~/cache || true
         cd ${{ matrix.folder }}
-        apptainer exec ${{ matrix.folder }}.simg cp -r /opt/ompi ~/cache
+        apptainer exec ${{ matrix.folder }}.simg cp -r /opt/mpich ~/cache
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem/include || true
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem || true
         apptainer exec ${{ matrix.folder }}.simg tar cjf ~/cache/libint.tar.bz2 /opt/install/exachem/include/libint2/  /opt/install/exachem/include/libint2.hpp /opt/install/exachem/include/libint2.h  /opt/install/exachem/share/libint /opt/install/exachem/lib/cmake/libint2 /opt/install/exachem/lib/libint2.a  /opt/install/exachem/lib/pkgconfig/libint2.pc
-        cp ubuntu_jammy.sif ~/cache/.
+        cp ubuntu_focal.sif ~/cache/.
         echo "cache stored"
         ls -l ~/cache
     - name: ldd check
@@ -183,10 +155,7 @@ jobs:
         pwd
         ls -la
         apptainer pull -F ${{ env.tag }}:${{ env.date }}
-        export UCX_TLS=tcp,self
-        export UCX_POSIX_USE_PROC_LINK=n
-        export MPIRUN_NPOPT="-x UCX_POSIX_USE_PROC_LINK=n -x UCX_TLS=tcp,self -n"
-        sudo apt-get install -y openmpi-bin openmpi-common libopenmpi-dev
+        sudo apt-get install -y libmpich-dev mpich
         which mpirun
         ldd `which mpirun`
         apptainer exec ${{ env.tag }}:latest ldd /opt/install/exachem/bin/ExaChem
@@ -196,13 +165,9 @@ jobs:
         pwd
         ls -la
         apptainer pull -F ${{ env.tag }}:${{ env.date }}
-        export UCX_TLS=tcp,self
-        export UCX_POSIX_USE_PROC_LINK=n
-        sudo apt-get install -y openmpi-bin openmpi-common libopenmpi-dev
         which mpirun
         ldd `which mpirun`
-        APPTAINERENV_OMPI_MCA_btl_vader_single_copy_mechanism=none \
-        OMPI_MCA_btl_vader_single_copy_mechanism=none \
         mpirun -np 2 apptainer exec ${{ env.tag }}:${{ env.date }} \
         /opt/install/exachem/bin/ExaChem \
         inputs/waterdft.json
+        echo exit code is $?

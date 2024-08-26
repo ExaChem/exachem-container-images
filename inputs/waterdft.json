@@ -11,7 +11,10 @@
     "basisset": "sto-3g"
   },
   "SCF": {
-      "xc_type": ["gga_x_pbe", "gga_c_pbe"]
+      "restart": false,
+      "DFT": {
+          "xc_type": ["gga_x_pbe", "gga_c_pbe"]
+      }
   },
   "TASK": {
     "scf": true
