@@ -66,7 +66,7 @@ echo ROCM_PATH is $ROCM_PATH
 echo GPU is $GPU
 export GCC_VERSION=11
 export EXACHEM_BRANCH=main
-export TAMM_BRANCH=smilib
+export TAMM_BRANCH=main
 
 export PATH=$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
 export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:"$ROCM_PATH"/lib
