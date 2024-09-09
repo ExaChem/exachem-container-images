@@ -1,5 +1,11 @@
 Bootstrap: localimage
-From: ubuntu_focal.sif
+From: ubuntu_{{ UBUNTU_VERSION }}.sif
+Stage: spython-base
+
+%arguments
+   UBUNTU_VERSION=focal
+
+%files
 %labels
 MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 
@@ -13,7 +19,7 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 #    ls -l ${SINGULARITY_ROOTFS}
     rm -f ${SINGULARITY_ROOTFS}/*.txt || true
     bash -c "if [[ -z '${GPU}' ]]; then echo 'GPU=nvidia ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; else echo 'GPU is ${GPU}'; echo 'GPU=${GPU} ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; fi"
-    bash -c "if [[ -z '${ARMCI_NETWORK}' ]]; then echo 'ARMCI_NETWORK=MPI-PR ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; else echo 'ARMCI_NETWORK is ${ARMCI_NETWORK}'; echo 'ARMCI_NETWORK=${ARMCI_NETWORK} ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; fi"
+    bash -c "if [[ -z '${GA_RUNTIME}' ]]; then echo 'GA_RUNTIME=MPI_PROGRESS_RANK ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; else echo 'GA_RUNTIME is ${GA_RUNTIME}'; echo 'GA_RUNTIME=${GA_RUNTIME} ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; fi"
     bash -c "if [[ -z '${MPI_IMPL}' ]]; then echo 'MPI_IMPL=mpich ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; else echo 'MPI_IMPL is ${MPI_IMPL}'; echo 'MPI_IMPL=${MPI_IMPL} ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; fi"
     bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main' >> ${SINGULARITY_ROOTFS}/tamm_branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/tamm_branch.txt ; fi"
     bash -c "if [[ -z '${EXACHEM_BRANCH}' ]]; then echo 'EXACHEM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/exachem_branch.txt ; else echo 'EXACHEM_BRANCH is ${EXACHEM_BRANCH}'; echo 'EXACHEM_BRANCH=${EXACHEM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/exachem_branch.txt ; fi"
@@ -65,13 +71,13 @@ export PATH=$MPICH_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_
 export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:"$ROCM_PATH"/lib
 export SINGULARITY_PATH=$PATH
 export SINGULARITY_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-export `cat ./armci_network.txt`
+export `cat ./ga_runtime.txt`
 export `cat ./mpi_impl.txt`
 export `cat ./exachem_branch.txt`
 export `cat ./tamm_branch.txt`
 echo GPU is $GPU
 echo ROCM_PATH is ${ROCM_PATH}
-echo ARMCI_NETWORK is $ARMCI_NETWORK
+echo GA_RUNTIME is $GA_RUNTIME
 echo MPI_IMPL is $MPI_IMPL
 echo EXACHEM_BRANCH is $EXACHEM_BRANCH
 echo TAMM_BRANCH is $TAMM_BRANCH
@@ -112,7 +118,7 @@ echo TAMM_BRANCH is $TAMM_BRANCH
 && echo UBUNTU_CODE is $UBUNTU_CODE \
 && export UBUNTU_RELEASE=$(lsb_release -r |cut -d : -f 2 | sed 's/\t//') \
 && echo UBUNTU_RELEASE is $UBUNTU_RELEASE \
-&& add-apt-repository -y ppa:ubuntu-toolchain-r/test && apt-get update \
+&& if [ $UBUNTU_CODE = "focal" ]; then add-apt-repository -y ppa:ubuntu-toolchain-r/test && apt-get update ; fi \
             && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION" libgfortran-"$GCC_VERSION"-dev  make patch curl rsync wget git file  bzip2 tar gnupg2  \
 && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 100 \
 && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 100 \
@@ -129,10 +135,25 @@ echo TAMM_BRANCH is $TAMM_BRANCH
 && if [ $GPU = "amd" ]; then mkdir --parents --mode=0755 /etc/apt/keyrings \
 && wget --quiet https://repo.radeon.com/rocm/rocm.gpg.key -O - |  gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null \
 && echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/'$ROCM_VERSION $UBUNTU_CODE 'main' | tee --append /etc/apt/sources.list.d/rocm.list \
-&& apt-get  update -y &&  apt-get -y install hip-dev hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib \
+&& echo  'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600'  |  tee /etc/apt/preferences.d/rocm-pin-600 \
+&& echo '$$$$ cat /etc/apt/preferences.d/rocm-pin-600 ' $(cat /etc/apt/preferences.d/rocm-pin-600) \
+&& apt-get  update -y &&  apt-get -y install hip-dev hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib rocminfo hipcc hipblas-dev\
 && ls -lrt /opt \
 && ls -lrt  /opt/rocm* || true \
-&& wget --quiet https://download.amd.com/developer/eula/blis/blis-4-1/aocl-blis-linux-aocc-4.1.0.tar.gz -O - | tar xzf - -C /opt ; fi   \
+&& echo '$$$$$$$$$$$$$$$$$$$$' \
+&& echo 'dpkg-query -L rocminfo' $(dpkg-query -L rocminfo) \
+&& if [ $UBUNTU_CODE = "jammy_std" ]; then ln -sf /usr/bin/rocm_agent_enumerator $ROCM_PATH/bin/. ;  ln -sf /usr/bin/rocminfo $ROCM_PATH/bin/. ; fi \
+&& echo '$$$$$$$$$$$$$$$$$$$$' \
+&& echo 'rocminfo' $(/opt/rocm/bin/rocm_agent_enumerator) \
+&& echo '$$$$$$$$$$$$$$$$$$$$' \
+&& echo 'hipcc --version' $(hipcc --version) \
+&& echo '$$$$$$$$$$$$$$$$$$$$' \
+&& echo 'hipconfig' $(hipconfig) \
+&& echo '$$$$$$$$$$$$$$$$$$$$' \
+&& echo ' ls -l  ROCM_PATH/lib' $(ls -l $ROCM_PATH/lib)   \
+&& echo '$$$$$$$$$$$$$$$$$$$$' \
+&& echo ' ls -l  ROCM_PATH/lib/libamdhip64.so*' $(ls -l $ROCM_PATH/lib/libamdhip64.so*)   \
+&& echo '$$$$$$$$$$$$$$$$$$$$' ; fi \
 && echo 'FC -v ' `$FC -v`  \
 && echo 'CC -v ' `$CC -v`  \
 && echo 'CXX -v ' `$CXX -v` || { echo "CXX not installed"; exit  1; } \
@@ -184,7 +205,7 @@ $FC -v \
 && wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/autoconf-2.71.tar.xz && tar -xf autoconf-2.71.tar.xz \
 && cd autoconf-2.71/ && ./configure --prefix=/usr && make -j3 && make -j3 install \
 && echo autoconf $(autoconf --version) \
-&& echo ARMCI_NETWORK is $ARMCI_NETWORK  \
+&& echo GA_RUNTIME is $GA_RUNTIME  \
 && 	     echo TAMM_BRANCH is ${TAMM_BRANCH}   \
 && 	     echo 'cloning tamm source *** ' || true   \
 &&            cd /opt || { echo "Failure"; exit 1; }  \
@@ -193,18 +214,20 @@ $FC -v \
 && 	     cd TAMM   \
 && 	     mkdir build && cd build  \
 &&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC;DFT' "  \
+&&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DDFT_CPU=ON " \
 && 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3"  \
 &&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}" ; fi  \
 &&              if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_SCALAPACK=ON "   \
 &&              if [ ${CC} = "gcc" ]; then CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_ELPA=ON " ; fi  \
 &&              if [ ${CC} = "amdclang" ]; then echo "scalapack workaround for clang "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_SCALAPACK=ON -DCMAKE_C_FLAGS_INIT='-Wno-error=implicit-function-declaration' 	" ; fi  \
+&&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_RUNTIME=${GA_RUNTIME}"  \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     USE_SCALAPACK=ON CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
-&&             make -j3 || { echo "Compilation failure"; 
-	    cat /opt/TAMM/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeOutput.log || true ; \
-            cat /opt/TAMM/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeError.log || true; exit 1; } \
+&&             make -j3 || { echo "Compilation failure in tamm step";
+	    cat $(find /opt/TAMM/ -name CMakeOutput.log) || true ; \
+            cat $(find /opt/TAMM/ -name CMakeError.log ) || true; exit 1; } \
 && 	     echo exit code for TAMM compilation $?   \
 &&              make install   \
 && 	     echo exit code for TAMM make install $?   \

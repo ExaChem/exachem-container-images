@@ -23,14 +23,18 @@ jobs:
             - main
           mpich:
             - 3.4.2
-          armci_network:
-            - MPI-PR
+          ga_runtime:
+            - MPI_PROGRESS_RANK
+            - MPI_RMA
           gpu:
             - cpu
-            - amd_gfx90a_rocm6.0
+            - amd_gfx90a_rocm6.2
+            - amd_gfx90a_rocm6.1.3
             - amd_gfx90a_rocm5.7.1
             - amd_gfx90a_rocm5.6
-            - amd_gfx90a_rocm5.5.1
+          ubuntu:
+            - focal
+            - jammy
     steps:
     - name: Get Instruction
       id: get-simd
@@ -42,12 +46,13 @@ jobs:
     - name: exachem version tag
       run: |
         myversion=-${{ matrix.exachem_branch }}
-        if [[ ${{ matrix.gpu }} !=  nvidia_70 ]]; then
-          myversion+=.${{ matrix.gpu }}
-        fi
-        if [[ ${{ matrix.armci_network }} !=  MPI-PR ]]; then
-          net_tag=$(echo ${{ matrix.armci_network }} | tr '[:upper:]' '[:lower:]')
+        myversion+=.${{ matrix.gpu }}
+        if [[ ${{ matrix.ga_runtime }} !=  MPI_2SIDED ]]; then
+          net_tag=$(echo ${{ matrix.ga_runtime }} | tr '[:upper:]' '[:lower:]')
           myversion+=.${net_tag}
+        fi
+        if [[ ${{ matrix.ubuntu }} !=  focal ]]; then
+          myversion+=.${{ matrix.ubuntu }}
         fi
         echo "exachemversion=$myversion" >> $GITHUB_ENV
     - name: tag
@@ -111,16 +116,16 @@ jobs:
         apptainer version
     - name: create sif from docker
       run: |
-        if [  -f ~/cache/ubuntu_focal.sif ]; then echo "sif found" ;
-           cp ~/cache/ubuntu_focal.sif ${{ matrix.folder }}/.
+        if [  -f ~/cache/ubuntu_${{ matrix.ubuntu }}.sif ]; then echo "sif found" ; \
+           cp ~/cache/ubuntu_${{ matrix.ubuntu }}.sif ${{ matrix.folder }}/.
         else
            cd ${{ matrix.folder }} ;\
-        apptainer pull docker://ubuntu:focal ; \
+        apptainer pull docker://ubuntu:${{ matrix.ubuntu }} ; \
         fi
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        MYUSERNAME=${{ github.actor}} EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
+        MYUSERNAME=${{ github.actor}}  EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} GA_RUNTIME=${{ matrix.ga_runtime}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --build-arg UBUNTU_VERSION=${{ matrix.ubuntu}} --rocm --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |
@@ -146,7 +151,7 @@ jobs:
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem/include || true
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem || true
         apptainer exec ${{ matrix.folder }}.simg tar cjf ~/cache/libint.tar.bz2 /opt/install/exachem/include/libint2/  /opt/install/exachem/include/libint2.hpp /opt/install/exachem/include/libint2.h  /opt/install/exachem/share/libint /opt/install/exachem/lib/cmake/libint2 /opt/install/exachem/lib/libint2.a  /opt/install/exachem/lib/pkgconfig/libint2.pc
-        cp ubuntu_focal.sif ~/cache/.
+        cp ubuntu_${{ matrix.ubuntu }}.sif ~/cache/.
         echo "cache stored"
         ls -l ~/cache
     - name: ldd check

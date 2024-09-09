@@ -15,7 +15,7 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
     bash -c "if [[ -z '${GPU}' ]]; then echo 'GPU=nvidia ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; else echo 'GPU is ${GPU}'; echo 'GPU=${GPU} ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; fi"
     bash -c "echo 'ELPA is ${ELPA}'; echo 'ELPA=${ELPA} ' >> ${SINGULARITY_ROOTFS}/elpa.txt "
     cat ${SINGULARITY_ROOTFS}/elpa.txt
-    bash -c "if [[ -z '${ARMCI_NETWORK}' ]]; then echo 'ARMCI_NETWORK=MPI-PR ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; else echo 'ARMCI_NETWORK is ${ARMCI_NETWORK}'; echo 'ARMCI_NETWORK=${ARMCI_NETWORK} ' >> ${SINGULARITY_ROOTFS}/armci_network.txt ; fi"
+    bash -c "if [[ -z '${GA_RUNTIME}' ]]; then echo 'GA_RUNTIME=MPI_2SIDED ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; else echo 'GA_RUNTIME is ${GA_RUNTIME}'; echo 'GA_RUNTIME=${GA_RUNTIME} ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; fi"
     bash -c "if [[ -z '${MPI_IMPL}' ]]; then echo 'MPI_IMPL=ompi ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; else echo 'MPI_IMPL is ${MPI_IMPL}'; echo 'MPI_IMPL=${MPI_IMPL} ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; fi"
     bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/tamm_branch.txt ; fi"
     bash -c "if [[ -z '${EXACHEM_BRANCH}' ]]; then echo 'EXACHEM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'EXACHEM_BRANCH is ${EXACHEM_BRANCH}'; echo 'EXACHEM_BRANCH=${EXACHEM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/exachem_branch.txt ; fi"
@@ -72,13 +72,13 @@ export PATH=$OMPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_M
 export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$OMPI_DIR/lib:"$ROCM_PATH"/lib
 export SINGULARITY_PATH=$PATH
 export SINGULARITY_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-export `cat ./armci_network.txt`
+export `cat ./ga_runtime.txt`
 export `cat ./mpi_impl.txt`
 export `cat ./exachem_branch.txt`
 export `cat ./tamm_branch.txt`
 echo GPU is $GPU
 echo ROCM_PATH is ${ROCM_PATH}
-echo ARMCI_NETWORK is $ARMCI_NETWORK
+echo GA_RUNTIME is $GA_RUNTIME
 echo MPI_IMPL is $MPI_IMPL
 echo EXACHEM_BRANCH is $EXACHEM_BRANCH
 echo TAMM_BRANCH is $TAMM_BRANCH
@@ -211,7 +211,7 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 && if [ $(command -v mpicc) ]; then echo mpicc present; else echo mpicc missing; exit 1; fi  \
 && echo "which mpicc is" $(which mpicc)  \
 && echo "mpicc -show is " $(mpicc -show)  || { tail -700 $ompi_prefix/config.log ;echo "mpi compilation failed"; exit 1; } \
-&& echo ARMCI_NETWORK is $ARMCI_NETWORK  \
+&& echo GA_RUNTIME is $GA_RUNTIME  \
 && 	     echo EXACHEM_BRANCH is ${EXACHEM_BRANCH}   \
 && 	     echo TAMM_BRANCH is ${TAMM_BRANCH}   \
 && 	     echo 'cloning tamm source *** ' || true   \
@@ -225,6 +225,7 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 &&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}" ; fi  \
 &&              if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  \
 &&              if [ ${ELPA} = "Y" ]; then echo "ELPA enabled "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_ELPA=ON" ; fi  \
+&&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_RUNTIME=${GA_RUNTIME}"  \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
