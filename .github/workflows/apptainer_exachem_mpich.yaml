@@ -47,7 +47,7 @@ jobs:
       run: |
         myversion=-${{ matrix.exachem_branch }}
         myversion+=.${{ matrix.gpu }}
-        if [[ ${{ matrix.ga_runtime }} !=  MPI_2SIDED ]]; then
+        if [[ ${{ matrix.ga_runtime }} !=  MPI_PROGRESS_RANK ]]; then
           net_tag=$(echo ${{ matrix.ga_runtime }} | tr '[:upper:]' '[:lower:]')
           myversion+=.${net_tag}
         fi
