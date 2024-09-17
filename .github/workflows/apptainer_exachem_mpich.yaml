@@ -23,9 +23,10 @@ jobs:
             - main
           mpich:
             - 3.4.2
+          mpich_device:
+            - ch4:ofi
           ga_runtime:
             - MPI_PROGRESS_RANK
-            - MPI_RMA
           gpu:
             - cpu
             - amd_gfx90a_rocm6.2
@@ -35,6 +36,15 @@ jobs:
           ubuntu:
             - focal
             - jammy
+          include:
+            - mpich: 4.2.2
+              mpich_device: ch4:ucx
+              ga_runtime: MPI_PROGRESS_RANK
+              ubuntu: jammy
+              gpu: cpu
+              exachem_branch: main
+              tamm_branch: main
+              folder: apptainer.mpich
     steps:
     - name: Get Instruction
       id: get-simd
@@ -54,10 +64,14 @@ jobs:
         if [[ ${{ matrix.ubuntu }} !=  focal ]]; then
           myversion+=.${{ matrix.ubuntu }}
         fi
+        if [[ ${{ matrix.mpich_device }} !=  ch4:ofi ]]; then
+          dev_tag=$(echo ${{ matrix.mpich_device }} | sed  's/:/_/' )
+          echo "mpich_device="${dev_tag} >> $GITHUB_ENV
+        fi
         echo "exachemversion=$myversion" >> $GITHUB_ENV
     - name: tag
       run: |
-        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer.mpich${{ matrix.mpich }}${{ env.exachemversion}}" >> $GITHUB_ENV
+        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer.mpich${{ matrix.mpich }}${{ env.mpich_device }}${{ env.exachemversion}}" >> $GITHUB_ENV
     - name: echo-tag
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'
@@ -94,7 +108,7 @@ jobs:
       with:
         path: |
           ~/cache
-        key: ${{ matrix.folder}}-${{ env.exachemversion}}-exachemcache-v001
+        key: ${{ matrix.folder}}-${{ env.exachemversion}}-${{ matrix.mpich }}${{ env.mpich_device }}-exachemcache-v002
     - name: fetch cache
       if: steps.setup-cache.outputs.cache-hit == 'true'
       run: |
@@ -125,7 +139,7 @@ jobs:
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        MYUSERNAME=${{ github.actor}}  EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} GA_RUNTIME=${{ matrix.ga_runtime}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --build-arg UBUNTU_VERSION=${{ matrix.ubuntu}} --rocm --fakeroot ${{ matrix.folder }}.simg  Singularity
+        MPICH_DEVICE=${{ matrix.mpich_device }} MPICH=${{ matrix.mpich }} MYUSERNAME=${{ github.actor}}  EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} GA_RUNTIME=${{ matrix.ga_runtime}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --build-arg UBUNTU_VERSION=${{ matrix.ubuntu}} --rocm --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |

@@ -24,6 +24,7 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
     bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main' >> ${SINGULARITY_ROOTFS}/tamm_branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/tamm_branch.txt ; fi"
     bash -c "if [[ -z '${EXACHEM_BRANCH}' ]]; then echo 'EXACHEM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/exachem_branch.txt ; else echo 'EXACHEM_BRANCH is ${EXACHEM_BRANCH}'; echo 'EXACHEM_BRANCH=${EXACHEM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/exachem_branch.txt ; fi"
     bash -c "if [[ -z '${MPICH}' ]]; then echo 'MPICH=3.4.2 ' >> ${SINGULARITY_ROOTFS}/MPICH.txt ; else echo 'MPICH is ${MPICH}'; echo 'MPICH=${MPICH} ' >> ${SINGULARITY_ROOTFS}/mpich.txt ; fi"
+    bash -c "if [[ -z '${MPICH_DEVICE}' ]]; then echo 'MPICH_DEVICE=ch4:ofi ' >> ${SINGULARITY_ROOTFS}/MPICH_DEVICE.txt ; else echo 'MPICH_DEVICE is ${MPICH_DEVICE}'; echo 'MPICH_DEVICE=${MPICH_DEVICE} ' >> ${SINGULARITY_ROOTFS}/mpich_device.txt ; fi"
     ls -lrt ${CACHEDIR} || true
     ls -la  ${CACHEDIR}/ || true
     ls -la  ${CACHEDIR}/mpich || true
@@ -43,6 +44,16 @@ export DEBIAN_FRONTEND=noninteractive
 export `cat ./mpich.txt`
 export mpich_prefix=mpich-$MPICH
 echo mpich_prefix is $mpich_prefix 
+export mpich_major=$(echo $MPICH | cut -d . -f1) 
+echo mpich_major is $mpich_major 
+export mpich_minor=$(echo $MPICH | cut -d . -f2) 
+echo mpich_minor is $mpich_minor 
+echo mpich_major is $mpich_major 
+if [ $mpich_major = '4' ]; then
+    export mpich_options=' '
+else
+    export mpich_options=' '
+fi 
 export MPICH_DIR=/opt/mpich
 export SINGULARITY_mpich=$mpich
 export SINGULARITY_mpich_prefix=mpich-$mpich
@@ -75,10 +86,15 @@ export `cat ./ga_runtime.txt`
 export `cat ./mpi_impl.txt`
 export `cat ./exachem_branch.txt`
 export `cat ./tamm_branch.txt`
+export `cat ./mpich_device.txt`
+export `cat ./mpich.txt`
+
 echo GPU is $GPU
 echo ROCM_PATH is ${ROCM_PATH}
 echo GA_RUNTIME is $GA_RUNTIME
 echo MPI_IMPL is $MPI_IMPL
+ echo MPICH is $MPICH
+ echo MPICH_DEVICE is $MPICH_DEVICE
 echo EXACHEM_BRANCH is $EXACHEM_BRANCH
 echo TAMM_BRANCH is $TAMM_BRANCH
  if [ "$GPU" = "amd" ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
@@ -160,24 +176,42 @@ echo TAMM_BRANCH is $TAMM_BRANCH
 && apt-get clean  \
 && echo 'ls -l /opt/mpich/lib/libmpi.a' $(ls -l /opt/mpich/lib/libmpi.a) || true  \
 && if [ $FC = gfortran ]; then export mpich_options=" FFLAGS=-fallow-argument-mismatch  FCFLAGS=-fallow-argument-mismatch " ; fi  \
-&& echo FC is $FC \
-&& echo mpich_options is $mpich_options \
-&& if [ ! -f /opt/mpich/lib/libmpi.a ]; then  \
+&& echo FC is $FC
+
+if [ ! -f /opt/mpich/lib/libmpi.a ]; then  \
 $FC -v \
+	 && if [ ${MPICH_DEVICE} != ch4:ofi ]; then echo 'installing ucx' ; \
+   export ucx=1.11.0 ; \
+   echo 'the ucx version is'  $ucx ; \
+   wget --progress=dot:giga  https://github.com/openucx/ucx/releases/download/v$ucx/ucx-$ucx.tar.gz ; \
+   tar xzf ucx-$ucx.tar.gz && rm ucx-$ucx.tar.gz  ;\
+   cd ucx-$ucx ; \
+   wget https://raw.githubusercontent.com/edoapra/nwchem-singularity/master/nwchem-dev.ompi41x.ifx/ucx_malloc.patch ;\
+   patch -p0 < ./ucx_malloc.patch ;\
+   mkdir -p build && cd build ;\
+   ../configure --prefix=$MPICH_DIR --disable-logging --disable-debug --disable-assertions --disable-params-check ;\
+   make -j4 && make install ;\
+   if [ ! -f $MPICH_DIR/bin/ucx_info ]; then echo ucx_info\ not\ found ; exit 1 ; fi ;\
+   cd ../.. ;\
+   export mpich_options=$mpich_options" --with-ucx="$MPICH_DIR ; \
+     fi \
+&& echo ' mpich_options is set to' $mpich_options \
 && wget  --progress=dot:giga https://www.mpich.org/static/downloads/$MPICH/mpich-$MPICH.tar.gz  -O - | tar xzf - \
 && cd $mpich_prefix     \
-&& mv autogen.sh autogen.sh.org \
-&& wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/autogen.sh \
-&& chmod +x autogen.sh \
-&& wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/install-autotools.sh \
-&& chmod +x install-autotools.sh \
-&& wget https://github.com/pmodels/mpich/commit/3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch \
-&& patch -p1 < 3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch \
-&& cd maint/patches/optional/confdb && rm -f flang.patch &&  wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/flang.patch && cd ../../../../  && pwd \
-&& sh ./autogen.sh \
+&& if [ $mpich_major = '3' ]; then echo 'mpich 3 autotools ' ; \
+mv autogen.sh autogen.sh.org ;\
+wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/autogen.sh ;\
+ chmod +x autogen.sh ;\
+ wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/install-autotools.sh ;\
+ chmod +x install-autotools.sh ;\
+ wget https://github.com/pmodels/mpich/commit/3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch ;\
+ patch -p1 < 3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch ;\
+ cd maint/patches/optional/confdb && rm -f flang.patch &&  wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/flang.patch ; cd ../../../../  ; pwd ;\
+ sh ./autogen.sh ;\
+ fi \
 && ./configure  --prefix=$MPICH_DIR   \
  $mpich_options \
---with-device=ch4:ofi  \
+--with-device=$MPICH_DEVICE  \
 --enable-fortran=all \
 --disable-opencl --enable-silent-rules \
 --disable-cuda \
@@ -188,8 +222,9 @@ $FC -v \
 && make install                  \
 && if [ ! -f $MPICH_DIR/bin/mpif90 ]; then echo mpif90\ not\ found ; exit 1 ; fi \
 && echo mpif90 show is $($MPICH_DIR/bin/mpif90 -show) \
-&& cd .. ; rm -rf *tar*gz mpich-*  ;fi  \
-&& if [ ! -f $MPICH_DIR/bin/mpif90 ]; then echo mpif90\ not\ found ; exit 1 ; fi \
+&& cd .. ; rm -rf *tar*gz mpich-*  ;fi
+
+ if [ ! -f $MPICH_DIR/bin/mpif90 ]; then echo mpif90\ not\ found ; exit 1 ; fi \
 && echo '********' \
 && export PATH=$MPICH_DIR/bin:$PATH \
 && export LD_LIBRARY_PATH=$MPICH_DIR/lib:$LD_LIBRARY_PATH \
