@@ -34,7 +34,6 @@ jobs:
             - amd_gfx90a_rocm5.7.1
             - amd_gfx90a_rocm5.6
           ubuntu:
-            - focal
             - jammy
           include:
             - mpich: 4.2.2
