@@ -126,10 +126,15 @@ echo TAMM_BRANCH is $TAMM_BRANCH
 && apt-get -y install -y coreutils  tar libnl-3-200 libnl-route-3-200 libgomp1 libnuma1 \
  g++ gfortran   make  patch   unzip perl-base file \
  python3 python3-dev   unzip zip perl automake libtool autoconf flex  \
- libnuma-dev libslurm-dev libpmi2-0-dev libpmi0-dev  libnl-3-dev libnl-route-3-dev udev \
+ libnuma-dev  libnl-3-dev libnl-route-3-dev udev \
  librdmacm-dev librdmacm1 rdma-core libibverbs-dev  ibverbs-providers \
  libhwloc-dev  lsb-release \
  pkg-config gawk  software-properties-common  gdb \
+ && if [ $mpich_major = '4' ]; then
+    apt-get -y install -y libpmix-bin libpmix-dev libpmix2
+else
+    apt-get -y install -y libpmi2-0-dev libpmi0-dev
+fi \
 && export UBUNTU_CODE=$(lsb_release -c |cut -d : -f 2 | sed 's/\t//') \
 && echo UBUNTU_CODE is $UBUNTU_CODE \
 && export UBUNTU_RELEASE=$(lsb_release -r |cut -d : -f 2 | sed 's/\t//') \
