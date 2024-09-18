@@ -130,20 +130,11 @@ echo TAMM_BRANCH is $TAMM_BRANCH
  librdmacm-dev librdmacm1 rdma-core libibverbs-dev  ibverbs-providers \
  libhwloc-dev  lsb-release \
  pkg-config gawk  software-properties-common  gdb \
-&& apt-get install -y  build-essential fakeroot devscripts equivs libmunge-dev libgtk2.0-dev libperl-dev liblua5.3-dev dh-exec librrd-dev libipmimonitoring-dev libfreeipmi-dev man2html-base libhttp-parser-dev libjson-c-dev libjwt-dev liblz4-dev librdkafka-dev bash-completion hdf5-helpers libaec-dev libaec0 libcurl4 libcurl4-openssl-dev libdbus-1-dev libhdf5-103-1 libhdf5-cpp-103-1   libhdf5-dev libhdf5-fortran-102 libhdf5-hl-100 libhdf5-hl-cpp-100 libhdf5-hl-fortran-100 libpam0g-dev libssl-dev libsz2 libyaml-dev libevent-2.1-7 libevent-core-2.1-7 libevent-dev libevent-extra-2.1-7 libevent-openssl-2.1-7 libevent-pthreads-2.1-7  \
-libpmix-bin libpmix-dev libpmix2 \
-libpmi2-0-dev libpmi0-dev \
-&& rm -rf temp  \
-&& mkdir temp && cd temp \
-&& wget https://github.com/SchedMD/slurm/archive/refs/tags/slurm-23-11-10-1.tar.gz \
-&& tar xzf slurm*tar.gz && rm -f slu*tar.gz \
-&& cd slurm* \
-&& mk-build-deps -i debian/control \
-&& debuild -b -uc -us \
-&& cd .. \
-&& dpkg -i slurm-smd_*_amd64.deb slurm-smd-dev_*_amd64.deb \
-&& cd .. \
-&& rm -rf temp \
+ && if [ $mpich_major = '4' ]; then
+    apt-get -y install -y libpmix-bin libpmix-dev libpmix2
+else
+    apt-get -y install -y libpmi2-0-dev libpmi0-dev
+fi \
 && export UBUNTU_CODE=$(lsb_release -c |cut -d : -f 2 | sed 's/\t//') \
 && echo UBUNTU_CODE is $UBUNTU_CODE \
 && export UBUNTU_RELEASE=$(lsb_release -r |cut -d : -f 2 | sed 's/\t//') \
