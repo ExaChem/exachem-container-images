@@ -184,6 +184,8 @@ jobs:
         pwd
         ls -la
         apptainer pull -F ${{ env.tag }}:${{ env.date }}
+        export UCX_TLS=tcp,self
+        export UCX_POSIX_USE_PROC_LINK=n
         which mpirun
         ldd `which mpirun`
         mpirun -np 2 apptainer exec ${{ env.tag }}:${{ env.date }} \
