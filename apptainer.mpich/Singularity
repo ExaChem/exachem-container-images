@@ -256,8 +256,6 @@ wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/app
 &&              git clone -b ${EXACHEM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git exachem    \
 &&              git clone -b ${TAMM_BRANCH} --depth 100 https://github.com/NWChemEx/TAMM.git   \
 && 	     cd TAMM   \
-&&           wget https://github.com/NWChemEx/TAMM/commit/c1be1ffbdb5d4b71bd07f7e87c793c6a870cfa4d.patch \
-&&           patch -p1 -R < c1be1ffbdb5d4b71bd07f7e87c793c6a870cfa4d.patch \
 && 	     mkdir build && cd build  \
 &&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC;DFT' "  \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DDFT_CPU=ON " \
