@@ -35,6 +35,10 @@ jobs:
             - amd_gfx90a_rocm5.6
           ubuntu:
             - jammy
+          scalapack:
+            - y
+          elpa:
+            - n
           include:
             - mpich: 4.2.2
               mpich_device: ch4:ucx
@@ -44,6 +48,8 @@ jobs:
               exachem_branch: main
               tamm_branch: main
               folder: apptainer.mpich
+              elpa: y
+              scalapack: y
     steps:
     - name: Get Instruction
       id: get-simd
@@ -138,7 +144,7 @@ jobs:
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        MPICH_DEVICE=${{ matrix.mpich_device }} MPICH=${{ matrix.mpich }} MYUSERNAME=${{ github.actor}}  EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} GA_RUNTIME=${{ matrix.ga_runtime}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --build-arg UBUNTU_VERSION=${{ matrix.ubuntu}} --rocm --fakeroot ${{ matrix.folder }}.simg  Singularity
+        SCALAPACK=${{ matrix.scalapack }} ELPA=${{ matrix.elpa }} MPICH_DEVICE=${{ matrix.mpich_device }} MPICH=${{ matrix.mpich }} MYUSERNAME=${{ github.actor}}  EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} GA_RUNTIME=${{ matrix.ga_runtime}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --build-arg UBUNTU_VERSION=${{ matrix.ubuntu}} --rocm --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |
