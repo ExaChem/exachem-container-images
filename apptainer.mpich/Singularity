@@ -149,14 +149,13 @@ fi \
 && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 100 \
 && update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-"$GCC_VERSION" 100 \
             && apt-get install  -q=2 -y  autoconf automake libtool git \
-&& bash -o  pipefail -c "if [[ $GPU == nvidia ]]; then  \	    
- curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg \
- && cp cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg \
- && echo 'deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /' |  tee /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.list \
- &&  curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin \
- && mv cuda-*.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
- && apt-get  update \
-&& apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-cudart-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} libcublas-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} ; fi " \
+&& if [ $GPU = "nvidia" ]; then  curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg ;\
+ cp cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg ;\
+ echo 'deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /' |  tee /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.list ;\
+  curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin ;\
+ mv cuda-*.pin /etc/apt/preferences.d/cuda-repository-pin-600 ;\
+  apt-get  update ;\
+apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-cudart-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} libcublas-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-nvml-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} ; export CUDA_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"; echo cublas $(ls -lrt $CUDA_PATH/lib64/libcublas*) ; fi  \
 && if [ $GPU = "amd" ]; then mkdir --parents --mode=0755 /etc/apt/keyrings \
 && wget --quiet https://repo.radeon.com/rocm/rocm.gpg.key -O - |  gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null \
 && echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/'$ROCM_VERSION $UBUNTU_CODE 'main' | tee --append /etc/apt/sources.list.d/rocm.list \
@@ -310,7 +309,7 @@ wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/app
 	    && rm -rf /usr/share/doc \
             &&  apt-get -q=2 -y purge   patch curl  wget  make git cpp-"$GCC_VERSION" gfortran-"$GCC_VERSION" gcc-"$GCC_VERSION" libicu-dev libpython"$PY_VERSION"-dev libstdc++-"$GCC_VERSION"-dev libc6-dev libgcc-"$GCC_VERSION"-dev libgfortran-"$GCC_VERSION"-dev  || true \
             && apt-get -q=2 -y install libgfortran5 libgomp1 && apt-get clean \
-	    && if [ "$GPU" = nvidia ]; then apt-get purge -y cuda-cccl-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" cuda-nvml-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} ; fi\
+	    && if [ "$GPU" = nvidia ]; then apt-get purge -y cuda-cccl-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" ; fi\
 	    && if [ "$GPU" = "amd" ]; then  apt-get  purge -y   git-man openmp-extras \
 	    lib32gcc-11-dev  libc6-dev-i386 libx32gcc-11-dev libc6-dev-x32 lib32gcc-11-dev  \
 	    lib32asan6 lib32atomic1 lib32gcc-s1 lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++6 lib32ubsan1 libc6-i386 \
