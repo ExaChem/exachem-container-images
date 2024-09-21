@@ -39,7 +39,7 @@ jobs:
           scalapack:
             - y
           elpa:
-            - y
+            - n
           include:
             - mpich: 4.2.2
               mpich_device: ch4:ucx
@@ -60,7 +60,7 @@ jobs:
               tamm_branch: main
               folder: apptainer.mpich
               scalapack: y
-              elpa: y
+              elpa: n
     steps:
     - name: Get Instruction
       id: get-simd
