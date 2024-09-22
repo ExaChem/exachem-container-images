@@ -271,6 +271,7 @@ wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/app
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \
 && 	     USE_SCALAPACK="$USE_SCALAPACK" CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
 &&             make -j3 || { echo "Compilation failure in tamm step";
+	    cat $(find /opt/TAMM/ -name config.log) || true ; \
 	    cat $(find /opt/TAMM/ -name CMakeOutput.log) || true ; \
             cat $(find /opt/TAMM/ -name CMakeError.log ) || true; exit 1; } \
 && 	     echo exit code for TAMM compilation $?   \
