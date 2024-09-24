@@ -1,0 +1,10 @@
+--- a/_deps/cmakebuild-src/cmake/build_external/ELPA/CMakeLists.txt
++++ b/_deps/cmakebuild-src/cmake/build_external/ELPA/CMakeLists.txt
+@@ -136,6 +136,7 @@
+ else()
+ ExternalProject_Add(ELPA_External
+     URL https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/${CMSB_ELPA_VERSION}/elpa-${CMSB_ELPA_VERSION}.tar.gz
++    PATCH_COMMAND rm -f elpa*patch && wget https://raw.githubusercontent.com/edoapra/exachem-container-images/refs/heads/pullsep09/patches/elpa_allocate_allreduce.patch && patch -p1   < ./elpa_allocate_allreduce.patch
+     CONFIGURE_COMMAND ./configure --prefix=${CMAKE_INSTALL_PREFIX}
+                                     ${ELPA_INTRINSICS}
+                                     ${ELPA_SHARED_LIBS}
