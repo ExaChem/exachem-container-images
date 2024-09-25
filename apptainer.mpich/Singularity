@@ -188,7 +188,16 @@ apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-c
 
 if [ ! -f /opt/mpich/lib/libmpi.a ]; then  \
 $FC -v \
-	 && if [ ${MPICH_DEVICE} != ch4:ofi ]; then echo 'installing ucx' ; \
+	 && if [ ${MPICH_DEVICE} = ch4:ofi ]; then echo 'installing libfabrics' ; \
+	   export libfabric_version="1.15.2" ; \
+	   echo using libfabric_version "$libfabric_version" ; \
+	    wget --progress=dot:giga  https://github.com/ofiwg/libfabric/releases/download/v"$libfabric_version"/libfabric-"$libfabric_version".tar.bz2 -O - | tar --no-same-owner  -xjf -  ; \
+ cd libfabric-$libfabric_version ; \
+ mkdir build && cd build  ; \
+ ../configure --prefix=$MPICH_DIR && make -j4 && make install ; \
+ if [ ! -f $MPICH_DIR/bin/fi_info ]; then echo fi_info\ not\ found ; exit 1 ; fi ;\
+   export mpich_options=$mpich_options" --with-libfabrics="$MPICH_DIR ; \
+	 else echo 'installing ucx' ; \
    export ucx=1.15.0 ; \
    echo 'the ucx version is'  $ucx ; \
    wget --progress=dot:giga  https://github.com/openucx/ucx/releases/download/v$ucx/ucx-$ucx.tar.gz ; \
@@ -199,10 +208,10 @@ $FC -v \
    mkdir -p build && cd build ;\
    ../configure --prefix=$MPICH_DIR --disable-logging --disable-debug --disable-assertions --disable-params-check ;\
    make -j4 && make install ;\
-   if [ ! -f $MPICH_DIR/bin/ucx_info ]; then echo ucx_info\ not\ found ; exit 1 ; fi ;\
-   cd ../.. ;\
+   if [ ! -f $MPICH_DIR/bin/ucx_info ]; then echo ucx_info\ not\ found ; exit 1 ; fi 
    export mpich_options=$mpich_options" --with-ucx="$MPICH_DIR ; \
      fi \
+   && cd ../..  \
 && echo ' mpich_options is set to' $mpich_options \
 && wget  --progress=dot:giga https://www.mpich.org/static/downloads/$MPICH/mpich-$MPICH.tar.gz  -O - | tar xzf - \
 && cd $mpich_prefix     \
