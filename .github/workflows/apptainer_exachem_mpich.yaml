@@ -42,6 +42,16 @@ jobs:
             - y
           include:
             - mpich: 4.2.2
+              mpich_device: ch4:ofi
+              ga_runtime: MPI_PROGRESS_RANK
+              ubuntu: jammy
+              gpu: cpu
+              exachem_branch: main
+              tamm_branch: main
+              folder: apptainer.mpich
+              scalapack: y
+              elpa: y
+            - mpich: 4.2.2
               mpich_device: ch4:ucx
               ga_runtime: MPI_PROGRESS_RANK
               ubuntu: jammy
