@@ -39,7 +39,7 @@ jobs:
           scalapack:
             - y
           elpa:
-            - y
+            - n
           include:
             - mpich: 4.2.2
               mpich_device: ch4:ofi
