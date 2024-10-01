@@ -265,7 +265,7 @@ wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/app
 &&              git clone -b ${TAMM_BRANCH} --depth 100 https://github.com/NWChemEx/TAMM.git   \
 && 	     cd TAMM   \
 && 	     mkdir build && cd build  \
-&&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC;DFT' "  \
+&&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC' "  \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DDFT_CPU=ON " \
 && 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3"  \
 &&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}" ; fi  \
