@@ -78,7 +78,7 @@ RUN         apt-get -q=2 update \
             &&  wget --progress=dot:giga https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin \
             && mv cuda-*.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
 	    && apt-get -q=2 update \
-            && apt-get -q=2 -y install cuda-nvcc-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" cuda-cudart-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR"  \
+            && apt-get -q=2 -y install cuda-nvcc-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" cuda-cudart-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" cuda-nvml-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR}  \
 	    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 1000 \
 	    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 1000 \
 	    && update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-"$GCC_VERSION" 1000 \
@@ -112,16 +112,25 @@ RUN         apt-get -q=2 update \
 	    && mkdir -p /opt/install/exachem/ /opt/cache\
             && if [[ -f /tmp/libint.tar.bz2 ]]; then cd /opt/install/exachem; tar xjvf /tmp/libint.tar.bz2; rm -rf /tmp/libint.tar.bz2 ; export FETCHED_LIBINT=1; fi \
             && cd /opt || { echo "Failure"; exit 1; } \
+            && git clone -b ${TAMM_BRANCH} --depth 100 https://github.com/NWChemEx/TAMM.git   \
             && git clone -b ${TAMM_BRANCH} --depth 20  https://github.com/ExaChem/exachem.git exachem  \
-            && cd exachem \
-	    && mkdir build && cd build \
+            && 	     cd TAMM   \
+            && 	     mkdir build && cd build  \
 	    && echo " USE_SYSV is " $USE_SYSV \
 	    && echo " USE_CPU is " $USE_CPU \
             && CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES=CC  -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3 " \
+	    && CMAKE_OPTIONS="$CMAKE_OPTIONS -DDFT_CPU=ON " \
             && if [[ $USE_SYSV == Y ]]; then echo "sysv enabled"; CMAKE_OPTIONS+="-DGA_ENABLE_SYSV=ON "; fi \
             && if [[ $USE_CPU == N ]]; then echo "gpu code"; CMAKE_OPTIONS+="-DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=80" ; else echo "cpu code" ;fi \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
+	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
+            && make -j3 \
+	    && echo exit code for compilation $? \
+            && make install \
+	    && echo exit code for make install $? \
+            && cd /opt/exachem \
+	    && mkdir build && cd build \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
             && make -j3 \
 	    && echo exit code for compilation $? \

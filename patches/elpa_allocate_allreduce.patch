@@ -1,0 +1,67 @@
+diff --git a/src/elpa2/elpa2_symm_matrix_allreduce_real_template.F90 b/src/elpa2/elpa2_symm_matrix_allreduce_real_template.F90
+index ba8c7496..600b75f4 100644
+--- a/src/elpa2/elpa2_symm_matrix_allreduce_real_template.F90
++++ b/src/elpa2/elpa2_symm_matrix_allreduce_real_template.F90
+@@ -51,6 +51,7 @@
+ ! distributed along with the original code in the file "COPYING".
+ 
+ #include "../general/sanity.F90"
++#include "../general/error_checking.inc"
+ 
+ #undef ROUTINE_NAME
+ #ifdef SKEW_SYMMETRIC_BUILD
+@@ -84,7 +85,8 @@ subroutine symm_matrix_allreduce_&
+ #endif
+   integer(kind=ik)             :: i, nc
+   integer(kind=MPI_KIND)       :: mpierr
+-  real(kind=REAL_DATATYPE)     :: h1(n*n), h2(n*n)
++! real(kind=REAL_DATATYPE)     :: h1(n*n), h2(n*n)
++  real(kind=REAL_DATATYPE), allocatable    :: h1(:), h2(:)
+   integer(kind=MPI_KIND)       :: allreduce_request1
+   logical                      :: useNonBlockingCollectives
+   logical                      :: useNonBlockingCollectivesCols
+@@ -92,6 +94,8 @@ subroutine symm_matrix_allreduce_&
+   logical, intent(in)          :: isRows
+   integer(kind=c_int)          :: non_blocking_collectives_rows, error, &
+                                   non_blocking_collectives_cols
++  integer(kind=c_int)          :: istat
++  character(200)                                                     :: errorMessage
+   logical                      :: success
+ 
+   success = .true.
+@@ -150,6 +154,7 @@ subroutine symm_matrix_allreduce_&
+     useNonBlockingCollectives = useNonBlockingCollectivesCols
+   endif
+ 
++  allocate(h1(n*n))
+   nc = 0
+   do i=1,n
+     h1(nc+1:nc+i) = a(1:i,i)
+@@ -159,12 +164,14 @@ subroutine symm_matrix_allreduce_&
+ #ifdef WITH_MPI
+   if (useNonBlockingCollectives) then
+     call obj%timer%start("mpi_nbc_communication")
++    allocate(h2(n*n))
+     call mpi_iallreduce(h1, h2, int(nc,kind=MPI_KIND), MPI_REAL_PRECISION, MPI_SUM, &
+                      int(comm,kind=MPI_KIND), allreduce_request1, mpierr)
+     call mpi_wait(allreduce_request1, MPI_STATUS_IGNORE, mpierr)
+     call obj%timer%stop("mpi_nbc_communication")
+   else
+     call obj%timer%start("mpi_communication")
++    print *,' calling mpi_allreduce n=',n
+     call mpi_allreduce(MPI_IN_PLACE,h1, int(nc,kind=MPI_KIND), MPI_REAL_PRECISION, MPI_SUM, &
+                      int(comm,kind=MPI_KIND), mpierr)
+     call obj%timer%stop("mpi_communication")
+@@ -195,6 +202,12 @@ subroutine symm_matrix_allreduce_&
+   enddo
+ 
+ #endif /* WITH_MPI */
++  deallocate(h1, stat=istat, errmsg=errorMessage)
++  check_deallocate("elpa2_symm_allr: h1", istat, errorMessage)
++  if (useNonBlockingCollectives) then
++     deallocate(h2, stat=istat, errmsg=errorMessage)
++     check_deallocate("elpa2_symm_allr: h2", istat, errorMessage)
++  endif
+ ! nc = 0
+ ! do i=1,n
+ !   a(1:i,i) = h2(nc+1:nc+i)
