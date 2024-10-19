@@ -17,6 +17,8 @@ jobs:
         matrix:
           folder:
             - apptainer.ompi41x
+          ga_runtime:
+            - MPI_PROGRESS_RANK
           tamm_branch:
             - main
           exachem_branch:
@@ -45,18 +47,21 @@ jobs:
               exachem_branch: main
               scalapack: Y
               elpa: Y
+              ga_runtime: MPI_PROGRESS_RANK
             - gpu: nvidia_80
               armci_network: MPI-PR
               folder: apptainer.ompi41x
               exachem_branch: main
               scalapack: Y
               elpa: Y
+              ga_runtime: MPI_PROGRESS_RANK
             - gpu: nvidia_90
               armci_network: MPI-PR
               folder: apptainer.ompi41x
               exachem_branch: main
               scalapack: Y
               elpa: Y
+              ga_runtime: MPI_PROGRESS_RANK
     steps:
     - name: Get Instruction
       id: get-simd
@@ -153,7 +158,7 @@ jobs:
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        MYUSERNAME=${{ github.actor}} EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} ARMCI_NETWORK=${{ matrix.armci_network}} SCALAPACK=${{ matrix.scalapack }} ELPA=${{ matrix.elpa}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
+        MYUSERNAME=${{ github.actor}} EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}}  GA_RUNTIME=${{ matrix.ga_runtime}} SCALAPACK=${{ matrix.scalapack }} ELPA=${{ matrix.elpa}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |

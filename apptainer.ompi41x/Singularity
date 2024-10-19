@@ -13,10 +13,10 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 #    ls -l ${SINGULARITY_ROOTFS}
     rm -f ${SINGULARITY_ROOTFS}/*.txt || true
     bash -c "if [[ -z '${GPU}' ]]; then echo 'GPU=nvidia ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; else echo 'GPU is ${GPU}'; echo 'GPU=${GPU} ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; fi"
+    bash -c "if [[ -z '${GA_RUNTIME}' ]]; then echo 'GA_RUNTIME=MPI_PROGRESS_RANK ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; else echo 'GA_RUNTIME is ${GA_RUNTIME}'; echo 'GA_RUNTIME=${GA_RUNTIME} ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; fi"
     bash -c "if [[ -z '${SCALAPACK}' ]]; then echo 'SCALAPACK=Y ' >> ${SINGULARITY_ROOTFS}/scalapack.txt ; else echo 'SCALAPACK is ${SCALAPACK}'; echo 'SCALAPACK=${SCALAPACK} ' >> ${SINGULARITY_ROOTFS}/scalapack.txt ; fi"
     bash -c "echo 'ELPA is ${ELPA}'; echo 'ELPA=${ELPA} ' >> ${SINGULARITY_ROOTFS}/elpa.txt "
     cat ${SINGULARITY_ROOTFS}/elpa.txt
-    bash -c "if [[ -z '${GA_RUNTIME}' ]]; then echo 'GA_RUNTIME=MPI_2SIDED ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; else echo 'GA_RUNTIME is ${GA_RUNTIME}'; echo 'GA_RUNTIME=${GA_RUNTIME} ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; fi"
     bash -c "if [[ -z '${MPI_IMPL}' ]]; then echo 'MPI_IMPL=ompi ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; else echo 'MPI_IMPL is ${MPI_IMPL}'; echo 'MPI_IMPL=${MPI_IMPL} ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; fi"
     bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/tamm_branch.txt ; fi"
     bash -c "if [[ -z '${EXACHEM_BRANCH}' ]]; then echo 'EXACHEM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'EXACHEM_BRANCH is ${EXACHEM_BRANCH}'; echo 'EXACHEM_BRANCH=${EXACHEM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/exachem_branch.txt ; fi"
