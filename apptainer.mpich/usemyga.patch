@@ -1,0 +1,20 @@
+--- _deps/cmakebuild-src/cmake/build_external/BuildGlobalArrays.cmake.org	2024-10-25 12:39:29.684417195 -0700
++++ _deps/cmakebuild-src/cmake/build_external/BuildGlobalArrays.cmake	2024-10-25 12:40:49.956880749 -0700
+@@ -14,15 +14,8 @@
+         set(GA_RUNTIME MPI_PROGRESS_RANK)
+     endif()
+ 
+-    is_valid_and_true(GA_REPO __set)
+-    if (NOT __set)
+-      set(GA_REPO "https://github.com/GlobalArrays/ga.git")
+-    endif()
+-
+-    is_valid_and_true(GA_TAG __set)
+-    if(__set)
+-      set(GA_GIT_TAG ${GA_TAG})
+-    endif()
++      set(GA_REPO "https://github.com/edoapra/ga.git")
++      set(GA_GIT_TAG hostid)
+ 
+     if(GCCROOT)
+         set(Clang_GCCROOT "-DGCCROOT=${GCCROOT}")

@@ -6,11 +6,14 @@ Stage: spython-base
    UBUNTU_VERSION=focal
 
 %files
+    usemyga.patch /tmp/usemyga.patch
 %labels
 MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 
 %setup
     #!/bin/bash
+    cat usemyga.patch
+    cp usemyga.patch /tmp
     echo "$(readlink /proc/$$/exe) is the shell in use"
     env|egrep SHELL
     ls -la  ${GITHUB_WORKSPACE}
@@ -304,6 +307,11 @@ wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/app
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \
 && 	     USE_SCALAPACK="$USE_SCALAPACK" CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
+&&           echo "modify ga repository to use" \
+&&           echo "=====" \
+&&           cat _deps/cmakebuild-src/cmake/build_external/BuildGlobalArrays.cmake \
+&&           echo "=====" \
+&&           patch -p0 < /tmp/usemyga.patch \
 &&             make -j3 || { echo "Compilation failure in tamm step";
                echo cublas $(ls -lrt $CUDA_PATH/lib64/libcublas*) || true ;  echo cublas target $(ls -lrt $CUDA_PATH/targets/x86_64-linux/lib64/libcublas*) ||true ;  echo ls cudapath $(ls -lrt $CUDA_PATH ) || true;  \
 	    cat $(find /opt/TAMM/ -name config.log) || true ; \
