@@ -48,6 +48,17 @@ jobs:
               ofi: builtin
               ga_runtime: MPI_PROGRESS_RANK
               ubuntu: jammy
+              gpu: nvidia_70
+              exachem_branch: main
+              tamm_branch: main
+              folder: apptainer.mpich
+              scalapack: y
+              elpa: y
+            - mpich: main
+              mpich_device: ch4:ofi
+              ofi: builtin
+              ga_runtime: MPI_PROGRESS_RANK
+              ubuntu: jammy
               gpu: cpu
               exachem_branch: main
               tamm_branch: main
