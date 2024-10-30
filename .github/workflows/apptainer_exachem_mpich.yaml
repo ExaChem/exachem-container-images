@@ -25,6 +25,8 @@ jobs:
             - 3.4.2
           mpich_device:
             - ch4:ofi
+          ofi:
+            - builtin
           ga_runtime:
             - MPI_PROGRESS_RANK
           gpu:
@@ -41,8 +43,20 @@ jobs:
           elpa:
             - n
           include:
-            - mpich: 4.2.2
+            - mpich: main
               mpich_device: ch4:ofi
+              ofi: builtin
+              ga_runtime: MPI_PROGRESS_RANK
+              ubuntu: jammy
+              gpu: nvidia_70
+              exachem_branch: main
+              tamm_branch: main
+              folder: apptainer.mpich
+              scalapack: y
+              elpa: y
+            - mpich: main
+              mpich_device: ch4:ofi
+              ofi: builtin
               ga_runtime: MPI_PROGRESS_RANK
               ubuntu: jammy
               gpu: cpu
@@ -51,8 +65,9 @@ jobs:
               folder: apptainer.mpich
               scalapack: y
               elpa: y
-            - mpich: 4.2.2
-              mpich_device: ch4:ucx
+            - mpich: 4.2.3
+              mpich_device: ch4:ofi
+              ofi: builtin
               ga_runtime: MPI_PROGRESS_RANK
               ubuntu: jammy
               gpu: cpu
@@ -61,8 +76,42 @@ jobs:
               folder: apptainer.mpich
               scalapack: y
               elpa: y
-            - mpich: 4.2.2
+            - mpich: 4.2.3
               mpich_device: ch4:ucx
+              ofi: builtin
+              ga_runtime: MPI_PROGRESS_RANK
+              ubuntu: jammy
+              gpu: cpu
+              exachem_branch: main
+              tamm_branch: main
+              folder: apptainer.mpich
+              scalapack: y
+              elpa: y
+            - mpich: 4.2.3
+              mpich_device: ch4:ucx
+              ofi: builtin
+              ga_runtime: MPI_PROGRESS_RANK
+              ubuntu: jammy
+              gpu: nvidia_70
+              exachem_branch: main
+              tamm_branch: main
+              folder: apptainer.mpich
+              scalapack: y
+              elpa: y
+            - mpich: 4.2.3
+              mpich_device: ch4:ofi
+              ofi: builtin
+              ga_runtime: MPI_PROGRESS_RANK
+              ubuntu: jammy
+              gpu: nvidia_70
+              exachem_branch: main
+              tamm_branch: main
+              folder: apptainer.mpich
+              scalapack: y
+              elpa: y
+            - mpich: 4.2.3
+              mpich_device: ch4:ofi
+              ofi: 1.22.0
               ga_runtime: MPI_PROGRESS_RANK
               ubuntu: jammy
               gpu: nvidia_70
@@ -93,6 +142,9 @@ jobs:
         if [[ ${{ matrix.mpich_device }} !=  ch4:ofi ]]; then
           dev_tag=$(echo ${{ matrix.mpich_device }} | sed  's/:/_/' )
           echo "mpich_device="${dev_tag} >> $GITHUB_ENV
+        fi
+        if [[ ${{ matrix.ofi }} !=  builtin ]]; then
+          myversion+=.libfabric-${{ matrix.ofi }}
         fi
         echo "exachemversion=$myversion" >> $GITHUB_ENV
     - name: tag
@@ -134,7 +186,7 @@ jobs:
       with:
         path: |
           ~/cache
-        key: ${{ matrix.folder}}-${{ env.exachemversion}}-${{ matrix.mpich }}${{ env.mpich_device }}-exachemcache-v002
+        key: ${{ matrix.folder}}-${{ env.exachemversion}}-${{ matrix.mpich }}${{ matrix.ofi }}${{ env.mpich_device }}-exachemcache-v002
     - name: fetch cache
       if: steps.setup-cache.outputs.cache-hit == 'true'
       run: |
@@ -165,7 +217,7 @@ jobs:
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        SCALAPACK=${{ matrix.scalapack }} ELPA=${{ matrix.elpa }} MPICH_DEVICE=${{ matrix.mpich_device }} MPICH=${{ matrix.mpich }} MYUSERNAME=${{ github.actor}}  EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} GA_RUNTIME=${{ matrix.ga_runtime}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --build-arg UBUNTU_VERSION=${{ matrix.ubuntu}} --rocm --fakeroot ${{ matrix.folder }}.simg  Singularity
+        SCALAPACK=${{ matrix.scalapack }} ELPA=${{ matrix.elpa }} OFI=${{ matrix.ofi }} MPICH_DEVICE=${{ matrix.mpich_device }} MPICH=${{ matrix.mpich }} MYUSERNAME=${{ github.actor}}  EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} GA_RUNTIME=${{ matrix.ga_runtime}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --build-arg UBUNTU_VERSION=${{ matrix.ubuntu}} --rocm --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |
