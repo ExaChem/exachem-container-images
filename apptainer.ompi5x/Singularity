@@ -313,9 +313,8 @@ cd .. ; rm -rf *tar*gz openmpi-* ucx-$ucx ;fi " \
 	    apt-get install -y hip-runtime-amd rocblas openmp-extras-runtime;  \
 	    cd $ROCM_PATH/lib/rocblas/ ; mkdir keep ; mv library/*"$GPU_ARCH"* keep/.  ; \
 	    rm -rf library ; mv keep library ; \
-	    cp "$ROCM_PATH"/bin/rocm-smi /tmp/rocm-smi ;\
 	    rm -rf "$ROCM_PATH"/bin  "$ROCM_PATH"/llvm/bin  ; \
-	    mkdir -p "$ROCM_PATH"/bin  && cp /tmp/rocm-smi "$ROCM_PATH"/bin/. ; fi\
+	    mkdir -p "$ROCM_PATH"/bin  && ln -sf "$ROCM_PATH"/libexec/rocm_smi/rocm_smi.py "$ROCM_PATH"/bin/rocm-smi ; fi\
 	    && echo '*** ls -l CC/bin **' \
 	    && ls -l /opt/install/exachem/bin/ || true \
 	    && echo '*** ldd ***'  \
