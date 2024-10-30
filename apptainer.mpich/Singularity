@@ -172,11 +172,10 @@ apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-c
 && apt-get  update -y &&  apt-get -y install hip-dev hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib rocminfo hipcc hipblas-dev\
 && ls -lrt /opt \
 && ls -lrt  /opt/rocm* || true \
+&& echo "$GPU_ARCH" >> $ROCM_PATH/bin/target.lst \
+&& echo 'rrrr' $(cat  $ROCM_PATH/bin/target.lst) \
 && echo '$$$$$$$$$$$$$$$$$$$$' \
-&& echo 'dpkg-query -L rocminfo' $(dpkg-query -L rocminfo) \
-&& if [ $UBUNTU_CODE = "jammy_std" ]; then ln -sf /usr/bin/rocm_agent_enumerator $ROCM_PATH/bin/. ;  ln -sf /usr/bin/rocminfo $ROCM_PATH/bin/. ; fi \
-&& echo '$$$$$$$$$$$$$$$$$$$$' \
-&& echo 'rocminfo' $(/opt/rocm/bin/rocm_agent_enumerator) \
+&& echo 'rocminfo' $(rocm_agent_enumerator) \
 && echo '$$$$$$$$$$$$$$$$$$$$' \
 && echo 'hipcc --version' $(hipcc --version) \
 && echo '$$$$$$$$$$$$$$$$$$$$' \
