@@ -302,15 +302,12 @@ wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/app
 &&              if [ \( ${CC} = "gcc" \) -a \(  ${ELPA} = "y" \) ]; then echo "ELPA ON"; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_ELPA=ON " ; fi  \
 &&              if [ \( ${CC} = "amdclang" \) -a \( ${SCALAPACK} = "y" \) ]; then echo "scalapack workaround for clang "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_C_FLAGS_INIT='-Wno-error=implicit-function-declaration' 	" ; fi  \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_RUNTIME=${GA_RUNTIME}"  \
+&&              echo "modify ga repository to use" \
+&&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_REPO='https://github.com/edoapra/ga.git' -DGA_TAG='hostid'"    \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \
 && 	     USE_SCALAPACK="$USE_SCALAPACK" CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
-&&           echo "modify ga repository to use" \
-&&           echo "=====" \
-&&           cat _deps/cmakebuild-src/cmake/build_external/BuildGlobalArrays.cmake \
-&&           echo "=====" \
-&&           patch -p0 < /tmp/usemyga.patch \
 &&             make -j3 || { echo "Compilation failure in tamm step";
                echo cublas $(ls -lrt $CUDA_PATH/lib64/libcublas*) || true ;  echo cublas target $(ls -lrt $CUDA_PATH/targets/x86_64-linux/lib64/libcublas*) ||true ;  echo ls cudapath $(ls -lrt $CUDA_PATH ) || true;  \
 	    cat $(find /opt/TAMM/ -name config.log) || true ; \
@@ -362,6 +359,7 @@ wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/app
 	    cd $ROCM_PATH/lib/rocblas/ ; mkdir keep ; mv library/*"$GPU_ARCH"* keep/.  ; \
 	    rm -rf library ; mv keep library ; \
 	    ln -sf "$ROCM_PATH"/ /opt/rocm ;\
+	    rm  -f "$ROCM_PATH"/bin/rocm-smi ; ln -sf "$ROCM_PATH"/libexec/rocm_smi/rocm_smi.py "$ROCM_PATH"/bin/rocm-smi  \
 	    rm -rf   "$ROCM_PATH"/llvm/bin  ; fi\
 	    && echo '*** ls -l CC/bin **' \
 	    && ls -l /opt/install/exachem/bin/ || true \
