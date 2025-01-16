@@ -1,0 +1,6 @@
+#
+
+FROM ubuntu:jammy
+
+LABEL maintainer="Edoardo Apra <edoardo.apra@pnnl.gov>"
+
