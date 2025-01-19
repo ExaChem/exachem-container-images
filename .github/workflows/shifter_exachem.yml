@@ -117,6 +117,21 @@ jobs:
           ls -l cache/ ; \
           echo "======" ; \
           fi
+      - name: save docker ubuntu image
+        run: |
+          if [  -f ~/cache/myubuntu_jammy.tar ]; then
+              echo "docker tar found"
+              docker load -i ~/cache/myubuntu_jammy.tar
+              docker images
+          else
+              echo "docker tar not found found"
+              cd ${{ matrix.folder }}
+              docker build -t ghcr.io/edoapra/ubuntu:latest -f Dockerfile.ubuntu .
+              mkdir -p ~/cache
+              docker save -o ~/cache/myubuntu_jammy.tar ghcr.io/edoapra/ubuntu:latest
+              docker images
+          fi
+          docker push ghcr.io/edoapra/ubuntu:latest
       - name: builddate
         id: build-date
         run: |
