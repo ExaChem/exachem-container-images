@@ -1,6 +1,7 @@
+ARG         GITHUB_REPOSITORY_OWNER
 #
 
-FROM ghcr.io/edoapra/ubuntu:latest
+FROM ghcr.io/$GITHUB_REPOSITORY_OWNER/ubuntu:latest
 
 LABEL maintainer="Edoardo Apra <edoardo.apra@pnnl.gov>"
 
@@ -21,7 +22,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG USE_OPENMP_VALUE
 ARG         FC
 ARG         TAMM_BRANCH
-ARG         GITHUB_REPOSITORY_OWNER
 ARG         USE_SYSV
 ARG         USE_CPU
 ENV         FC=${FC}
