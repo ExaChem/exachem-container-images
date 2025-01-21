@@ -1,10 +1,13 @@
 name: exachem_shifter
 
 on:
+  schedule:
+    - cron: '0 0 * * SUN'
+  pull_request:
   repository_dispatch:
     types: [backend_automation]
-  pull_request:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   shifter_schedule:
@@ -126,12 +129,12 @@ jobs:
           else
               echo "docker tar not found found"
               cd ${{ matrix.folder }}
-              docker build -t ghcr.io/${{ github.actor }}/ubuntu:latest -f Dockerfile.ubuntu .
+              docker build -t ghcr.io/${{ github.repository }}/ubuntu:latest -f Dockerfile.ubuntu .
               mkdir -p ~/cache
-              docker save -o ~/cache/myubuntu_jammy.tar ghcr.io/${{ github.actor }}/ubuntu:latest
+              docker save -o ~/cache/myubuntu_jammy.tar ghcr.io/${{ github.repository }}/ubuntu:latest
               docker images
           fi
-          docker push ghcr.io/${{ github.actor }}/ubuntu:latest
+          docker push ghcr.io/${{ github.repository }}/ubuntu:latest
       - name: builddate
         id: build-date
         run: |
@@ -150,6 +153,7 @@ jobs:
             USE_CPU=${{ matrix.cpu }}
             CACHE_HIT=${{ env.cache_hit }}
             GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }}
+            GITHUB_REPOSITORY=${{ github.repository }}
             TAMM_BRANCH=${{ matrix.branch }}
       - name: load and test image
         if: ${{ env.push_truefalse == 'true' }}
