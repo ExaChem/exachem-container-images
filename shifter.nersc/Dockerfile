@@ -1,7 +1,8 @@
 ARG         GITHUB_REPOSITORY_OWNER
+ARG         GITHUB_REPOSITORY
 #
 
-FROM ghcr.io/$GITHUB_REPOSITORY_OWNER/ubuntu:latest
+FROM ghcr.io/$GITHUB_REPOSITORY/ubuntu:latest
 
 LABEL maintainer="Edoardo Apra <edoardo.apra@pnnl.gov>"
 
