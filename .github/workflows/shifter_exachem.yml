@@ -126,12 +126,12 @@ jobs:
           else
               echo "docker tar not found found"
               cd ${{ matrix.folder }}
-              docker build -t ghcr.io/edoapra/ubuntu:latest -f Dockerfile.ubuntu .
+              docker build -t ghcr.io/${{ github.actor }}/ubuntu:latest -f Dockerfile.ubuntu .
               mkdir -p ~/cache
-              docker save -o ~/cache/myubuntu_jammy.tar ghcr.io/edoapra/ubuntu:latest
+              docker save -o ~/cache/myubuntu_jammy.tar ghcr.io/${{ github.actor }}/ubuntu:latest
               docker images
           fi
-          docker push ghcr.io/edoapra/ubuntu:latest
+          docker push ghcr.io/${{ github.actor }}/ubuntu:latest
       - name: builddate
         id: build-date
         run: |
