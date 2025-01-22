@@ -122,6 +122,7 @@ jobs:
           fi
       - name: save docker ubuntu image
         run: |
+          ubuntu_tag=$(echo ghcr.io/${{ github.repository }}/ubuntu:latest| tr '[:upper:]' '[:lower:]')
           if [  -f ~/cache/myubuntu_jammy.tar ]; then
               echo "docker tar found"
               docker load -i ~/cache/myubuntu_jammy.tar
@@ -129,12 +130,12 @@ jobs:
           else
               echo "docker tar not found found"
               cd ${{ matrix.folder }}
-              docker build -t ghcr.io/${{ github.repository }}/ubuntu:latest -f Dockerfile.ubuntu .
+              docker build -t $ubuntu_tag -f Dockerfile.ubuntu .
               mkdir -p ~/cache
-              docker save -o ~/cache/myubuntu_jammy.tar ghcr.io/${{ github.repository }}/ubuntu:latest
+              docker save -o ~/cache/myubuntu_jammy.tar $ubuntu_tag
               docker images
           fi
-          docker push ghcr.io/${{ github.repository }}/ubuntu:latest
+          docker push $ubuntu_tag
       - name: builddate
         id: build-date
         run: |
