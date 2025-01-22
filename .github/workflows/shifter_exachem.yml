@@ -10,8 +10,7 @@ on:
   workflow_call:
 
 jobs:
-  shifter_schedule:
-    if: (github.event_name == 'workflow_dispatch') || (github.event_name == 'schedule')
+  shifter_job
     strategy:
         fail-fast: false
         matrix:
