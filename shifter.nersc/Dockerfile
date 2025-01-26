@@ -1,8 +1,9 @@
+ARG         UBUNTU_TAG
 ARG         GITHUB_REPOSITORY_OWNER
 ARG         GITHUB_REPOSITORY
 #
 
-FROM ghcr.io/$GITHUB_REPOSITORY/ubuntu:latest
+FROM $UBUNTU_TAG
 
 LABEL maintainer="Edoardo Apra <edoardo.apra@pnnl.gov>"
 
