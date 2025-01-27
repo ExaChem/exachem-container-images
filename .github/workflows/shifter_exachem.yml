@@ -11,6 +11,11 @@ on:
 
 jobs:
   shifter_job:
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
     strategy:
         fail-fast: false
         matrix:
