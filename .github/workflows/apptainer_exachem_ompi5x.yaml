@@ -12,6 +12,11 @@ on:
 jobs:
   build_image:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
     strategy:
         fail-fast: false
         matrix:
