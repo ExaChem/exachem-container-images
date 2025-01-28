@@ -97,7 +97,7 @@ jobs:
         fi
     - name: tag
       run: |
-        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}${{ env.ga_runtime}}${{ env.elpa}}" >> $GITHUB_ENV
+        echo "$(echo tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}${{ env.ga_runtime}}${{ env.elpa}} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
     - name: echo-tag
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'

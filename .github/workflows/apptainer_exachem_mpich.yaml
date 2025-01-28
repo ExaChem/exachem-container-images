@@ -31,6 +31,8 @@ jobs:
             - MPI_PROGRESS_RANK
           gpu:
             - cpu
+            - amd_gfx90a_rocm6.3.2
+            - amd_gfx90a_rocm6.2.4
             - amd_gfx90a_rocm6.2
             - amd_gfx90a_rocm6.1.3
             - amd_gfx90a_rocm5.7.1
@@ -149,7 +151,7 @@ jobs:
         echo "exachemversion=$myversion" >> $GITHUB_ENV
     - name: tag
       run: |
-        echo "tag=oras://ghcr.io/${{ github.repository }}/apptainer.mpich${{ matrix.mpich }}${{ env.mpich_device }}${{ env.exachemversion}}" >> $GITHUB_ENV
+        echo "tag=$(echo oras://ghcr.io/${{ github.repository }}/apptainer.mpich${{ matrix.mpich }}${{ env.mpich_device }}${{ env.exachemversion}} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
     - name: echo-tag
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'
