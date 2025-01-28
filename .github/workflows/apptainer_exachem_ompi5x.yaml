@@ -164,6 +164,15 @@ jobs:
            cd ${{ matrix.folder }} ;\
         apptainer pull docker://ubuntu:jammy ; \
         fi
+    - name: push_false
+      id: push_false
+      if: ${{ github.event_name == 'pull_request' }}
+      run: |
+        echo "push_truefalse=false" >> $GITHUB_ENV
+    - name: push_true
+      if: ${{ github.event_name != 'pull_request' }}
+      run: |
+        echo "push_truefalse=true" >> $GITHUB_ENV
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
@@ -173,6 +182,7 @@ jobs:
       run: |
         echo "date=$(TZ=America/Los_Angeles date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
     - name: push to ghcr.io
+      if: ${{ env.push_truefalse == 'true' }}
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${{ github.actor }} --password-stdin oras://ghcr.io
         apptainer remote list
@@ -183,11 +193,6 @@ jobs:
         tries=0 ; until [ "$tries" -ge 3 ] ; do \
         apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:latest|| exit_code+=$? && break ;\
         tries=$((tries+1)) ; echo attempt no.  $tries    ; sleep 30 ;  done
-        if [[ $exit_code == 0 ]]; then
-        echo "push_truefalse=true" >> $GITHUB_ENV
-        else
-        echo "push_truefalse=false" >> $GITHUB_ENV
-        fi
       shell: bash
     - name: store cache
       if: ${{ env.push_truefalse == 'true' }}
