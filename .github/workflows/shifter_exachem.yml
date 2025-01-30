@@ -80,7 +80,7 @@ jobs:
       - name: docker tag
         id: docker-tag
         run: |
-          echo "tag=ghcr.io/${{ github.actor }}/${{ env.longnwversion}}" | tr '[:upper:]' '[:lower:]' >>  $GITHUB_ENV
+          echo "tag=ghcr.io/${{ github.repository }}/${{ env.longnwversion}}" | tr '[:upper:]' '[:lower:]' >>  $GITHUB_ENV
         shell: bash
       - name: push_false
         id: push_false
