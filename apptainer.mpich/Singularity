@@ -22,6 +22,7 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 #    ls -l ${SINGULARITY_ROOTFS}
     rm -f ${SINGULARITY_ROOTFS}/*.txt || true
     bash -c "if [[ -z '${GPU}' ]]; then echo 'GPU=nvidia ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; else echo 'GPU is ${GPU}'; echo 'GPU=${GPU} ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; fi"
+    bash -c "if [[ -z '${CC}' ]]; then echo 'CC=gcc ' >> ${SINGULARITY_ROOTFS}/cc.txt ; else echo 'CC is ${CC}'; echo 'CC=${CC} ' >> ${SINGULARITY_ROOTFS}/cc.txt ; fi"
     bash -c "if [[ -z '${GA_RUNTIME}' ]]; then echo 'GA_RUNTIME=MPI_PROGRESS_RANK ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; else echo 'GA_RUNTIME is ${GA_RUNTIME}'; echo 'GA_RUNTIME=${GA_RUNTIME} ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; fi"
     bash -c "if [[ -z '${MPI_IMPL}' ]]; then echo 'MPI_IMPL=mpich ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; else echo 'MPI_IMPL is ${MPI_IMPL}'; echo 'MPI_IMPL=${MPI_IMPL} ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; fi"
     bash -c "if [[ -z '${OFI}' ]]; then echo 'OFI=builtin ' >> ${SINGULARITY_ROOTFS}/OFI.txt ; else echo 'OFI is ${OFI}'; echo 'OFI=${OFI} ' >> ${SINGULARITY_ROOTFS}/ofi.txt ; fi"
@@ -49,11 +50,31 @@ echo "$(readlink /proc/$$/exe) is the shell in use"
 #https://sylabs.io/guides/3.6/user-guide/mpi.html
 export DEBIAN_FRONTEND=noninteractive
 export `cat ./mpich.txt`
-export mpich_prefix=mpich-$MPICH
+export `cat ./cc.txt`
+export `cat ./ga_runtime.txt`
+export `cat ./mpi_impl.txt`
+export `cat ./exachem_branch.txt`
+export `cat ./tamm_branch.txt`
+export `cat ./mpich_device.txt`
+export `cat ./mpich.txt`
+export `cat ./ofi.txt`
+export `cat ./scalapack.txt`
+export `cat ./elpa.txt`
+export `cat ./gpu.txt`
+export MPICH_DIR=/opt/mpich
+export MPICH_AURORA="4.3.0" 
+export PMIX_VERSION="4.2.9" 
+echo MPICH is $MPICH
+if [ $MPICH = aurora ]; then
+    export MPICH_VERSION=$MPICH_AURORA
+    	   else
+    export MPICH_VERSION=$MPICH
+fi 
+export mpich_prefix=mpich-$MPICH_VERSION
 echo mpich_prefix is $mpich_prefix 
-export mpich_major=$(echo $MPICH | cut -d . -f1) 
+export mpich_major=$(echo $MPICH_VERSION | cut -d . -f1) 
 echo mpich_major is $mpich_major 
-export mpich_minor=$(echo $MPICH | cut -d . -f2) 
+export mpich_minor=$(echo $MPICH_VERSION | cut -d . -f2) 
 echo mpich_minor is $mpich_minor 
 echo mpich_major is $mpich_major 
 if [ $mpich_major = '4' ]; then
@@ -61,10 +82,12 @@ if [ $mpich_major = '4' ]; then
 else
     export mpich_options=' '
 fi 
-export MPICH_DIR=/opt/mpich
-export SINGULARITY_mpich=$mpich
-export SINGULARITY_mpich_prefix=mpich-$mpich
-export `cat ./gpu.txt`
+ if [ $MPICH = aurora ]; then
+    export mpich_options=$mpich_options' --disable-maintainer-mode --with-pm=no --enable-romio --with-slurm=no --with-pmi=pmix --with-pmix=/opt/pmix '
+fi 
+ if [ $FC = gfortran ]; then
+    export mpich_options=$mpich_options' FFLAGS=-fallow-argument-mismatch  FCFLAGS=-fallow-argument-mismatch '
+fi 
 echo 'ROCM_VERSION=0' > rocm_version.txt ;
 bash -o  pipefail -c "if [[ $(echo $GPU | cut -c 1-3)  == 'amd' ]]; then echo gpus is amd;
 echo 'ROCM_VERSION='`echo $GPU | cut -c 16-` > rocm_version.txt ;
@@ -90,30 +113,23 @@ export PATH=$MPICH_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_
 export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:"$ROCM_PATH"/lib
 export SINGULARITY_PATH=$PATH
 export SINGULARITY_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-export `cat ./ga_runtime.txt`
-export `cat ./mpi_impl.txt`
-export `cat ./exachem_branch.txt`
-export `cat ./tamm_branch.txt`
-export `cat ./mpich_device.txt`
-export `cat ./mpich.txt`
-export `cat ./ofi.txt`
-export `cat ./scalapack.txt`
-export `cat ./elpa.txt`
 
 echo GPU is $GPU
 echo ROCM_PATH is ${ROCM_PATH}
+echo CC is $CC
 echo GA_RUNTIME is $GA_RUNTIME
 echo MPI_IMPL is $MPI_IMPL
- echo MPICH is $MPICH
  echo MPICH_DEVICE is $MPICH_DEVICE
 echo EXACHEM_BRANCH is $EXACHEM_BRANCH
 echo TAMM_BRANCH is $TAMM_BRANCH
- if [ "$GPU" = "amd" ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
- else export FC=gfortran ; export CC=gcc; export CXX=g++; fi \
+if [ "$CC" = "gcc" ]; then export FC=gfortran ; export CC=$CC; export CXX=g++; \
+elif [ "$CC" = "icx" ]; then export FC=ifx ; export CC=icx; export CXX=icpcx; \
+elif [ "$GPU" = "amd" ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
+fi \
 && echo 'FC is' "$FC"  \
 && echo ' CC is ' "$CC" \
 && echo ' CXX is ' "$CXX" \
-&& echo MPICH is $MPICH \
+&& echo MPICH_VERSION is $MPICH_VERSION \
 && echo OFI is $OFI\
 && cd / \
 && pwd \
@@ -190,75 +206,134 @@ apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-c
 && echo 'CXX -v ' `$CXX -v` || { echo "CXX not installed"; exit  1; } \
 && apt-get clean  \
 && echo 'ls -l /opt/mpich/lib/libmpi.a' $(ls -l /opt/mpich/lib/libmpi.a) || true  \
-&& if [ $FC = gfortran ]; then export mpich_options=" FFLAGS=-fallow-argument-mismatch  FCFLAGS=-fallow-argument-mismatch " ; fi  \
 && echo FC is $FC
 
-if [ ! -f /opt/mpich/lib/libmpi.a ]; then  \
-$FC -v \
-	 && if [ ${MPICH_DEVICE} = ch4:ofi ] && [ ${OFI} != builtin ] ; then echo 'installing libfabrics' ; \
-	   export libfabric_version=${OFI} ; \
-	   echo using libfabric_version "$libfabric_version" ; \
-   export mpich_options=$mpich_options" --with-libfabrics="$MPICH_DIR ; \
-	    wget --progress=dot:giga  https://github.com/ofiwg/libfabric/releases/download/v"$libfabric_version"/libfabric-"$libfabric_version".tar.bz2 -O - | tar --no-same-owner  -xjf -  ; \
- cd libfabric-$libfabric_version ; \
- mkdir build && cd build  ; \
- ../configure --prefix=$MPICH_DIR && make -j4 && make install ; \
- if [ ! -f $MPICH_DIR/bin/fi_info ]; then echo fi_info\ not\ found ; exit 1 ; fi ;\
-	 elif [ ${MPICH_DEVICE} = ch4:ucx ]; then echo 'installing ucx' ; \
-   export ucx=1.15.0 ; \
-   echo 'the ucx version is'  $ucx ; \
-   wget --progress=dot:giga  https://github.com/openucx/ucx/releases/download/v$ucx/ucx-$ucx.tar.gz ; \
-   tar xzf ucx-$ucx.tar.gz && rm ucx-$ucx.tar.gz  ;\
-   cd ucx-$ucx ; \
-   wget https://raw.githubusercontent.com/edoapra/nwchem-singularity/master/nwchem-dev.ompi41x.ifx/ucx_malloc.patch ;\
-   patch -p0 < ./ucx_malloc.patch ;\
-   mkdir -p build && cd build ;\
-   ../configure --prefix=$MPICH_DIR --disable-logging --disable-debug --disable-assertions --disable-params-check ;\
-   make -j4 && make install ;\
-   if [ ! -f $MPICH_DIR/bin/ucx_info ]; then echo ucx_info\ not\ found ; exit 1 ; fi 
-   export mpich_options=$mpich_options" --with-ucx="$MPICH_DIR ; \
-     fi \
-   && cd ../..  \
-&& echo ' mpich_options is set to' $mpich_options \
-&& if [ ${MPICH} = main ]; then git clone -b main https://github.com/pmodels/mpich.git mpich-main ;  \
-cd mpich-main ; \
-mpich_hash=49bb9c1b3dd4cc54e5567e7ee47800d666f1c3c0;  \
-git reset --hard $mpich_hash ; \
-   git submodule update --init ;\
-   sh autogen.sh ;\
-   cd ..;\
-   else  wget  --progress=dot:giga https://www.mpich.org/static/downloads/$MPICH/mpich-$MPICH.tar.gz  -O - | tar xzf -  ;\
-   fi \
-&& cd $mpich_prefix     \
-&& if [ $mpich_major = '3' ]; then echo 'mpich 3 autotools ' ; \
-mv autogen.sh autogen.sh.org ;\
-wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/autogen.sh ;\
- chmod +x autogen.sh ;\
- wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/install-autotools.sh ;\
- chmod +x install-autotools.sh ;\
- wget https://github.com/pmodels/mpich/commit/3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch ;\
- patch -p1 < 3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch ;\
- cd maint/patches/optional/confdb && rm -f flang.patch &&  wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/flang.patch ; cd ../../../../  ; pwd ;\
- sh ./autogen.sh ;\
- fi \
-&& ./configure  --prefix=$MPICH_DIR   \
- $mpich_options \
---with-device=$MPICH_DEVICE  \
---enable-fortran=all \
---disable-opencl --enable-silent-rules \
---disable-cuda \
-  FC=$FC \
-&& head config.log \
-&& tail -300 config.log \
-&&   echo 'checkcheckechk******' \
-&&   grep -i psm2 Makefile ||true \
-&&   grep -i infinipat Makefile ||true \
-&&   echo 'checkcheckechk******' \
-&& make FC=$FC -j 6                                                  \
-&& make install                  \
-&& if [ ! -f $MPICH_DIR/bin/mpif90 ]; then echo mpif90\ not\ found ; exit 1 ; fi \
-&& echo mpif90 show is $($MPICH_DIR/bin/mpif90 -show) \
-&& cd .. ; rm -rf *tar*gz mpich-*  ;fi
+export MYROOT=/
+if [ ! -f /opt/mpich/lib/libmpi.a ]; then
+    wget --progress=dot:giga https://github.com/Cray-HPE/xpmem/tarball/master -O xpmem.tar.gz 
+    tar xzf xpmem.tar.gz 
+    rm xpmem.tar.gz 
+    cd Cray-HPE-xpmem* 
+    sh autogen.sh 
+    ./configure --prefix=$MPICH_DIR --disable-kernel-module  
+    make -j3 
+    make install 
+    cd ..
+    if [ $MPICH = aurora ]; then
+        apt-get install -y libevent-dev
+	wget https://github.com/openpmix/openpmix/releases/download/v${PMIX_VERSION}/pmix-${PMIX_VERSION}.tar.gz 
+	tar xzf pmix-${PMIX_VERSION}.tar.gz 
+	cd pmix-${PMIX_VERSION} 
+	./configure --prefix=/opt/pmix 
+	make -j3 
+	make -j3 install 
+	cd .. 
+	rm -rf pmix-*.* 
+    fi 
+    $FC -v 
+    if [ ${MPICH_DEVICE} = ch4:ofi ]; then
+	if [ ${OFI} = builtin ] ; then
+	    echo 'builtin OFI - nothing to download'
+	elif [ ${OFI} = git ]; then
+	    export COMMIT=c3420a7402a10f5fe3f475ac5eb39b3f2837f8d1  
+	    curl -L https://github.com/ofiwg/libfabric/archive/${COMMIT}.tar.gz -o libfabric-${COMMIT}.tar.gz  
+	    tar xzf libfabric-${COMMIT}.tar.gz  
+	    mv libfabric-${COMMIT} libfabric-git 
+	    cd libfabric-git && sh autogen.sh
+	    apt-get install -y libconfig-dev libsensors-dev libuv1-dev libfuse-dev libyaml-dev libjson-c-dev libcurl4-openssl-dev  
+	    cd $MYROOT ; ls -lrta  
+	    mkdir -p $MPICH_DIR  
+	    cd $MPICH_DIR 
+	    export SHSTAG=release/shs-12.0
+	    git clone https://github.com/HewlettPackard/shs-cassini-headers 
+	    git clone --branch ${SHSTAG} https://github.com/HewlettPackard/shs-cxi-driver 
+	    cd $MYROOT
+	    git clone --branch ${SHSTAG} https://github.com/HewlettPackard/shs-libcxi 
+	    cd shs-libcxi 
+	    sh autogen.sh 
+	    ./configure --prefix=$MPICH_DIR 
+	    make CFLAGS="-I${MPICH_DIR}/shs-cassini-headers/include/ -I${MPICH_DIR}/shs-cxi-driver/include/" pkg_CFLAGS=-Wall -i 
+	    make CFLAGS="-I${MPICH_DIR}/shs-cassini-headers/include/ -I${MPICH_DIR}/shs-cxi-driver/include/" install-dist_cxi_yamlDATA install-man install-pkgconfigDATA install-pkgincludeHEADERS  install-exec  
+	    export libfabric_options=" --enable-cxi=${MPICH_DIR}  --with-cassini-headers=${MPICH_DIR}/shs-cassini-headers --with-cxi-uapi-headers=${MPICH_DIR}/shs-cxi-driver "
+	    echo 'libfabric_options are' $libfabric_options 
+	    rm -rf shs-* 
+	    cd $MYROOT ; echo 'pwd ' $(pwd) ;ls -lrta 
+	else
+	    wget --progress=dot:giga  https://github.com/ofiwg/libfabric/releases/download/v${OFI}/libfabric-${OFI}.tar.bz2 -O - | tar --no-same-owner  -xjf - ; export libfabric_options=' '
+	fi
+	cd libfabric-${OFI} 
+	mkdir build && cd build
+	../configure --prefix=${MPICH_DIR} $libfabric_options 
+	make -j4 && make install 
+	export mpich_options="${mpich_options} --with-libfabric=${MPICH_DIR}"
+	echo 'mpich_options are '${mpich_options}
+	if [ ! -f ${MPICH_DIR}/bin/fi_info ]; then
+	    echo fi_info\ not\ found
+	    exit 1
+	fi
+	echo 'installed libfabrics' 
+    elif [ ${MPICH_DEVICE} = ch4:ucx ]; then
+	echo 'installing ucx' 
+	export ucx=1.15.0 
+	echo 'the ucx version is'  $ucx 
+	wget --progress=dot:giga  https://github.com/openucx/ucx/releases/download/v$ucx/ucx-$ucx.tar.gz 
+	tar xzf ucx-$ucx.tar.gz && rm ucx-$ucx.tar.gz  
+	cd ucx-$ucx 
+	wget https://raw.githubusercontent.com/edoapra/nwchem-singularity/master/nwchem-dev.ompi41x.ifx/ucx_malloc.patch 
+	patch -p0 < ./ucx_malloc.patch
+	mkdir -p build && cd build 
+	../configure --prefix=${MPICH_DIR} --disable-logging --disable-debug --disable-assertions --disable-params-check 
+	make -j4 && make install 
+	if [ ! -f ${MPICH_DIR}/bin/ucx_info ]; then echo ucx_info\ not\ found ; exit 1 ; fi
+	export mpich_options=$mpich_options" --with-ucx="${MPICH_DIR}
+    fi
+    cd ../..  
+    echo ' mpich_options is set to' $mpich_options 
+    if [ ${MPICH_VERSION} = main ]; then
+	git clone -b main https://github.com/pmodels/mpich.git mpich-main 
+	cd mpich-main 
+	mpich_hash=49bb9c1b3dd4cc54e5567e7ee47800d666f1c3c0
+	git reset --hard $mpich_hash 
+	git submodule update --init 
+	sh autogen.sh 
+	cd ..
+    else
+	wget  --progress=dot:giga https://www.mpich.org/static/downloads/${MPICH_VERSION}/mpich-${MPICH_VERSION}.tar.gz  -O - | tar xzf -  
+    fi 
+    cd $mpich_prefix    
+    if [ $mpich_major = '3' ]; then
+	echo 'mpich 3 autotools ' 
+	mv autogen.sh autogen.sh.org 
+	wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/autogen.sh 
+	chmod +x autogen.sh 
+	wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/install-autotools.sh
+	chmod +x install-autotools.sh 
+	wget https://github.com/pmodels/mpich/commit/3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch 
+	patch -p1 < 3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch 
+	cd maint/patches/optional/confdb && rm -f flang.patch &&  wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/flang.patch ; cd ../../../../  ; pwd 
+	sh ./autogen.sh 
+    fi
+    ./configure  --prefix=${MPICH_DIR} \
+    $mpich_options \
+    --with-device=${MPICH_DEVICE}  \
+    --enable-fortran=all  \
+    --disable-opencl --enable-silent-rules  \
+    --disable-cuda  \
+    --with-xpmem=${MPICH_DIR}
+    FC=$FC CC=$CC CXX=$CXX 
+    head config.log 
+    tail -300 config.log 
+    echo 'checkcheckechk******' 
+    grep -i psm2 Makefile ||true 
+    grep -i infinipat Makefile ||true 
+    echo 'checkcheckechk******' 
+    make FC=$FC -j 6
+    make install
+    if [ ! -f $MPICH_DIR/bin/mpif90 ]; then echo mpif90\ not\ found ; exit 1 ; fi
+    echo mpif90 show is $($MPICH_DIR/bin/mpif90 -show) 
+    cd .. ; rm -rf *tar*gz mpich-*
+fi
+
 
  if [ ! -f $MPICH_DIR/bin/mpif90 ]; then echo mpif90\ not\ found ; exit 1 ; fi \
 && echo '********' \
