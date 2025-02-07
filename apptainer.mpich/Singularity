@@ -393,7 +393,10 @@ fi
 && 	     mkdir build && cd build  \
 &&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC' "  \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DDFT_CPU=ON " \
+&&           if [ ${CC} = "icx" ]; then echo "intel compilers "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DGCCROOT=/usr"; fi\ 
 && 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3"  \
+&&              if [ ${GPU} = "intel_gpu_pvc" ]; then echo "intel_gpu_pvc "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DLINALG_VENDOR=IntelMKL -DUSE_OPENMP=OFF -DTAMM_ENABLE_DPCPP=ON  -DLINALG_PREFIX=${MKLROOT} -DCMAKE_BUILD_TYPE=Release -DMODULES=CC" ; \
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_CXX_FLAGS=\" -march=sapphirerapids -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020\" " ; fi \
 &&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}" ; fi  \
 &&              if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  \
 &&             export USE_SCALAPACK=OFF \
