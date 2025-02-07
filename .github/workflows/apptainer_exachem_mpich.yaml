@@ -285,8 +285,8 @@ jobs:
         pwd
         ls -la
         apptainer pull -F ${{ env.tag }}:${{ env.date }}
-        sudo apt-get install -y libmpich-dev mpich
-        which mpirun
+        sudo apt-get install -y openmpi-bin libmpich-dev mpich
+        mpirun --version || true
         ldd `which mpirun`
         apptainer exec ${{ env.tag }}:latest ldd /opt/install/exachem/bin/ExaChem
     - name: test cpu image with apptainer
@@ -295,11 +295,17 @@ jobs:
         pwd
         ls -la
         apptainer pull -F ${{ env.tag }}:${{ env.date }}
+        sudo apt-get install -y openmpi-bin libmpich-dev mpich
+        if [[ ${{ matrix.mpich }} == aurora ]]; then
+           export MPIRUN_PATH=`which mpirun.openmpi`
+        else
+           export MPIRUN_PATH=`which mpirun.mpich`
+        fi
+        echo "MPIRUN_PATH is" $MPIRUN_PATH
+        mpirun --version || true
         export UCX_TLS=tcp,self
         export UCX_POSIX_USE_PROC_LINK=n
-        which mpirun
-        ldd `which mpirun`
-        mpirun -np 2 apptainer exec ${{ env.tag }}:${{ env.date }} \
+        $MPIRUN_PATH -np 2 apptainer exec ${{ env.tag }}:${{ env.date }} \
         /opt/install/exachem/bin/ExaChem \
         inputs/waterdft.json
         echo exit code is $?
