@@ -180,6 +180,7 @@ fi \
     echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list 
     apt-get update 
     apt-get install -y intel-oneapi-compiler-fortran intel-oneapi-mkl intel-oneapi-compiler-dpcpp-cpp
+    export MKLROOT=/opt/intel/oneapi/mkl/latest
     mkdir neo && cd neo 
     export IGCV=1.0.16510.2
     wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGCV}/intel-igc-core_${IGCV}_amd64.deb 
@@ -398,9 +399,9 @@ fi
 && 	     mkdir build && cd build  \
 &&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC' "  \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DDFT_CPU=ON " \
-&&           if [ ${CC} = "icx" ]; then echo "intel compilers "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DGCCROOT=/usr" ; fi \
-&& 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3"  \
-&&              if [ ${GPU} = "intel_gpu_pvc" ]; then echo "intel_gpu_pvc "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DLINALG_VENDOR=IntelMKL -DUSE_OPENMP=OFF -DTAMM_ENABLE_DPCPP=ON  -DLINALG_PREFIX=${MKLROOT} -DCMAKE_BUILD_TYPE=Release -DMODULES=CC" ; \
+&&           if [ ${CC} = "icx" ]; then echo "intel compilers "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DGCCROOT=/usr" ;     CMAKE_OPTIONS="$CMAKE_OPTIONS -DLINALG_VENDOR=IntelMKL  -DLINALG_PREFIX=${MKLROOT} " ;  \
+else 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3" ; fi \
+&&              if [ ${GPU} = "intel_gpu_pvc" ]; then echo "intel_gpu_pvc "; CMAKE_OPTIONS="$CMAKE_OPTIONS  -DUSE_OPENMP=OFF -DTAMM_ENABLE_DPCPP=ON  -DCMAKE_BUILD_TYPE=Release -DMODULES=CC" ; \
 CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_CXX_FLAGS=\" -march=sapphirerapids -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020\" " ; fi \
 &&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}" ; fi  \
 &&              if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  \
