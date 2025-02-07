@@ -106,8 +106,9 @@ echo ROCM_PATH is $ROCM_PATH
 echo GPU is $GPU
 export GCC_VERSION=11
 
-export PATH=$MPICH_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
-export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:"$ROCM_PATH"/lib
+export PATH=$MPICH_DIR/bin:/opt/intel/oneapi/compiler/latest/bin:/opt/intel/oneapi/compiler/latest/linux/bin/intel64:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
+export LD_LIBRARY_PATH=$MPICH_DIR/lib:/opt/intel/oneapi/compiler/latest/lib:/opt/intel/oneapi/compiler/latest/linux/lib:/opt/intel/oneapi/compiler/latest/linux/lib/x64:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:"$ROCM_PATH"/lib
+export LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/lib:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/latest/linux/lib
 export SINGULARITY_PATH=$PATH
 export SINGULARITY_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
@@ -169,8 +170,26 @@ fi \
 && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 100 \
 && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 100 \
 && update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-"$GCC_VERSION" 100 \
-            && apt-get install  -q=2 -y  autoconf automake libtool git \
-&& if [ $GPU = "nvidia" ]; then  curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg ;\
+            && apt-get install  -q=2 -y  autoconf automake libtool git 
+ if [ "$CC" = 'icx' ]; then
+    APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1	
+    TERM=dumb
+    wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null 
+    echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list 
+    apt-get update 
+    apt-get install -y intel-oneapi-compiler-fortran intel-oneapi-mkl intel-oneapi-compiler-dpcpp-cpp
+    mkdir neo && cd neo 
+    export IGCV=1.0.16510.2
+    wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGCV}/intel-igc-core_${IGCV}_amd64.deb 
+    wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGCV}/intel-igc-opencl_${IGCV}_amd64.deb 
+    export CRTV=24.13.29138.7 
+    export CRTVS=1.3.29138.7 
+    wget https://github.com/intel/compute-runtime/releases/download/${CRTV}/intel-level-zero-gpu_${CRTVS}_amd64.deb 
+    wget https://github.com/intel/compute-runtime/releases/download/${CRTV}/intel-opencl-icd_${CRTV}_amd64.deb 
+    wget https://github.com/intel/compute-runtime/releases/download/${CRTV}/libigdgmm12_22.3.18_amd64.deb
+    dpkg -i *.deb && cd .. && rm -rf neo
+ fi 
+if [ $GPU = "nvidia" ]; then  curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg ;\
  cp cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg ;\
  echo 'deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /' |  tee /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.list ;\
   curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin ;\
@@ -340,6 +359,7 @@ fi
  if [ ! -f $MPICH_DIR/bin/mpif90 ]; then echo mpif90\ not\ found ; exit 1 ; fi \
 && echo '********' \
 && export PATH=$MPICH_DIR/bin:$PATH \
+&& export PATH=/opt/intel/oneapi/compiler/latest/bin:/opt/intel/oneapi/compiler/latest/linux/bin/intel64:$PATH \
 && export LD_LIBRARY_PATH=$MPICH_DIR/lib:$LD_LIBRARY_PATH \
 && export PATH=$PATH:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin \
 && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64 \

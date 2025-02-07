@@ -148,6 +148,18 @@ jobs:
               folder: apptainer.mpich
               scalapack: y
               elpa: n
+            - mpich: aurora
+              mpich_device: ch4:ofi
+              ofi: git
+              cc: icx
+              ga_runtime: MPI_PROGRESS_RANK
+              ubuntu: jammy
+              gpu: cpu
+              exachem_branch: main
+              tamm_branch: main
+              folder: apptainer.mpich
+              scalapack: y
+              elpa: n
     steps:
     - name: Get Instruction
       id: get-simd
@@ -162,6 +174,9 @@ jobs:
            myversion=.${{ matrix.exachem_branch }}
         fi
         myversion+=.${{ matrix.gpu }}
+        if [[ ${{ matrix.cc }} !=  gcc ]]; then
+          myversion+=.${{ matrix.cc }}
+        fi
         if [[ ${{ matrix.ga_runtime }} !=  MPI_PROGRESS_RANK ]]; then
           net_tag=$(echo ${{ matrix.ga_runtime }} | tr '[:upper:]' '[:lower:]')
           myversion+=.${net_tag}
