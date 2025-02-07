@@ -122,9 +122,9 @@ echo MPI_IMPL is $MPI_IMPL
  echo MPICH_DEVICE is $MPICH_DEVICE
 echo EXACHEM_BRANCH is $EXACHEM_BRANCH
 echo TAMM_BRANCH is $TAMM_BRANCH
-if [ "$CC" = "gcc" ]; then export FC=gfortran ; export CC=$CC; export CXX=g++; \
+if [ "$GPU" = "amd" ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
 elif [ "$CC" = "icx" ]; then export FC=ifx ; export CC=icx; export CXX=icpcx; \
-elif [ "$GPU" = "amd" ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
+elif [ "$CC" = "gcc" ]; then export FC=gfortran ; export CC=$CC; export CXX=g++; \
 fi \
 && echo 'FC is' "$FC"  \
 && echo ' CC is ' "$CC" \

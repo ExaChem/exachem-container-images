@@ -147,7 +147,7 @@ jobs:
               tamm_branch: main
               folder: apptainer.mpich
               scalapack: y
-              elpa: y
+              elpa: n
     steps:
     - name: Get Instruction
       id: get-simd
@@ -158,7 +158,9 @@ jobs:
         echo "simd=$(./guess_simd.sh)" >> $GITHUB_ENV
     - name: exachem version tag
       run: |
-        myversion=-${{ matrix.exachem_branch }}
+        if [ ${{ matrix.exachem_branch }} != main ]]; then
+           myversion=.${{ matrix.exachem_branch }}
+        fi
         myversion+=.${{ matrix.gpu }}
         if [[ ${{ matrix.ga_runtime }} !=  MPI_PROGRESS_RANK ]]; then
           net_tag=$(echo ${{ matrix.ga_runtime }} | tr '[:upper:]' '[:lower:]')
