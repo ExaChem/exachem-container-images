@@ -37,8 +37,10 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
     ls -la  ${CACHEDIR}/mpich || true
     ls -la  ${CACHEDIR}/mpich/lib || true
     ls -la  ${CACHEDIR}/mpich/bin || true
+    ls -la  ${CACHEDIR}/pmix || true
     ls -la  ${CACHEDIR}/libint.tar.bz2 || true
     bash -c "if [[  -f ${CACHEDIR}/mpich/lib/libmpi.so ]]; then mkdir -p ${SINGULARITY_ROOTFS}/opt ;rsync -a ${CACHEDIR}/mpich ${SINGULARITY_ROOTFS}/opt/. ; echo mpich cache fetched ;fi"
+    bash -c "if [[  -f ${CACHEDIR}/pmix/etc/pmix-mca-params.conf ]]; then mkdir -p ${SINGULARITY_ROOTFS}/opt ;rsync -a ${CACHEDIR}/pmix ${SINGULARITY_ROOTFS}/opt/. ; echo pmix cache fetched ;fi"
     bash -c "if [[  -f ${CACHEDIR}/libint.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libint.tar.bz2; echo libint cache fetched ;fi"
     ls -lrta ${SINGULARITY_ROOTFS}/opt  ||true
 
@@ -121,7 +123,7 @@ echo MPI_IMPL is $MPI_IMPL
 echo EXACHEM_BRANCH is $EXACHEM_BRANCH
 echo TAMM_BRANCH is $TAMM_BRANCH
 if [ "$GPU" = "amd" ]; then export FC=amdflang ; export CC=amdclang; export CXX=amdclang++; \
-elif [ "$CC" = "icx" ]; then export FC=ifx ; export CC=icx; export CXX=icpcx; \
+elif [ "$CC" = "icx" ]; then export FC=ifx ; export CC=icx; export CXX=icpx; \
 elif [ "$CC" = "gcc" ]; then export FC=gfortran ; export CC=$CC; export CXX=g++; \
 fi \
 && echo 'FC is' "$FC"  \
