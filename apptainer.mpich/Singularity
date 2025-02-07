@@ -266,10 +266,15 @@ if [ ! -f /opt/mpich/lib/libmpi.a ]; then
 	    mkdir -p $MPICH_DIR  
 	    cd $MPICH_DIR 
 	    export SHSTAG=release/shs-12.0
-	    git clone https://github.com/HewlettPackard/shs-cassini-headers 
-	    git clone --branch ${SHSTAG} https://github.com/HewlettPackard/shs-cxi-driver 
+	    CASHEA=9a8a738a879f007849fbc69be8e3487a4abf0952
+	    curl -L https://github.com/HewlettPackard/shs-cassini-headers/archive/${CASHEA}.tar.gz | tar xzf -
+	    mv shs-cassini-headers-* shs-cassini-headers
+	    export SHSTAG=release/shs-12.0
+	    curl -L https://github.com/HewlettPackard/shs-cxi-driver/archive/${SHSTAG}.tar.gz | tar xzf -
+	    mv shs-cxi-driver-* shs-cxi-driver
 	    cd $MYROOT
-	    git clone --branch ${SHSTAG} https://github.com/HewlettPackard/shs-libcxi 
+	    curl -L https://github.com/HewlettPackard/shs-libcxi/archive/${SHSTAG}.tar.gz | tar xzf -
+	    mv shs-libcxi-* shs-libcxi
 	    cd shs-libcxi 
 	    sh autogen.sh 
 	    ./configure --prefix=$MPICH_DIR 
