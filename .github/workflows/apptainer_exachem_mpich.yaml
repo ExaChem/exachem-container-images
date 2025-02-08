@@ -298,7 +298,7 @@ jobs:
         apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:${{ env.date }} || exit_code=$?
         apptainer push ${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:latest|| exit_code+=$?
     - name: store cache
-      if: steps.setup-cache.outputs.cache-hit != 'true' && ${{ env.push_truefalse == 'true' }}
+      if: ${{ (steps.setup-cache.outputs.cache-hit != 'true') && (env.push_truefalse == 'true') }}
       run: |
         mkdir -p ~/cache || true
         cd ${{ matrix.folder }}
