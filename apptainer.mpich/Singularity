@@ -108,9 +108,9 @@ echo ROCM_PATH is $ROCM_PATH
 echo GPU is $GPU
 export GCC_VERSION=11
 
-export PATH=$MPICH_DIR/bin:/opt/intel/oneapi/compiler/latest/bin:/opt/intel/oneapi/compiler/latest/linux/bin/intel64:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
-export LD_LIBRARY_PATH=$MPICH_DIR/lib:/opt/intel/oneapi/compiler/latest/lib:/opt/intel/oneapi/compiler/latest/linux/lib:/opt/intel/oneapi/compiler/latest/linux/lib/x64:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:"$ROCM_PATH"/lib
-export LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/lib:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/latest/linux/lib
+export PATH=$MPICH_DIR/bin:/opt/intel/oneapi/compiler/latest/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
+export LD_LIBRARY_PATH=$MPICH_DIR/lib:/opt/intel/oneapi/compiler/latest/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:"$ROCM_PATH"/lib
+export LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/lib
 export SINGULARITY_PATH=$PATH
 export SINGULARITY_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
@@ -376,7 +376,7 @@ fi
  if [ ! -f $MPICH_DIR/bin/mpif90 ]; then echo mpif90\ not\ found ; exit 1 ; fi \
 && echo '********' \
 && export PATH=$MPICH_DIR/bin:$PATH \
-&& export PATH=/opt/intel/oneapi/compiler/latest/bin:/opt/intel/oneapi/compiler/latest/linux/bin/intel64:$PATH \
+&& export PATH=/opt/intel/oneapi/compiler/latest/bin:$PATH \
 && export LD_LIBRARY_PATH=$MPICH_DIR/lib:$LD_LIBRARY_PATH \
 && export PATH=$PATH:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin \
 && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64 \
@@ -518,9 +518,9 @@ export PATH=/opt/rocm/bin:$PATH
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:$ROCM_PATH/lib:$LD_LIBRARY_PATH
-
+export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/lib:$LD_LIBRARY_PATH
 export PATH=/opt/install/exachem/bin:$MPICH_DIR/bin:$PATH
-export LD_LIBRARY_PATH=$MPICH_DIR/lib:/usr/local/lib:$LD_LIBRARY_PATHs
+export LD_LIBRARY_PATH=$MPICH_DIR/lib:/usr/local/lib:$LD_LIBRARY_PATH
 #export APPTAINERENV_APPEND_PATH=/opt/install/exachem/bin:$MPICH_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin
 #export APPTAINERENV_APPEND_LD_LIBRARY_PATH=$MPICH_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:$ROCM_PATH/lib
 export COMEX_MAX_NB_OUTSTANDING=12
