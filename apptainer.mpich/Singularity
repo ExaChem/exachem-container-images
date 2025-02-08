@@ -180,7 +180,13 @@ fi \
     echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list 
     apt-get update 
     apt-get install -y intel-oneapi-compiler-fortran intel-oneapi-mkl intel-oneapi-compiler-dpcpp-cpp
-    export MKLROOT=/opt/intel/oneapi/mkl/latest
+    export MKLROOT=/opt/intel/oneapi/mkl/latest/
+    export PKG_CONFIG_PATH=${MKLROOT}/lib/pkgconfig:${PKG_CONFIG_PATH}
+    export CMAKE_PREFIX_PATH=${MKLROOT}/lib/cmake:${CMAKE_PREFIX_PATH}
+    export LIBRARY_PATH=${MKLROOT}/lib:${LIBRARY_PATH}
+    export LD_LIBRARY_PATH=${MKLROOT}/lib:${LD_LIBRARY_PATH}
+    export PATH=${MKLROOT}/bin:${PATH}
+    export CPATH=${MKLROOT}/include:${CPATH}
     mkdir neo && cd neo 
     export IGCV=1.0.16510.2
     wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGCV}/intel-igc-core_${IGCV}_amd64.deb 

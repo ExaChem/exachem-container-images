@@ -158,7 +158,7 @@ jobs:
               exachem_branch: main
               tamm_branch: main
               folder: apptainer.mpich
-              scalapack: y
+              scalapack: n
               elpa: n
             - mpich: aurora
               mpich_device: ch4:ofi
@@ -170,7 +170,7 @@ jobs:
               exachem_branch: main
               tamm_branch: main
               folder: apptainer.mpich
-              scalapack: y
+              scalapack: n
               elpa: n
     steps:
     - name: Get Instruction
