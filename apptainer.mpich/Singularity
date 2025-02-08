@@ -189,7 +189,6 @@ fi \
     export LD_LIBRARY_PATH=${MKLROOT}/lib:${LD_LIBRARY_PATH}
     export PATH=${MKLROOT}/bin:${PATH}
     export CPATH=${MKLROOT}/include:${CPATH}
-     .  /opt/intel/oneapi/setvars.sh 
     mkdir neo && cd neo 
     export IGCV=1.0.16510.2
     wget --progress=dot:giga https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGCV}/intel-igc-core_${IGCV}_amd64.deb 
