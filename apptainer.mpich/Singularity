@@ -181,7 +181,8 @@ fi \
     apt-get update
     export ONEAPIV=2025.0
     apt-get install -y intel-oneapi-compiler-fortran-${ONEAPIV} intel-oneapi-mkl-${ONEAPIV} intel-oneapi-compiler-dpcpp-cpp-${ONEAPIV} \
-    intel-oneapi-mkl-core-devel-${ONEAPIV}  intel-oneapi-mkl-sycl-lapack-${ONEAPIV}
+  intel-oneapi-mkl-core-devel-${ONEAPIV}  intel-oneapi-mkl-sycl-devel-${ONEAPIV} \
+  libmkl-tbb-thread intel-oneapi-tbb-common-devel-2021.13
     ls -l /opt/intel/oneapi/mkl/latest/lib/intel64/libmkl*.a 
     export MKLROOT=/opt/intel/oneapi/mkl/latest/
     export PKG_CONFIG_PATH=${MKLROOT}/lib/pkgconfig:${PKG_CONFIG_PATH}
