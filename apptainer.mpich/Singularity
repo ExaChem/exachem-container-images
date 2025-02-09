@@ -6,14 +6,14 @@ Stage: spython-base
    UBUNTU_VERSION=focal
 
 %files
-    usemyga.patch /tmp/usemyga.patch
+    usemylibrett.patch /tmp/usemylibrett.patch
 %labels
 MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 
 %setup
     #!/bin/bash
-    cat usemyga.patch
-    cp usemyga.patch /tmp
+    cat usemylibrett.patch
+    cp usemylibrett.patch /tmp
     echo "$(readlink /proc/$$/exe) is the shell in use"
     env|egrep SHELL
     ls -la  ${GITHUB_WORKSPACE}
@@ -179,7 +179,7 @@ fi \
     wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null 
     echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list 
     apt-get update
-    export ONEAPIV=2024.2
+    export ONEAPIV=2025.0
     apt-get install -y intel-oneapi-compiler-fortran-${ONEAPIV} intel-oneapi-mkl-${ONEAPIV} intel-oneapi-compiler-dpcpp-cpp-${ONEAPIV} \
     intel-oneapi-mkl-core-devel-${ONEAPIV}  intel-oneapi-mkl-sycl-lapack-${ONEAPIV}
     ls -l /opt/intel/oneapi/mkl/latest/lib/intel64/libmkl*.a 
@@ -423,7 +423,10 @@ else 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \
-&& if [ ${GPU} = "intel_gpu_pvc" ]; then  cmake  $CMAKE_OPTIONS  -DTAMM_CXX_FLAGS=" -march=sapphirerapids -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020" .. || { echo "Cmake pvc failure"; exit 1; } ; \
+&& if [ ${GPU} = "intel_gpu_pvc" ]; then  cmake  $CMAKE_OPTIONS  -DTAMM_CXX_FLAGS=" -march=sapphirerapids -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020" .. || { echo "Cmake pvc failure";  exit 1; } ; \
+echo "modify Librett  repository to use"  ; \
+cat _deps/cmakebuild-src/cmake/build_external/BuildLibrett.cmake ; \
+ patch -p0 < /tmp/usemylibrett.patch ; \
 else 	     USE_SCALAPACK="$USE_SCALAPACK" CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } ; fi \
 &&             make -j3 || { echo "Compilation failure in tamm step";
                echo cublas $(ls -lrt $CUDA_PATH/lib64/libcublas*) || true ;  echo cublas target $(ls -lrt $CUDA_PATH/targets/x86_64-linux/lib64/libcublas*) ||true ;  echo ls cudapath $(ls -lrt $CUDA_PATH ) || true;  \
