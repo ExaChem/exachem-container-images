@@ -106,7 +106,7 @@ export ROCM_PATH=/opt/rocm-${ROCM_VERSION}
 if [ ${#ROCM_VERSION} = 3 ]; then export ROCM_PATH="$ROCM_PATH".0; fi
 echo ROCM_PATH is $ROCM_PATH
 echo GPU is $GPU
-export GCC_VERSION=11
+export GCC_VERSION=12
 
 export PATH=$MPICH_DIR/bin:/opt/intel/oneapi/compiler/latest/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
 export LD_LIBRARY_PATH=$MPICH_DIR/lib:/opt/intel/oneapi/compiler/latest/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:"$ROCM_PATH"/lib
