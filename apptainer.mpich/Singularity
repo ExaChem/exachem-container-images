@@ -432,6 +432,7 @@ else 	     USE_SCALAPACK="$USE_SCALAPACK" CC="$CC" CXX="$CXX" FC="$FC" cmake  $C
 &&             make -j3 || { echo "Compilation failure in tamm step";
                echo cublas $(ls -lrt $CUDA_PATH/lib64/libcublas*) || true ;  echo cublas target $(ls -lrt $CUDA_PATH/targets/x86_64-linux/lib64/libcublas*) ||true ;  echo ls cudapath $(ls -lrt $CUDA_PATH ) || true;  \
 	    cat $(find /opt/TAMM/ -name config.log) || true ; \
+	    cat $(find /opt/TAMM/ -name CMakeCache.txt) || true ; \
 	    cat $(find /opt/TAMM/ -name CMakeOutput.log) || true ; \
             cat $(find /opt/TAMM/ -name CMakeError.log ) || true; exit 1; } \
 && 	     echo exit code for TAMM compilation $?   \
