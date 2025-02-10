@@ -439,7 +439,7 @@ else 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \
-&& if [ ${GPU} = "intel_gpu_pvc" ]; then  cmake  $CMAKE_OPTIONS  -DTAMM_CXX_FLAGS=" -march=sapphirerapids -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020" .. || { echo "Cmake pvc failure";  exit 1; } ; \
+&& if [ ${GPU} = "intel_gpu_pvc" ]; then  cmake  $CMAKE_OPTIONS  -DTAMM_CXX_FLAGS="  -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020" .. || { echo "Cmake pvc failure";  exit 1; } ; \
 echo "modify Librett  repository to use"  ; \
 cat _deps/cmakebuild-src/cmake/build_external/BuildLibrett.cmake ; \
  patch -p0 < /tmp/usemylibrett.patch ; \
