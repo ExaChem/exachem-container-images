@@ -106,7 +106,11 @@ export ROCM_PATH=/opt/rocm-${ROCM_VERSION}
 if [ ${#ROCM_VERSION} = 3 ]; then export ROCM_PATH="$ROCM_PATH".0; fi
 echo ROCM_PATH is $ROCM_PATH
 echo GPU is $GPU
-export GCC_VERSION=12
+if [ ${CC} = "icx" ]; then
+    export GCC_VERSION=12
+else
+    export GCC_VERSION=11
+fi
 
 export PATH=$MPICH_DIR/bin:/opt/intel/oneapi/compiler/latest/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
 export LD_LIBRARY_PATH=$MPICH_DIR/lib:/opt/intel/oneapi/compiler/latest/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:"$ROCM_PATH"/lib
@@ -182,7 +186,7 @@ fi \
     export ONEAPIV=2025.0
     apt-get install -y intel-oneapi-compiler-fortran-${ONEAPIV} intel-oneapi-mkl-${ONEAPIV} intel-oneapi-compiler-dpcpp-cpp-${ONEAPIV} \
   intel-oneapi-mkl-core-devel-${ONEAPIV}  intel-oneapi-mkl-sycl-devel-${ONEAPIV} \
-  libmkl-tbb-thread intel-oneapi-tbb-common-devel-2021.13
+intel-oneapi-tbb-devel 
     ls -l /opt/intel/oneapi/mkl/latest/lib/intel64/libmkl*.a 
     export MKLROOT=/opt/intel/oneapi/mkl/latest/
     export PKG_CONFIG_PATH=${MKLROOT}/lib/pkgconfig:${PKG_CONFIG_PATH}
@@ -191,6 +195,17 @@ fi \
     export LD_LIBRARY_PATH=${MKLROOT}/lib:${LD_LIBRARY_PATH}
     export PATH=${MKLROOT}/bin:${PATH}
     export CPATH=${MKLROOT}/include:${CPATH}
+    export TBBROOT=/opt/intel/oneapi/tbb/latest/
+    export TBB_TARGET_ARCH=intel64
+    export TBB_LIB_NAME=libtbb.so.12
+    export TBB_LIB_DIR=intel64/gcc4.8
+    export LIBRARY_PATH=/opt/intel/oneapi/tbb/latest/lib/intel64/gcc4.8:${LIBRARY_PATH}
+    export LD_LIBRARY_PATH=/opt/intel/oneapi/tbb/latest/lib/intel64/gcc4.8:${LD_LIBRARY_PATH}
+    export CPATH=/opt/intel/oneapi/tbb/latest/include:${CPATH}
+    export CMAKE_PREFIX_PATH=/opt/intel/oneapi/tbb/latest/lib/cmake:${CMAKE_PREFIX_PATH}
+    export PKG_CONFIG_PATH=/opt/intel/oneapi/tbb/latest/lib/pkgconfig:${PKG_CONFIG_PATH}
+
+    find /opt/intel/oneapi/ -name "*cmake"
     mkdir neo && cd neo 
     export IGCV=1.0.16510.2
     wget --progress=dot:giga https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGCV}/intel-igc-core_${IGCV}_amd64.deb 
