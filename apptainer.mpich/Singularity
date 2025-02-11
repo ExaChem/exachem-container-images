@@ -182,8 +182,11 @@ fi \
     TERM=dumb
     wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null 
     echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list 
+    curl -fsSL https://repositories.intel.com/gpu/intel-graphics.key | gpg --dearmor | tee /usr/share/keyrings/intel-graphics-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/intel-graphics-archive-keyring.gpg arch=amd64] https://repositories.intel.com/gpu/ubuntu noble unified" > /etc/apt/sources.list.d/intel-graphics.list
     apt-get update
     export ONEAPIV=2025.0
+    apt-get install -y libze-intel-gpu1 libze1 libze-dev
     apt-get install -y intel-oneapi-compiler-fortran-${ONEAPIV} intel-oneapi-mkl-${ONEAPIV} intel-oneapi-compiler-dpcpp-cpp-${ONEAPIV} \
   intel-oneapi-mkl-core-devel-${ONEAPIV}  intel-oneapi-mkl-sycl-devel-${ONEAPIV} \
 intel-oneapi-tbb-devel 
@@ -216,7 +219,8 @@ intel-oneapi-tbb-devel
     wget --progress=dot:giga https://github.com/intel/compute-runtime/releases/download/${CRTV}/intel-opencl-icd_${CRTV}_amd64.deb 
     wget --progress=dot:giga https://github.com/intel/compute-runtime/releases/download/${CRTV}/libigdgmm12_22.3.18_amd64.deb
     dpkg -i *.deb && cd .. && rm -rf neo
- fi 
+ fi
+#    sudo apt-get install -y level-zero clinfo
 if [ $GPU = "nvidia" ]; then  curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg ;\
  cp cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg ;\
  echo 'deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /' |  tee /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.list ;\
