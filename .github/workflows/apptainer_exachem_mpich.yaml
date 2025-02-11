@@ -238,11 +238,12 @@ jobs:
         fi
     - name: Install apptainer
       env:
-        APP_VER: 1.3.2
+        APP_VER: 1.3.4
       run: |
         sudo apt-get install -y  libfuse2 libseccomp2 zlib1g uidmap squashfs-tools squashfuse fuse2fs fuse-overlayfs fakeroot
-        wget -q  https://github.com/apptainer/apptainer/releases/download/v${APP_VER}/apptainer_${APP_VER}_amd64.deb 
-        sudo dpkg -i apptainer_${APP_VER}_amd64.deb
+        wget -q  https://github.com/apptainer/apptainer/releases/download/v${APP_VER}/apptainer_${APP_VER}_amd64.deb  -O apptainer.deb
+        wget -q  https://github.com/apptainer/apptainer/releases/download/v${APP_VER}/apptainer-suid_${APP_VER}_amd64.deb  -O apptainers.deb
+        sudo dpkg -i apptainer*.deb
         which apptainer
         apptainer version
     - name: create sif from docker
