@@ -439,7 +439,7 @@ else 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \
-&& if [ ${GPU} = "intel_gpu_pvc" ]; then  cmake  $CMAKE_OPTIONS  -DTAMM_CXX_FLAGS="  -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020" .. || { echo "Cmake pvc failure";  exit 1; } ; \
+&& if [ ${GPU} = "intel_gpu_pvc" ]; then  cmake  $CMAKE_OPTIONS  -DTAMM_CXX_FLAGS=" -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020" .. || { echo "Cmake pvc failure";  exit 1; } ; \
 echo "modify Librett  repository to use"  ; \
 cat _deps/cmakebuild-src/cmake/build_external/BuildLibrett.cmake ; \
  patch -p0 < /tmp/usemylibrett.patch ; \
@@ -457,12 +457,12 @@ else 	     USE_SCALAPACK="$USE_SCALAPACK" CC="$CC" CXX="$CXX" FC="$FC" cmake  $C
 && 	     mkdir build && cd build   \
 && 	     echo ' === ls -l /opt/install/exachem ===' $(ls -l /opt/install/exachem)   \
 && 	     echo ' === ls -l /opt/install/exachem/lib ===' $(ls -l /opt/install/exachem/lib)   \
-&&	     if [ -f /opt/install/exachem/lib/libint2.a ]; then echo 'found libint cache' ; \
+&&	     if [ -f /opt/install/exachem/include/libint2.h ]; then echo 'found libint cache' ; \
              mkdir -p /opt/exachem/build/stage/opt || true ; \
 	     rsync -av /opt/install /opt/exachem/build/stage/opt/. ; fi \
 &&             export CMAKE_OPTIONS  \
 &&	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
-&& if [ ${GPU} = "intel_gpu_pvc" ]; then  cmake  $CMAKE_OPTIONS  -DTAMM_CXX_FLAGS=" -march=sapphirerapids -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020" .. || { echo "Cmake pvc failure"; exit 1; } ; \
+&& if [ ${GPU} = "intel_gpu_pvc" ]; then  cmake  $CMAKE_OPTIONS  -DTAMM_CXX_FLAGS=" -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020" .. || { echo "Cmake pvc failure"; exit 1; } ; \
 else     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  ; fi\
 &&             make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; exit 1; }  \
 &&	     echo exit code for compilation $?  \
