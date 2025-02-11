@@ -287,7 +287,14 @@ jobs:
         apptainer exec ${{ matrix.folder }}.simg cp -r /opt/pmix ~/cache/. || true
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem/include || true
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem || true
-        apptainer exec ${{ matrix.folder }}.simg tar cjf ~/cache/libint.tar.bz2 /opt/install/exachem/include/libint2/  /opt/install/exachem/include/libint2.hpp /opt/install/exachem/include/libint2.h  /opt/install/exachem/share/libint /opt/install/exachem/lib/cmake/libint2 /opt/install/exachem/lib/libint2.*  /opt/install/exachem/lib/pkgconfig/libint2.pc
+        VER=$(apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem/lib/libint2.so.2 |tail |cut -d . -f 5-)
+        echo $?
+        echo @@@ $VER @@@
+        if [  -z $VER ] ; then libint_libs=" /opt/install/exachem/lib/libint2.a"  ; else \
+        libint_libs="/opt/install/exachem/lib/libint2.so /opt/install/exachem/lib/libint2.so.2 /opt/install/exachem/lib/libint2.so.$VER"
+        fi
+        echo libint_libs is $libint_libs
+        apptainer exec ${{ matrix.folder }}.simg tar cjvf ~/cache/libint.tar.bz2 /opt/install/exachem/include/libint2/  /opt/install/exachem/include/libint2.hpp /opt/install/exachem/include/libint2.h  /opt/install/exachem/share/libint /opt/install/exachem/lib/cmake/libint2 $libint_libs  /opt/install/exachem/lib/pkgconfig/libint2.pc
         cp ubuntu_${{ matrix.ubuntu }}.sif ~/cache/.
         echo "cache stored"
         ls -l ~/cache
