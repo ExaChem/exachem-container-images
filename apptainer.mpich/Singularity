@@ -398,6 +398,7 @@ fi
 && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64 \
 && export PATH=$PATH:"$ROCM_PATH"/bin \
 && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$ROCM_PATH"/lib \
+&& export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/install/exachem/lib/exachem/ \
 && which mpicc \
 && wget https://raw.githubusercontent.com/pmodels/mpich/refs/heads/main/examples/cpi.c \
 && mpicc cpi.c -o cpi.x \
@@ -467,6 +468,7 @@ else     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake 
 &&             make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; exit 1; }  \
 &&	     echo exit code for compilation $?  \
 &&             make install  \
+&&            cp EXACHEM_Methods_External-prefix/src/EXACHEM_Methods_External-build/libcmsb_gpulib_ExaChem.so  /opt/install/exachem/lib/exachem/. \
 &&	     echo exit code for make install $?  \
 &&	     bash -c "if [[ -f /opt/install/exachem/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi"  \
 &&	     echo git describe --always `git describe --always`  >> /opt/install/info.txt \
@@ -502,7 +504,7 @@ else     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake 
 	    && echo '*** ls -l CC/bin **' \
 	    && ls -l /opt/install/exachem/bin/ || true \
 	    && echo '*** ldd ***'  \
-	    && LD_LIBRARY_PATH=/usr/local/lib:/opt/lib ldd /opt/install/exachem/bin/ExaChem || true \
+	    &&  ldd /opt/install/exachem/bin/ExaChem || true \
 && DEBIAN_FRONTEND=noninteractive apt-get clean -y \
 && DEBIAN_FRONTEND=noninteractive apt-get -y install localepurge \
 && echo MANDELETE >  /etc/locale.nopurge \
@@ -539,6 +541,7 @@ export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:$ROCM_PATH/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/opt/install/exachem/lib/exachem/:$LD_LIBRARY_PATH
 export PATH=/opt/install/exachem/bin:$MPICH_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$MPICH_DIR/lib:/usr/local/lib:$LD_LIBRARY_PATH
 #export APPTAINERENV_APPEND_PATH=/opt/install/exachem/bin:$MPICH_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin
