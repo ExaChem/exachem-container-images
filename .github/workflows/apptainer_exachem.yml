@@ -104,25 +104,7 @@ jobs:
       with:
         clean: false
     - name: pkg cleanup
-      run: |
-        df -h
-        if [[ $(uname -s) == "Linux" ]]; then
-        ubuntu_ver=$(cat /etc/os-release | grep VERSION_ID |cut -d \" -f 2)
-        dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n
-        sudo apt-get purge -y azure-cli || true
-        sudo apt-get purge -y google-cloud-cli microsoft-edge-stable dotnet-sdk-* google-chrome-stable firefox
-        sudo apt-get purge -y temurin-*-jdk
-        sudo apt-get purge -y llvm-12-*-dev
-        if [[ $ubuntu_ver == "20.04" ]]; then
-        sudo apt-get purge -y hhvm
-        sudo apt-get purge -y libgl1-mesa-dri
-        fi
-        sudo apt-get -y clean
-        sudo apt-get autoremove -y 
-        dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n
-        df -h
-        fi
-      shell: bash
+      uses: edoapra/ubuntu-pkg-cleanup@main
     - name: Setup cache
       id: setup-cache
       uses: actions/cache@v4
