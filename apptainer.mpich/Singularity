@@ -550,15 +550,16 @@ export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:$ROCM_PATH/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/opt/intel/oneapi/umf/0.9/lib:/opt/intel/oneapi/tbb/latest/lib/intel64/gcc4.8:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/opt/install/exachem/lib/exachem/:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/opt/install/exachem/lib/:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/opt/install/exachem/lib/tamm/:$LD_LIBRARY_PATH
 export PATH=/opt/install/exachem/bin:$MPICH_DIR/bin:$PATH
+export PATH=$PATH:/opt/intel/oneapi/compiler/latest/bin
 export LD_LIBRARY_PATH=$MPICH_DIR/lib:/usr/local/lib:$LD_LIBRARY_PATH
-#export APPTAINERENV_APPEND_PATH=/opt/install/exachem/bin:$MPICH_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin
-#export APPTAINERENV_APPEND_LD_LIBRARY_PATH=$MPICH_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:$ROCM_PATH/lib
+lib:$ROCM_PATH/lib
 export COMEX_MAX_NB_OUTSTANDING=12
-export APPTAINERENV_COMEX_MAX_NB_OUTSTANDING=12
+#export APPTAINERENV_COMEX_MAX_NB_OUTSTANDING=12
 #%runscript
 #exec /bin/bash "$@"
 
