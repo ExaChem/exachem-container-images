@@ -379,7 +379,8 @@ if [ ! -f /opt/mpich/lib/libmpi.a ]; then
     --with-device=${MPICH_DEVICE}  \
     --enable-fortran=all  \
     --disable-opencl --enable-silent-rules  \
-    --disable-cuda  \
+    --without-cuda  \
+    --without-ze  \
     --with-xpmem=${MPICH_DIR}
     FC=$FC CC=$CC CXX=$CXX 
     head config.log 
