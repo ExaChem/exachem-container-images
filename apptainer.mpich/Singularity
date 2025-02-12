@@ -381,6 +381,7 @@ if [ ! -f /opt/mpich/lib/libmpi.a ]; then
     --disable-opencl --enable-silent-rules  \
     --without-cuda  \
     --without-ze  \
+    --without-hip  \
     --with-xpmem=${MPICH_DIR}
     FC=$FC CC=$CC CXX=$CXX 
     head config.log 
