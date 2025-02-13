@@ -37,9 +37,13 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
     ls -la  ${CACHEDIR}/mpich/bin || true
     ls -la  ${CACHEDIR}/pmix || true
     ls -la  ${CACHEDIR}/libint.tar.bz2 || true
+    ls -la  ${CACHEDIR}/libxc.tar.bz2 || true
+    ls -la  ${CACHEDIR}/libelpa.tar.bz2 || true
     bash -c "if [[  -f ${CACHEDIR}/mpich/lib/libmpi.so ]]; then mkdir -p ${SINGULARITY_ROOTFS}/opt ;rsync -a ${CACHEDIR}/mpich ${SINGULARITY_ROOTFS}/opt/. ; echo mpich cache fetched ;fi"
     bash -c "if [[  -f ${CACHEDIR}/pmix/etc/pmix-mca-params.conf ]]; then mkdir -p ${SINGULARITY_ROOTFS}/opt ;rsync -a ${CACHEDIR}/pmix ${SINGULARITY_ROOTFS}/opt/. ; echo pmix cache fetched ;fi"
     bash -c "if [[  -f ${CACHEDIR}/libint.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libint.tar.bz2; echo libint cache fetched ;fi"
+    bash -c "if [[  -f ${CACHEDIR}/libxc.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libxc.tar.bz2; echo libxc cache fetched ;fi"
+    bash -c "if [[  -f ${CACHEDIR}/libelpa.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libelpa.tar.bz2; echo libelpa cache fetched ;fi"
     ls -lrta ${SINGULARITY_ROOTFS}/opt  ||true
 
 %post 
