@@ -1,13 +1,17 @@
 name: exachem_apptainer_mpich
 
 on:
+  push:
+    paths-ignore:
+      - apptainer.ompi41x
+      - apptainer.ompi5x
+      - shifter.nersc
   schedule:
     - cron: '0 0 * * SUN'
   pull_request:
   repository_dispatch:
     types: [backend_automation]
   workflow_dispatch:
-  workflow_call:
 
 jobs:
   build_image:
