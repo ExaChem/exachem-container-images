@@ -3,7 +3,7 @@ From: ubuntu_{{ UBUNTU_VERSION }}.sif
 Stage: spython-base
 
 %arguments
-   UBUNTU_VERSION=focal
+   UBUNTU_VERSION=jammy
 
 %files
     usemylibrett.patch /tmp/usemylibrett.patch
@@ -18,8 +18,6 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
     env|egrep SHELL
     ls -la  ${GITHUB_WORKSPACE}
     if [ -d ${GITHUB_WORKSPACE}/../../../cache ]; then export CACHEDIR=${GITHUB_WORKSPACE}/../../../cache; else  export CACHEDIR=$(pwd)/cache; fi
-#    echo '@@@ ls -l $SINGULARITY_ROOTFS'
-#    ls -l ${SINGULARITY_ROOTFS}
     rm -f ${SINGULARITY_ROOTFS}/*.txt || true
     bash -c "if [[ -z '${GPU}' ]]; then echo 'GPU=nvidia ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; else echo 'GPU is ${GPU}'; echo 'GPU=${GPU} ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; fi"
     bash -c "if [[ -z '${CC}' ]]; then echo 'CC=gcc ' >> ${SINGULARITY_ROOTFS}/cc.txt ; else echo 'CC is ${CC}'; echo 'CC=${CC} ' >> ${SINGULARITY_ROOTFS}/cc.txt ; fi"
@@ -181,15 +179,17 @@ fi \
     APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1	
     TERM=dumb
     wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null 
-    echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list 
-    wget -O- https://repositories.intel.com/gpu/intel-graphics.key | gpg --dearmor | tee /usr/share/keyrings/intel-graphics-archive-keyring.gpg > /dev/null
-    echo "deb [signed-by=/usr/share/keyrings/intel-graphics-archive-keyring.gpg arch=amd64] https://repositories.intel.com/gpu/ubuntu jammy unified" > /etc/apt/sources.list.d/intel-graphics.list
+    echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list
+   wget -qO - https://repositories.intel.com/gpu/intel-graphics.key |  gpg --yes --dearmor --output /usr/share/keyrings/intel-graphics.gpg
+   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy/lts/2350 unified" | \
+    tee /etc/apt/sources.list.d/intel-gpu-jammy.list
     apt-get update
+    apt-get install -y  \
+    libigc-dev intel-igc-cm libigdfcl-dev libigfxcmrt-dev level-zero-dev xpu-smi
     export ONEAPIV=2025.0
-    apt-get install -y libze-intel-gpu1 libze1 libze-dev
     apt-get install -y intel-oneapi-compiler-fortran-${ONEAPIV} intel-oneapi-mkl-${ONEAPIV} intel-oneapi-compiler-dpcpp-cpp-${ONEAPIV} \
   intel-oneapi-mkl-core-devel-${ONEAPIV}  intel-oneapi-mkl-sycl-devel-${ONEAPIV} \
-intel-oneapi-tbb-devel 
+intel-oneapi-tbb-devel intel-oneapi-umf
     ls -l /opt/intel/oneapi/mkl/latest/lib/intel64/libmkl*.a 
     export MKLROOT=/opt/intel/oneapi/mkl/latest/
     export PKG_CONFIG_PATH=${MKLROOT}/lib/pkgconfig:${PKG_CONFIG_PATH}
@@ -209,21 +209,16 @@ intel-oneapi-tbb-devel
     export PKG_CONFIG_PATH=/opt/intel/oneapi/tbb/latest/lib/pkgconfig:${PKG_CONFIG_PATH}
 
     find /opt/intel/oneapi/ -name "*cmake"
+# https://github.com/intel/compute-runtime
     mkdir neo && cd neo 
-#    export IGCV=1.0.16510.2
-    export IGCV=2.5.6
-    export IGCVV=2_${IGCV}+18417
-    wget --progress=dot:giga https://github.com/intel/intel-graphics-compiler/releases/download/v${IGCV}/intel-igc-core-${IGCVV}_amd64.deb 
-    wget --progress=dot:giga https://github.com/intel/intel-graphics-compiler/releases/download/v${IGCV}/intel-igc-opencl-${IGCVV}_amd64.deb 
-    export CRTV=24.52.32224.5
-    export CRTVS=1.6.32224.5
-# conflict with libze-intel-gpu1    
-#    wget --progress=dot:giga https://github.com/intel/compute-runtime/releases/download/${CRTV}/intel-level-zero-gpu_${CRTVS}_amd64.deb 
-    wget --progress=dot:giga https://github.com/intel/compute-runtime/releases/download/${CRTV}/intel-opencl-icd_${CRTV}_amd64.deb 
-    wget --progress=dot:giga https://github.com/intel/compute-runtime/releases/download/${CRTV}/libigdgmm12_22.5.5_amd64.deb
+    export IGCV=1.0.17537.20
+    wget --progress=dot:giga https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGCV}/intel-igc-core_${IGCV}_amd64.deb
+    wget --progress=dot:giga https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGCV}/intel-igc-opencl_${IGCV}_amd64.deb
+    export CRTV=24.35.30872.22
+    wget --progress=dot:giga https://github.com/intel/compute-runtime/releases/download/${CRTV}/intel-opencl-icd_${CRTV}_amd64.deb
+    wget --progress=dot:giga https://github.com/intel/compute-runtime/releases/download/${CRTV}/libigdgmm12_22.5.0_amd64.deb
     dpkg -i *.deb && cd .. && rm -rf neo
  fi
-#    sudo apt-get install -y level-zero clinfo
 if [ $GPU = "nvidia" ]; then  curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg ;\
  cp cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg ;\
  echo 'deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /' |  tee /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.list ;\
@@ -552,14 +547,13 @@ export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPICH_DIR/lib:$ROCM_PATH/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/lib:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=/opt/intel/oneapi/umf/0.9/lib:/opt/intel/oneapi/tbb/latest/lib/intel64/gcc4.8:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/opt/intel/oneapi/umf/latest/lib:/opt/intel/oneapi/tbb/latest/lib/intel64/gcc4.8:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/opt/install/exachem/lib/exachem/:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/opt/install/exachem/lib/:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/opt/install/exachem/lib/tamm/:$LD_LIBRARY_PATH
 export PATH=/opt/install/exachem/bin:$MPICH_DIR/bin:$PATH
 export PATH=$PATH:/opt/intel/oneapi/compiler/latest/bin
 export LD_LIBRARY_PATH=$MPICH_DIR/lib:/usr/local/lib:$LD_LIBRARY_PATH
-lib:$ROCM_PATH/lib
 export COMEX_MAX_NB_OUTSTANDING=12
 #export APPTAINERENV_COMEX_MAX_NB_OUTSTANDING=12
 #%runscript
