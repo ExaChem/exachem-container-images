@@ -509,7 +509,8 @@ else     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake 
 	    cd $ROCM_PATH/lib/rocblas/ ; mkdir keep ; mv library/*"$GPU_ARCH"* keep/.  ; \
 	    rm -rf library ; mv keep library ; \
 	    ln -sf "$ROCM_PATH"/ /opt/rocm ;\
-	    rm  -f "$ROCM_PATH"/bin/rocm-smi ; ln -sf "$ROCM_PATH"/libexec/rocm_smi/rocm_smi.py "$ROCM_PATH"/bin/rocm-smi  \
+	    rm  -f "$ROCM_PATH"/bin/rocm-smi ; ln -sf "$ROCM_PATH"/libexec/rocm_smi/rocm_smi.py "$ROCM_PATH"/bin/rocm-smi ; \
+	    rm -rf "$ROCM_PATH"/lib/hipblaslt || true ; \
 	    rm -rf   "$ROCM_PATH"/llvm/bin  ; fi\
 	    && echo '*** ls -l CC/bin **' \
 	    && ls -l /opt/install/exachem/bin/ || true \
