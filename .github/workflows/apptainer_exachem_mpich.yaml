@@ -49,6 +49,7 @@ jobs:
             - amd_gfx90a_rocm5.7.1
             - amd_gfx90a_rocm5.6
             - nvidia_70
+            - nvidia_80
           ubuntu:
             - jammy
           scalapack:
