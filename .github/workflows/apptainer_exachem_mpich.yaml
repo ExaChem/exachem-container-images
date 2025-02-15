@@ -288,8 +288,14 @@ jobs:
         echo ${{ secrets.GITHUB_TOKEN }} | apptainer registry login -u ${{ github.actor }} --password-stdin oras://ghcr.io
         apptainer remote list
         exit_code=0
-        apptainer push /mnt/tmpdir/exachem.simg ${{ env.tag }}:${{ env.date }} || exit_code=$?
-        apptainer push /mnt/tmpdir/exachem.simg ${{ env.tag }}:latest|| exit_code+=$?
+        tries=0 ; until [ "$tries" -ge 5 ] ; do \
+        apptainer push /mnt/tmpdir/exachem.simg ${{ env.tag }}:${{ env.date }} \
+        && break ;\
+        tries=$((tries+1)) ; echo " first push no.1 attempt no. $tries" ; sleep 30 ; done
+        tries=0 ; until [ "$tries" -ge 5 ] ; do \
+        apptainer push /mnt/tmpdir/exachem.simg ${{ env.tag }}:latest \
+        && break ;\
+        tries=$((tries+1)) ; echo " second push  attempt no. $tries" ; sleep 30 ; done
     - name: store cache
       if: ${{ (steps.setup-cache.outputs.cache-hit != 'true') && (env.push_truefalse == 'true') }}
       run: |
