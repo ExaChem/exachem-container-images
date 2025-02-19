@@ -186,7 +186,9 @@ fi \
     wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null 
     echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list
    wget -qO - https://repositories.intel.com/gpu/intel-graphics.key |  gpg --yes --dearmor --output /usr/share/keyrings/intel-graphics.gpg
-   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu "${UBUNTU_VERSION}"/lts/2350 unified" | \
+   echo "UBUNTU_VERSION is " ${UBUNTU_VERSION}
+   echo "UBUNTU_CODE is " ${UBUNTU_CODE}
+   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu "${UBUNTU_CODE}"/lts/2350 unified" | \
     tee /etc/apt/sources.list.d/intel-gpu-${UBUNTU_VERSION}.list
     apt-get update
     apt-get install -y  \
