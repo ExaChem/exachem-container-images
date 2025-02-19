@@ -61,7 +61,7 @@ jobs:
               cc: gcc
               ga_runtime: MPI_PROGRESS_RANK
               ubuntu: noble
-              gpu: amd_gfx90a_rocm5.7.1
+              gpu: amd_gfx90a_rocm6.2.4
               exachem_branch: main
               tamm_branch: main
               folder: apptainer.mpich
