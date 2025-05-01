@@ -153,7 +153,7 @@ fi \
 && wget --quiet https://repo.radeon.com/rocm/rocm.gpg.key -O - |  gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null \
 && echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${ROCM_VERSION} jammy main' | tee --append /etc/apt/sources.list.d/rocm.list \
 && echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' |  tee /etc/apt/preferences.d/rocm-pin-600 \
-&& apt-get  update -y &&  apt-get -y install hip-dev hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib \
+&& apt-get  update -y &&  apt-get -y install hip-dev hipcc hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib \
 && ls -lrt /opt \
 && ls -lrt  /opt/rocm* || true \
 && echo "$GPU_ARCH" >> $ROCM_PATH/bin/target.lst \
@@ -268,7 +268,7 @@ cd .. ; rm -rf *tar*gz openmpi-* ucx-$ucx ;fi " \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
-&&             make -j3 || { echo "Compilation failure"; 
+&&             make VERBOSE=1 V=1 -j1 -l0.0001 || { echo "Compilation failure"; 
 	    cat /opt/TAMM/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeOutput.log || true ; \
             cat /opt/TAMM/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeError.log || true; exit 1; } \
 && 	     echo exit code for TAMM compilation $?   \
@@ -284,7 +284,7 @@ cd .. ; rm -rf *tar*gz openmpi-* ucx-$ucx ;fi " \
 &&             export CMAKE_OPTIONS  \
 &&	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 &&	     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
-&&             make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; exit 1; }  \
+&&             make V=1 VERBOSE=1 -j1 -l0.0001 || { echo "Compilation failure"; exit 1; }  \
 &&	     echo exit code for compilation $?  \
 &&             make install  \
 &&	     echo exit code for make install $?  \
