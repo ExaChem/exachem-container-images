@@ -38,12 +38,10 @@ jobs:
             - nvidia_70
             - nvidia_80
             - nvidia_90
-            - amd_gfx908_rocm5.5.1
-            - amd_gfx90a_rocm5.5.1
-            - amd_gfx908_rocm6.0
-            - amd_gfx90a_rocm6.0
-            - amd_gfx908_rocm5.7.3
-            - amd_gfx90a_rocm5.7.3
+            - amd_gfx908_rocm6.0.3
+            - amd_gfx90a_rocm6.0.3
+            - amd_gfx908_rocm6.2.4
+            - amd_gfx90a_rocm6.2.4
           include:
             - gpu: cpu
               ga_runtime: MPI_RMA
