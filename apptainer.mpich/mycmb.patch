@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 898f91a1..f9233df4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -23,7 +23,7 @@ if( NOT ${CMakeBuild_FOUND} )
+   else()
+     FetchContent_Declare(
+       CMakeBuild
+-      GIT_REPOSITORY https://github.com/NWChemEx-Project/CMakeBuild.git
++      GIT_REPOSITORY https://github.com/edoapra/CMakeBuild.git
+       GIT_TAG ${CMSB_TAG}
+     )
+   endif()
