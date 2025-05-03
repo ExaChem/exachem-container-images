@@ -51,21 +51,21 @@ jobs:
               folder: apptainer.ompi41x
               exachem_branch: main
               scalapack: Y
-              elpa: Y
+              elpa: N
               ga_runtime: MPI_PROGRESS_RANK
             - gpu: nvidia_80
               armci_network: MPI-PR
               folder: apptainer.ompi41x
               exachem_branch: main
               scalapack: Y
-              elpa: Y
+              elpa: N
               ga_runtime: MPI_PROGRESS_RANK
             - gpu: nvidia_90
               armci_network: MPI-PR
               folder: apptainer.ompi41x
               exachem_branch: main
               scalapack: Y
-              elpa: Y
+              elpa: N
               ga_runtime: MPI_PROGRESS_RANK
     steps:
     - name: Get Instruction
