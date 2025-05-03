@@ -319,7 +319,8 @@ jobs:
         sudo mkdir /mnt/tmpdir
         sudo chmod -R uog+rwx /mnt/tmpdir
         echo 'this is a test' > /mnt/tmpdir/test.txt
-        SCALAPACK=${{ matrix.scalapack }} ELPA=${{ matrix.elpa }} OFI=${{ matrix.ofi }} MPICH_DEVICE=${{ matrix.mpich_device }} MPICH=${{ matrix.mpich }} MYUSERNAME=${{ github.actor}}  EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} CC=${{ matrix.cc }} GA_RUNTIME=${{ matrix.ga_runtime}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --build-arg UBUNTU_VERSION=${{ matrix.ubuntu}} --rocm --fakeroot /mnt/tmpdir/exachem.simg  Singularity
+        if [[ $(echo ${{ matrix.gpu }} | cut -c 1-3)  == 'amd' ]]; then  export ROCM_OPT=" --rocm ";fi
+        SCALAPACK=${{ matrix.scalapack }} ELPA=${{ matrix.elpa }} OFI=${{ matrix.ofi }} MPICH_DEVICE=${{ matrix.mpich_device }} MPICH=${{ matrix.mpich }} MYUSERNAME=${{ github.actor}}  EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} CC=${{ matrix.cc }} GA_RUNTIME=${{ matrix.ga_runtime}}  MPI_IMPL=mpich MPICH=${{ matrix.mpich}}  apptainer build --build-arg UBUNTU_VERSION=${{ matrix.ubuntu}} $ROCM_OPT --fakeroot /mnt/tmpdir/exachem.simg  Singularity
     - name: builddate
       id: build-date
       run: |
