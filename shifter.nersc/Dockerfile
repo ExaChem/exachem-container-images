@@ -113,6 +113,9 @@ RUN         apt-get -q=2 update \
 	    && echo 'cloning tamm source *** ' || true \
 	    && mkdir -p /opt/install/exachem/ /opt/cache\
             && if [[ -f /tmp/libint.tar.bz2 ]]; then cd /opt/install/exachem; tar xjvf /tmp/libint.tar.bz2; rm -rf /tmp/libint.tar.bz2 ; export FETCHED_LIBINT=1; fi \
+	    && cd / && export CMAKE_VER=3.29.5 \
+	    && curl -LJO https://github.com/Kitware/CMake/releases/download/v"$CMAKE_VER"/cmake-"$CMAKE_VER"-linux-x86_64.tar.gz && tar xzf cmake-"$CMAKE_VER"-linux-x86_64.tar.gz \
+	    && export PATH=/cmake-"$CMAKE_VER"-linux-x86_64/bin:$PATH \
             && cd /opt || { echo "Failure"; exit 1; } \
             && git clone -b ${TAMM_BRANCH} --depth 100 https://github.com/NWChemEx/TAMM.git   \
             && git clone -b ${TAMM_BRANCH} --depth 20  https://github.com/ExaChem/exachem.git exachem  \
@@ -120,9 +123,6 @@ RUN         apt-get -q=2 update \
             && 	     mkdir build && cd build  \
 	    && echo " USE_SYSV is " $USE_SYSV \
 	    && echo " USE_CPU is " $USE_CPU \
-	    && export CMAKE_VER=3.29.5 \
-	    && curl -LJO https://github.com/Kitware/CMake/releases/download/v"$CMAKE_VER"/cmake-"$CMAKE_VER"-linux-x86_64.tar.gz && tar xzf cmake-"$CMAKE_VER"-linux-x86_64.tar.gz \
-	    && export PATH=/cmake-"$CMAKE_VER"-linux-x86_64/bin:$PATH \
             && CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES=CC  -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3 " \
 	    && CMAKE_OPTIONS="$CMAKE_OPTIONS -DDFT_CPU=ON " \
             && if [[ $USE_SYSV == Y ]]; then echo "sysv enabled"; CMAKE_OPTIONS+="-DGA_ENABLE_SYSV=ON "; fi \
