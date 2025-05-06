@@ -97,6 +97,10 @@ echo TAMM_BRANCH is $TAMM_BRANCH
 && chmod +x /usr/bin/curl \
 && echo ca_certificate=/etc/ssl/certs/ca-certificates.crt >  ~/.wgetrc \
 && echo        "cacert=/etc/ssl/certs/ca-certificates.crt" >> ~/.curlrc \
+&& export CMAKE_VER=3.29.5 \
+&& curl -LJO https://github.com/Kitware/CMake/releases/download/v"$CMAKE_VER"/cmake-"$CMAKE_VER"-linux-x86_64.tar.gz && tar xzf cmake-"$CMAKE_VER"-linux-x86_64.tar.gz \
+&& export PATH=/cmake-"$CMAKE_VER"-linux-x86_64/bin:$PATH \
+&& cmake --version \
 && apt-get -y install -y  gfortran \
 && pwd \
 && echo '@@ ls -lart ' \
@@ -130,7 +134,7 @@ echo TAMM_BRANCH is $TAMM_BRANCH
 && wget --quiet https://repo.radeon.com/rocm/rocm.gpg.key -O - |  gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null \
 && echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/${ROCM_VERSION} jammy main' | tee --append /etc/apt/sources.list.d/rocm.list \
 && echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' |  tee /etc/apt/preferences.d/rocm-pin-600 \
-&& apt-get  update -y &&  apt-get -y install hip-dev hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib \
+&& apt-get  update -y &&  apt-get -y install hip-dev hipcc hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib \
 && ls -lrt /opt \
 && ls -lrt  /opt/rocm* || true \
 && echo "$GPU_ARCH" >> $ROCM_PATH/bin/target.lst \
@@ -234,6 +238,7 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 &&              git clone -b ${EXACHEM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git exachem    \
 &&              git clone -b ${TAMM_BRANCH} --depth 100 https://github.com/NWChemEx/TAMM.git   \
 && 	     cd TAMM   \
+&& export NO_STOP_MESSAGE=1 \
 && 	     mkdir build && cd build  \
 &&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC;DFT' "  \
 && 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3"  \
@@ -247,7 +252,7 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \
 && 	     USE_SCALAPACK="$USE_SCALAPACK" CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
-&&             make -j3 || { echo "Compilation failure"; 
+&&             make -j3  || { echo "Compilation failure"; 
 	    cat /opt/TAMM/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeOutput.log || true ; \
             cat /opt/TAMM/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeError.log || true; exit 1; } \
 && 	     echo exit code for TAMM compilation $?   \
@@ -263,7 +268,7 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 &&             export CMAKE_OPTIONS  \
 &&	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 &&	     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  \
-&&             make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; exit 1; }  \
+&&             make V=1 VERBOSE=1 -j3  || { echo "Compilation failure"; exit 1; }  \
 &&	     echo exit code for compilation $?  \
 &&             make install  \
 &&	     echo exit code for make install $?  \

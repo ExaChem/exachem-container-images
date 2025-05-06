@@ -48,7 +48,7 @@ ENV	    PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN         apt-get -q=2 update \
             && apt-get -q=2 -y upgrade \
-            && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION"   make ssh patch rsync wget git file python"$PY_VERSION" libpython"$PY_VERSION"-dev python"$PY_VERSION"-dev bzip2 tar gnupg2 cmake \
+            && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION"   make ssh patch rsync wget curl git file python"$PY_VERSION" libpython"$PY_VERSION"-dev python"$PY_VERSION"-dev bzip2 tar gnupg2 cmake \
             && apt-get install -q=2 -y  autoconf automake libtool git \
 	    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 100 \
 	    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 100 \
@@ -113,6 +113,9 @@ RUN         apt-get -q=2 update \
 	    && echo 'cloning tamm source *** ' || true \
 	    && mkdir -p /opt/install/exachem/ /opt/cache\
             && if [[ -f /tmp/libint.tar.bz2 ]]; then cd /opt/install/exachem; tar xjvf /tmp/libint.tar.bz2; rm -rf /tmp/libint.tar.bz2 ; export FETCHED_LIBINT=1; fi \
+	    && cd / && export CMAKE_VER=3.29.5 \
+	    && curl -LJO https://github.com/Kitware/CMake/releases/download/v"$CMAKE_VER"/cmake-"$CMAKE_VER"-linux-x86_64.tar.gz && tar xzf cmake-"$CMAKE_VER"-linux-x86_64.tar.gz \
+	    && export PATH=/cmake-"$CMAKE_VER"-linux-x86_64/bin:$PATH \
             && cd /opt || { echo "Failure"; exit 1; } \
             && git clone -b ${TAMM_BRANCH} --depth 100 https://github.com/NWChemEx/TAMM.git   \
             && git clone -b ${TAMM_BRANCH} --depth 20  https://github.com/ExaChem/exachem.git exachem  \
@@ -145,10 +148,6 @@ RUN         apt-get -q=2 update \
 	    && if [[ $FETCHED_LIBINT == 1 ]]; then rm -f /opt/cache/libint.tar.bz2 || true; else tar cjvf /opt/cache/libint.tar.bz2 ./include/libint* ./share/libint* ./lib/pkgconfig/libint*.pc ./lib/cmake/libint* ./lib/libint*  || true ; fi  \
             && echo 'clean unnecessary source to reduce docker size' \
             && cd /opt && rm -rf exachem \
-	    && cd /opt/install/exachem/share/libint/2.9.0/basis/ \
-	    && wget --progress=dot:giga -O aug-cc-pvdz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvdz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
-	    && wget --progress=dot:giga -O aug-cc-pvtz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvtz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
-	    && wget --progress=dot:giga -O aug-cc-pvqz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
 	    && cd /usr/local || { echo "Failure"; exit 1; } ; if [[ $FETCHED_MPICH == 1 ]]; then rm -f /opt/cache/mpich.tar.bz2 || true; else tar cjvf /opt/cache/mpich.tar.bz2 lib/* include/* bin/* share/* ||true ; fi\
             && echo 'clean unnecessary packages ' \
             && DEBIAN_FRONTEND=noninteractive apt-get -q=2 -y install localepurge \
