@@ -5,15 +5,11 @@ Stage: spython-base
 %arguments
    UBUNTU_VERSION=jammy
 
-%files
-    usemylibrett.patch /tmp/usemylibrett.patch
 %labels
 MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 
 %setup
     #!/bin/bash
-    cat usemylibrett.patch
-    cp usemylibrett.patch /tmp
     echo "$(readlink /proc/$$/exe) is the shell in use"
     env|egrep SHELL
     ls -la  ${GITHUB_WORKSPACE}
@@ -167,8 +163,6 @@ fi \
  pkg-config gawk  software-properties-common  gdb \
  && if [ $mpich_major = '4' ]; then
     apt-get -y install -y libpmix-bin libpmix-dev libpmix2
-else
-    apt-get -y install -y libpmi2-0-dev libpmi0-dev
 fi \
 && export UBUNTU_CODE=$(lsb_release -c |cut -d : -f 2 | sed 's/\t//') \
 && echo UBUNTU_CODE is $UBUNTU_CODE \
@@ -402,6 +396,9 @@ fi
 
  if [ ! -f $MPICH_DIR/bin/mpif90 ]; then echo mpif90\ not\ found ; exit 1 ; fi \
 && echo '********' \
+&& if [ ! -z ${OFI} ]; then  \
+    if [ ${MPICH_DEVICE} = ch4:ofi ] && [ ${OFI} = git ]; then  apt-get install -y libjson-c-dev libcurl4-openssl-dev ; fi \
+    fi \
 && export PATH=$MPICH_DIR/bin:$PATH \
 && export PATH=/opt/intel/oneapi/compiler/latest/bin:$PATH \
 && export LD_LIBRARY_PATH=$MPICH_DIR/lib:$LD_LIBRARY_PATH \
@@ -435,30 +432,33 @@ fi
 &&              git clone -b ${EXACHEM_BRANCH} --depth 100  https://github.com/ExaChem/exachem.git exachem    \
 &&              git clone -b ${TAMM_BRANCH} --depth 100 https://github.com/NWChemEx/TAMM.git   \
 && 	     cd TAMM   \
+&& wget https://raw.githubusercontent.com/edoapra/exachem-container-images/refs/heads/pullmay/apptainer.mpich/mycmb.patch \
+&& patch -p1 < mycmb.patch \
 && export NO_STOP_MESSAGE=1 \
 && 	     mkdir build && cd build  \
-&&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC' "  \
-&&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DDFT_CPU=ON " \
-&&           if [ ${CC} = "icx" ]; then echo "intel compilers "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DGCCROOT=/usr" ;     CMAKE_OPTIONS="$CMAKE_OPTIONS -DLINALG_VENDOR=IntelMKL  -DLINALG_PREFIX=${MKLROOT} " ;  \
-else 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3" ; fi \
+&&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX="\""/opt/install/exachem"\"" -DMODULES="\""CC"\"""  \
+&&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DDFT_CPU=ON" \
+&&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGCCROOT=/usr" \
+&&           if [ ${CC} = "icx" ]; then echo "intel compilers "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DLINALG_VENDOR=IntelMKL  -DLINALG_PREFIX=${MKLROOT} " ;  fi \
 &&              if [ ${GPU} = "intel_gpu_pvc" ]; then echo "intel_gpu_pvc "; CMAKE_OPTIONS="$CMAKE_OPTIONS  -DUSE_OPENMP=OFF -DTAMM_ENABLE_DPCPP=ON " ; fi \
 &&              if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}" ; fi  \
-&&              if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  \
+&&              if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  \
 &&             export USE_SCALAPACK=OFF \
 &&              if [ ${SCALAPACK} = "y" ]; then echo "SCALAPACK ON"; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_SCALAPACK=ON "; export USE_SCALAPACK=ON; fi   \
 &&              if [ \( ${CC} = "gcc" \) -a \(  ${ELPA} = "y" \) ]; then echo "ELPA ON"; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_ELPA=ON " ; fi  \
 &&              if [ \( ${CC} = "amdclang" \) -a \( ${SCALAPACK} = "y" \) ]; then echo "scalapack workaround for clang "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_C_FLAGS_INIT='-Wno-error=implicit-function-declaration' 	" ; fi  \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_RUNTIME=${GA_RUNTIME}"  \
 &&              echo "modify ga repository to use" \
-&&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_REPO='https://github.com/GlobalArrays/ga.git' -DGA_TAG='develop'"    \
+&&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_REPO="\""https://github.com/GlobalArrays/ga.git"\"" -DGA_TAG="\""develop"\"""    \
+&& if [ ${GPU} = "intel_gpu_pvc" ]; then  CMAKE_OPTIONS="$CMAKE_OPTIONS  -DTAMM_CXX_FLAGS="\""-mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020"\""" ; fi \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \
-&& if [ ${GPU} = "intel_gpu_pvc" ]; then  cmake  $CMAKE_OPTIONS  -DTAMM_CXX_FLAGS=" -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020" .. || { echo "Cmake pvc failure";  exit 1; } ; \
-echo "modify Librett  repository to use"  ; \
-cat _deps/cmakebuild-src/cmake/build_external/BuildLibrett.cmake ; \
- patch -p0 < /tmp/usemylibrett.patch ; \
-else 	     USE_SCALAPACK="$USE_SCALAPACK" CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } ; fi \
+&& rm -f doit.sh \
+&&   echo   "USE_SCALAPACK=$USE_SCALAPACK CC=$CC CXX=$CXX FC=$FC \\" >>doit.sh  \
+&&   echo "cmake \\" >>doit.sh  \
+&&   echo "$CMAKE_OPTIONS  \\" >> doit.sh ; echo ".. " >>doit.sh  \
+&&    bash doit.sh || { echo "Cmake failure"; exit 1; }  \
 &&             make -j3 || { echo "Compilation failure in tamm step";
                echo cublas $(ls -lrt $CUDA_PATH/lib64/libcublas*) || true ;  echo cublas target $(ls -lrt $CUDA_PATH/targets/x86_64-linux/lib64/libcublas*) ||true ;  echo ls cudapath $(ls -lrt $CUDA_PATH ) || true;  \
 	    cat $(find /opt/TAMM/ -name config.log) || true ; \
@@ -475,10 +475,15 @@ else 	     USE_SCALAPACK="$USE_SCALAPACK" CC="$CC" CXX="$CXX" FC="$FC" cmake  $C
 &&	     if [ -f /opt/install/exachem/include/libint2.h ]; then echo 'found libint cache' ; \
              mkdir -p /opt/exachem/build/stage/opt || true ; \
 	     rsync -av /opt/install /opt/exachem/build/stage/opt/. ; fi \
+&&             CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_BUILD_TYPE=Debug "\
+&& if [ ${GPU} = "intel_gpu_pvc" ]; then  CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_CXX_FLAGS="\"" -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020"\""" ; fi\
 &&             export CMAKE_OPTIONS  \
 &&	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
-&& if [ ${GPU} = "intel_gpu_pvc" ]; then  cmake  $CMAKE_OPTIONS  -DTAMM_CXX_FLAGS=" -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020" .. || { echo "Cmake pvc failure"; exit 1; } ; \
-else     CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; }  ; fi\
+&& rm -f doit.sh \
+&&   echo   " CC=$CC CXX=$CXX FC=$FC \\" >>doit.sh  \
+&&   echo "cmake \\" >>doit.sh  \
+&&   echo "$CMAKE_OPTIONS  \\" >> doit.sh ; echo ".. " >>doit.sh  \
+&&    bash doit.sh || { echo "Cmake failure"; exit 1; }  \
 &&             make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; exit 1; }  \
 &&	     echo exit code for compilation $?  \
 &&             make install  \
