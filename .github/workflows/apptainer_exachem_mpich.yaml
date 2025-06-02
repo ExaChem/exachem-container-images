@@ -65,7 +65,7 @@ jobs:
               tamm_branch: main
               folder: apptainer.mpich
               scalapack: y
-              elpa: n
+              elpa: y
             - mpich: 3.4.2
               mpich_device: ch4:ofi
               ofi: git
@@ -77,7 +77,7 @@ jobs:
               tamm_branch: main
               folder: apptainer.mpich
               scalapack: y
-              elpa: n
+              elpa: y
             - mpich: 3.4.2
               mpich_device: ch4:ofi
               ofi: builtin
@@ -197,7 +197,7 @@ jobs:
               tamm_branch: main
               folder: apptainer.mpich
               scalapack: y
-              elpa: n
+              elpa: y
             - mpich: aurora
               mpich_device: ch4:ofi
               ofi: git
@@ -385,7 +385,7 @@ jobs:
       run: |
         pwd
         ls -la
-        apptainer pull -F ${{ env.tag }}:${{ env.date }}
+        APPTAINER_DISABLE_CACHE=True apptainer pull -F ${{ env.tag }}:${{ env.date }}
         sudo apt-get install -y openmpi-bin libmpich-dev mpich
         mpirun --version || true
         ldd `which mpirun`
@@ -395,7 +395,7 @@ jobs:
       run: |
         pwd
         ls -la
-        apptainer pull -F ${{ env.tag }}:${{ env.date }}
+        APPTAINER_DISABLE_CACHE=True apptainer pull -F ${{ env.tag }}:${{ env.date }}
         sudo apt-get install -y openmpi-bin libmpich-dev mpich
         if [[ ${{ matrix.mpich }} == aurora ]]; then
            export MPIRUN_PATH=`which mpirun.openmpi`
@@ -406,7 +406,8 @@ jobs:
         mpirun --version || true
         export UCX_TLS=tcp,self
         export UCX_POSIX_USE_PROC_LINK=n
-        $MPIRUN_PATH -np 2 apptainer exec ${{ env.tag }}:${{ env.date }} \
+        export ASAN_OPTIONS=allocator_may_return_null=1 
+        timeout 5m $MPIRUN_PATH -np 2 apptainer exec ${{ env.tag }}:${{ env.date }} \
         /opt/install/exachem/bin/ExaChem \
         inputs/waterdft.json
         echo exit code is $?
