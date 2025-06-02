@@ -136,7 +136,10 @@ fi \
 && echo OFI is $OFI\
 && cd / \
 && pwd \
-&& apt-get -y update \
+&& sed --in-place --regexp-extended 's http:// https:// g' /etc/apt/sources.list \
+&& apt-get update -y -o Acquire::https::archive.ubuntu.com::Verify-Peer=false   -o Acquire::https::archive.ubuntu.com::Verify-Host=false || true \
+&& apt-get install -o Acquire::https::archive.ubuntu.com::Verify-Peer=false   -o Acquire::https::archive.ubuntu.com::Verify-Host=false  -y ca-certificates \
+&& apt-get update -y \
 && apt-get -y install -y tzdata git moreutils  wget rsync  sudo ca-certificates  \
 && wget https://github.com/moparisthebest/static-curl/releases/download/v8.1.2/curl-amd64 -O /usr/bin/curl \
 && chmod +x /usr/bin/curl \
