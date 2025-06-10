@@ -476,7 +476,7 @@ fi
 &&	     if [ -f /opt/install/exachem/include/libint2.h ]; then echo 'found libint cache' ; \
              mkdir -p /opt/exachem/build/stage/opt || true ; \
 	     rsync -av /opt/install /opt/exachem/build/stage/opt/. ; fi \
-&&             CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_BUILD_TYPE=Debug "\
+&&             CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_BUILD_TYPE=Release "\
 && if [ ${GPU} = "intel_gpu_pvc" ]; then  CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_CXX_FLAGS="\"" -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020"\""" ; fi\
 &&             export CMAKE_OPTIONS  \
 &&	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
