@@ -65,7 +65,7 @@ jobs:
               tamm_branch: main
               folder: apptainer.mpich
               scalapack: y
-              elpa: y
+              elpa: n
             - mpich: 3.4.2
               mpich_device: ch4:ofi
               ofi: git
@@ -77,7 +77,7 @@ jobs:
               tamm_branch: main
               folder: apptainer.mpich
               scalapack: y
-              elpa: y
+              elpa: n
             - mpich: 3.4.2
               mpich_device: ch4:ofi
               ofi: builtin
