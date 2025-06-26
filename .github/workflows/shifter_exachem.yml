@@ -146,7 +146,12 @@ jobs:
       - name: load and test image
         if: ${{ env.push_truefalse == 'true' }}
         run: |
-          sleep 30s
+          sleep 10s
+          sudo systemctl stop docker
+          sudo systemctl stop docker.socket
+          sudo rm -rf /var/lib/docker /home/docker
+          sudo systemctl start docker
+          df -h
           docker pull ${{ env.tag }}
           export MYLDPATH=/usr/local/lib:/opt/lib
           docker run -e LD_LIBRARY_PATH="$MYLDPATH" --entrypoint=ldd --rm \
