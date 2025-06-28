@@ -47,25 +47,23 @@ ENV	    PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"
 	    LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib  
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-RUN mkdir -p /opt
-RUN <<EOF
-echo "line=\$(grep -hni ecp \$1|head -1|cut -d : -f 1) " > /opt/ecp_strip.sh
-echo " linem1=\$((line-2)) " >> /opt/ecp_strip.sh
-echo " rm -f az_ecp " >> /opt/ecp_strip.sh
-echo " head -n \$linem1 \$1 > az_ecp " >> /opt/ecp_strip.sh
-echo " mv az_ecp \$1 " >> /opt/ecp_strip.sh
-EOF
-
-RUN <<EOF
-echo "line=\$(grep -hni ecp \$1|head -1|cut -d : -f 1) " > /opt/ao_strip.sh
-echo " length=\$(wc -l \$1 | cut -d ' ' -f 1) " >> /opt/ao_strip.sh
-echo " linem1=\$((length-line+1)) " >> /opt/ao_strip.sh
-echo " rm -f az_ecp " >> /opt/ao_strip.sh
-echo " head -n \$linem1 \$1 > az_ecp " >> /opt/ao_strip.sh
-echo " mv az_ecp \$1" >> /opt/ao_strip.sh
-EOF
-
-RUN         apt-get -q=2 update \
+RUN mkdir -p /opt \
+&& { echo "line=\$(grep -hni ecp \$1|head -1|cut -d : -f 1) " ; \
+echo " linem1=\$((line-2)) " ; \
+echo " rm -f az_ecp " ; \
+echo " head -n \$linem1 \$1 > az_ecp " ; \
+echo " mv az_ecp \$1 " ; }  > /opt/ecp_strip.sh && \
+chmod +x /opt/ecp_strip.sh && \
+cat /opt/ecp_strip.sh && \
+  { echo "line=\$(grep -hni ecp \$1|head -1|cut -d : -f 1) " ; \
+echo " length=\$(wc -l \$1 | cut -d ' ' -f 1) " ; \
+echo " linem1=\$((length-line+1)) " ; \
+echo " rm -f az_ecp " ; \
+echo " tail -n \$linem1 \$1 > az_ecp " ; \
+echo " mv az_ecp \$1" ; } > /opt/ao_strip.sh && \
+chmod +x  /opt/ao_strip.sh && \
+cat /opt/ao_strip.sh && \
+         apt-get -q=2 update \
             && apt-get -q=2 -y upgrade \
             && apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION"   make ssh patch rsync wget curl git file python"$PY_VERSION" libpython"$PY_VERSION"-dev python"$PY_VERSION"-dev bzip2 tar gnupg2 cmake \
             && apt-get install -q=2 -y  autoconf automake libtool git  gdb \
