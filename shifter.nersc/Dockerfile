@@ -59,7 +59,7 @@ cat /opt/ecp_strip.sh && \
 echo " length=\$(wc -l \$1 | cut -d ' ' -f 1) " ; \
 echo " linem1=\$((length-line+1)) " ; \
 echo " rm -f az_ecp " ; \
-echo " head -n \$linem1 \$1 > az_ecp " ; \
+echo " tail -n \$linem1 \$1 > az_ecp " ; \
 echo " mv az_ecp \$1" ; } > /opt/ao_strip.sh && \
 chmod +x  /opt/ao_strip.sh && \
 cat /opt/ao_strip.sh && \
