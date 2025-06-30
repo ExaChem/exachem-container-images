@@ -162,7 +162,19 @@ cat /opt/ao_strip.sh && \
 	    && echo git describe --always `git describe --always`  >> /opt/install/info.txt \
 	    && echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt \
 	    && cd /opt/install/exachem/share/libint/*/basis/ \
-	    && rm -f aug* || true \
+	    && rm -f aug* cc-p*v?z* || true \
+	    && wget   --progress=dot:giga -O cc-pvdz-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pvdz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pvtz-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pvtz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pvqz-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pv5z-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pv5z-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pvdz.g94 "https://www.basissetexchange.org/api/basis/cc-pvdz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pvtz.g94 "https://www.basissetexchange.org/api/basis/cc-pvtz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pvqz.g94 "https://www.basissetexchange.org/api/basis/cc-pvqz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pv5z.g94 "https://www.basissetexchange.org/api/basis/cc-pv5z/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pwcvdz-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pwcvdz/format/gaussian94/?version=0&elements=5,6,7,8,9,10,13,14,15,16,17,18&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pwcvtz-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pwcvtz/format/gaussian94/?version=0&elements=5,6,7,8,9,10,13,14,15,16,17,18&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pwcvqz-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pwcvqz/format/gaussian94/?version=0&elements=5,6,7,8,9,10,13,14,15,16,17,18&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pwcv5z-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pwcv5z/format/gaussian94/?version=0&elements=5,6,7,8,9,10,13,14,15,16,17,18&optimize_general=true&uncontract_general=true" \
 	    && wget   --progress=dot:giga -O myaug-cc-pvdz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvdz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
 	    && wget   --progress=dot:giga -O myaug-cc-pvtz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvtz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
 	    && wget  --progress=dot:giga -O myaug-cc-pvqz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
@@ -175,6 +187,10 @@ cat /opt/ao_strip.sh && \
 	    && wget   --progress=dot:giga -O  myaug-cc-pvqz-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
 	    && wget   --progress=dot:giga -O  myaug-cc-pv5z-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
 && chmod +x /opt/ecp_strip.sh \
+&& /opt/ecp_strip.sh cc-pvdz-pp.g94  \
+&& /opt/ecp_strip.sh cc-pvtz-pp.g94  \
+&& /opt/ecp_strip.sh cc-pvqz-pp.g94  \
+&& /opt/ecp_strip.sh cc-pv5z-pp.g94  \
 && /opt/ecp_strip.sh myaug-cc-pvdz-pp.g94  \
 && /opt/ecp_strip.sh myaug-cc-pvtz-pp.g94  \
 && /opt/ecp_strip.sh myaug-cc-pvqz-pp.g94  \
@@ -183,6 +199,14 @@ cat /opt/ao_strip.sh && \
 && /opt/ecp_strip.sh myaug-cc-pwcvtz-pp.g94  \
 && /opt/ecp_strip.sh myaug-cc-pwcvqz-pp.g94  \
 && /opt/ecp_strip.sh myaug-cc-pwcv5z-pp.g94  \
+&&           wget  --progress=dot:giga -O  cc-pvdz-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pvdz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+&&           wget  --progress=dot:giga -O  cc-pvtz-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pvtz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+&&           wget  --progress=dot:giga -O  cc-pvqz-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+&&           wget  --progress=dot:giga -O  cc-pv5z-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pv5z-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+&&           wget  --progress=dot:giga -O  cc-pwcvdz-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pwcvdz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+&&           wget  --progress=dot:giga -O  cc-pwcvtz-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pwcvtz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+&&           wget  --progress=dot:giga -O  cc-pwcvqz-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pwcvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+&&           wget  --progress=dot:giga -O  cc-pwcv5z-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pwcv5z-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
 && 	     wget  --progress=dot:giga -O  myaug-cc-pwcvdz-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
 	    && wget  --progress=dot:giga -O  myaug-cc-pwcvtz-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
 	    && wget  --progress=dot:giga -O  myaug-cc-pwcvqz-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
@@ -192,6 +216,14 @@ cat /opt/ao_strip.sh && \
 	    && wget  --progress=dot:giga -O  myaug-cc-pvqz-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
 	    && wget  --progress=dot:giga -O  myaug-cc-pv5z-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
 && chmod +x /opt/ao_strip.sh \
+&& /opt/ao_strip.sh cc-pvdz-pp.ecp \
+&& /opt/ao_strip.sh cc-pvtz-pp.ecp \
+&& /opt/ao_strip.sh cc-pvqz-pp.ecp \
+&& /opt/ao_strip.sh cc-pv5z-pp.ecp \
+&& /opt/ao_strip.sh cc-pwcvdz-pp.ecp \
+&& /opt/ao_strip.sh cc-pwcvtz-pp.ecp \
+&& /opt/ao_strip.sh cc-pwcvqz-pp.ecp \
+&& /opt/ao_strip.sh cc-pwcv5z-pp.ecp \
 && /opt/ao_strip.sh myaug-cc-pvdz-pp.ecp \
 && /opt/ao_strip.sh myaug-cc-pvtz-pp.ecp \
 && /opt/ao_strip.sh myaug-cc-pvqz-pp.ecp \
