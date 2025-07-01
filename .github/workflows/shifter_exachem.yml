@@ -128,6 +128,8 @@ jobs:
           echo "date=$(TZ=America/Los_Angeles date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
       - name: build_docker
         uses: docker/build-push-action@v6
+        env:
+          DOCKER_BUILD_SUMMARY: false
         with:
           push:  ${{ env.push_truefalse }}
           context: ${{ matrix.folder }}
