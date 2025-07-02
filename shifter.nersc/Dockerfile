@@ -7,15 +7,12 @@ FROM $UBUNTU_TAG
 
 LABEL maintainer="Edoardo Apra <edoardo.apra@pnnl.gov>"
 
-LABEL org.opencontainers.image.description "Exachem CC Shifter image built with Mpich 4.0"
+LABEL org.opencontainers.image.description "Exachem CC"$CONTAINER"image built with Mpich 4.0"
 
 #LABEL org.opencontainers.image.source "https://github.com/Exachem/exachem-container-images"
 
 LABEL org.opencontainers.image.licenses "Apache-2.0"
 
-#create user exachem
-RUN           groupadd -r exachem -g 1994 \
-              && useradd  -u 1994 -r -g exachem -c 'Exachem user' -m -d /opt/install/exachem -s /bin/bash exachem 
 
 #caching from host cache dir
 COPY Dockerfile cache* /tmp/
@@ -26,11 +23,13 @@ ARG         FC
 ARG         TAMM_BRANCH
 ARG         USE_SYSV
 ARG         USE_CPU
+ARG         CONTAINER
 ENV         FC=${FC}
 ENV         TAMM_BRANCH=${TAMM_BRANCH}
 ENV         GITHUB_REPOSITORY_OWNER=${GITHUB_REPOSITORY_OWNER}
 ENV         USE_SYSV=$USE_SYSV
 ENV         USE_CPU=$USE_CPU
+ENV         CONTAINER=${CONTAINER}
 ARG mpich=4.0.2
 ARG mpich_prefix=mpich-$mpich
 ARG	    CUDA_VERSION_MAJOR=11 \
@@ -46,8 +45,10 @@ ENV         PY_VERSION=3.11
 ENV	    PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:/opt/nwchem/bin:/usr/local/bin \
 	    LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib  
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-RUN mkdir -p /opt \
+RUN           env && if [[ "${CONTAINER}" == shifter ]]; then groupadd -r exachem -g 1994 ;\
+              useradd  -u 1994 -r -g exachem -c 'Exachem user' -m -d /opt/install/exachem -s /bin/bash exachem ; fi && \
+            if [[ "${CONTAINER}" == shifter ]]; then export MYUSER=exachem ; else export MYUSER=root ;fi && \
+    mkdir -p /opt \
 && { echo "line=\$(grep -hni ecp \$1|head -1|cut -d : -f 1) " ; \
 echo " linem1=\$((line-2)) " ; \
 echo " rm -f az_ecp " ; \
@@ -267,11 +268,10 @@ ENV	    CUDA_VERSION_MAJOR=11
 ENV	    CUDA_VERSION_MINOR=7
 ENV	    LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/opt/lib \
 	    PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:/opt/install/exachem/bin:/usr/local/bin
-
 #clean unnecessary packages
 #RUN         apt-get -y remove  make  unzip cmake   &&  apt-get -y autoremove && apt-get clean
 
-USER        exachem
+USER        "$MYUSER"
 
-WORKDIR     /data
+#WORKDIR     /data
 #ENTRYPOINT  ["mpirun","-np","3","nwchem"]
