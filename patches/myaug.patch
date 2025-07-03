@@ -8,9 +8,9 @@ index 8123882..ca6213a 100644
      txt_utils::to_lower(_basis_string);
 +    if (_basis_string.find("aug") == 0 ){
 +      _basis_string = txt_utils::str_prefix(_basis_string, "my");
-+      std::cout << "basis modified: " << _basis_string  << std::endl;
-+    } else {
-+      std::cout << "aug string not found: " << _basis_string  << std::endl;
++ //     std::cout << "basis modified: " << _basis_string  << std::endl;
++ //   } else {
++ //     std::cout << "aug string not found: " << _basis_string  << std::endl;
 +    }
      atom_basis_map[element_symbol] = _basis_string;
    }
@@ -21,9 +21,9 @@ index 8123882..ca6213a 100644
    txt_utils::to_lower(common_options.basis);
 +    if (common_options.basis.find("aug") == 0 ){
 +      common_options.basis = txt_utils::str_prefix(common_options.basis, "my");
-+      std::cout << "basis modified: " << common_options.basis  << std::endl;
-+    } else {
-+      std::cout << "aug string not found: " << common_options.basis  << std::endl;
++ //     std::cout << "basis modified: " << common_options.basis  << std::endl;
++ //   } else {
++ //     std::cout << "aug string not found: " << common_options.basis  << std::endl;
 +    }
  
    json                               jatom_basis    = jinput["basis"]["atom_basis"];
