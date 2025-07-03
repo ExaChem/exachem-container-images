@@ -21,14 +21,15 @@ jobs:
         matrix:
           folder:
             - shifter.nersc
-          branch: [main]
+          branch: [ main ]
           fc: [ gfortran]
-          sysv:
-            - Y
-            - N
+          sysv: [ N ]
           cpu:
             - N
             - Y
+          container:
+            - shifter
+            - podman
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -54,9 +55,9 @@ jobs:
           if [[ ${{ matrix.cpu }} ==  Y ]]; then extratag+="_cpu" ;fi
           echo "extratag is $extratag"
           if [[ ${{ matrix.branch }} ==  main ]]; then
-          echo "longnwversion=${{ matrix.folder }}$extratag" >> $GITHUB_ENV
+          echo "longnwversion=${{ matrix.container }}$extratag" >> $GITHUB_ENV
           else
-          echo "longnwversion=${{ matrix.folder }}$extratag${{ matrix.branch }}" >> $GITHUB_ENV
+          echo "longnwversion=${{ matrix.container }}$extratag${{ matrix.branch }}" >> $GITHUB_ENV
           fi
         shell: bash
       - name: docker tag
@@ -139,6 +140,7 @@ jobs:
           build-args: |
             FC=${{ matrix.fc }}
             USE_SYSV=${{ matrix.sysv }}
+            CONTAINER=${{ matrix.container }}
             USE_CPU=${{ matrix.cpu }}
             CACHE_HIT=${{ env.cache_hit }}
             GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }}
