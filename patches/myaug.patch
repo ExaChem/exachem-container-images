@@ -1,0 +1,56 @@
+diff --git a/exachem/common/options/parse_common_options.cpp b/exachem/common/options/parse_common_options.cpp
+index 8123882..ca6213a 100644
+--- a/exachem/common/options/parse_common_options.cpp
++++ b/exachem/common/options/parse_common_options.cpp
+@@ -17,6 +17,12 @@ std::map<std::string, std::string> get_atom_basis_map(ChemEnv& chem_env, const j
+   for(auto& [element_symbol, basis_string]: jatom_basis.items()) {
+     std::string _basis_string = basis_string;
+     txt_utils::to_lower(_basis_string);
++    if (_basis_string.find("aug") == 0 ){
++      _basis_string = txt_utils::str_prefix(_basis_string, "my");
++ //     std::cout << "basis modified: " << _basis_string  << std::endl;
++ //   } else {
++ //     std::cout << "aug string not found: " << _basis_string  << std::endl;
++    }
+     atom_basis_map[element_symbol] = _basis_string;
+   }
+   return atom_basis_map;
+@@ -36,6 +42,12 @@ void ParseCommonOptions::parse(ChemEnv& chem_env) {
+   parse_option<std::string>(common_options.dfbasis, jinput["basis"], "df_basisset");
+ 
+   txt_utils::to_lower(common_options.basis);
++    if (common_options.basis.find("aug") == 0 ){
++      common_options.basis = txt_utils::str_prefix(common_options.basis, "my");
++ //     std::cout << "basis modified: " << common_options.basis  << std::endl;
++ //   } else {
++ //     std::cout << "aug string not found: " << common_options.basis  << std::endl;
++    }
+ 
+   json                               jatom_basis    = jinput["basis"]["atom_basis"];
+   std::map<std::string, std::string> atom_basis_map = get_atom_basis_map(chem_env, jatom_basis);
+diff --git a/exachem/common/txt_utils.cpp b/exachem/common/txt_utils.cpp
+index e2bcad8..5aeef07 100644
+--- a/exachem/common/txt_utils.cpp
++++ b/exachem/common/txt_utils.cpp
+@@ -22,6 +22,10 @@ std::string txt_utils::str_upper(const std::string str) {
+   std::transform(ustr.begin(), ustr.end(), ustr.begin(), ::toupper);
+   return ustr;
+ }
++std::string txt_utils::str_prefix(const std::string str, const std::string prefix){
++  std::string ustr = prefix + str;
++  return ustr;
++}
+ 
+ bool txt_utils::strequal_case(const std::string& a, const std::string& b) {
+   return a.size() == b.size() and
+diff --git a/exachem/common/txt_utils.hpp b/exachem/common/txt_utils.hpp
+index 6a34363..fdff793 100644
+--- a/exachem/common/txt_utils.hpp
++++ b/exachem/common/txt_utils.hpp
+@@ -15,5 +15,6 @@ namespace txt_utils {
+ void        to_upper(std::string& str);
+ void        to_lower(std::string& str);
+ std::string str_upper(const std::string str);
++std::string str_prefix(const std::string str, const std::string prefix);
+ bool        strequal_case(const std::string& a, const std::string& b);
+ } // namespace txt_utils
