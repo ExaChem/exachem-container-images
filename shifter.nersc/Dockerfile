@@ -156,7 +156,7 @@ cat /opt/ao_strip.sh && \
             && make install \
 	    && echo exit code for make install $? \
             && cd /opt/exachem \
-	    && patch -p1 < /tmp/myaug.patch \
+	    && patch -p1 -s -N < /tmp/myaug.patch \
 	    && mkdir build && cd build \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
             && make -j3 \
