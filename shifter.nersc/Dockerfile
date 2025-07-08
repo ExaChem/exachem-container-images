@@ -151,7 +151,7 @@ cat /opt/ao_strip.sh && \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
-            && make -j3 \
+            && make -j3 || { echo 'tamm Compilation Failure'; exit 1; }  \
 	    && echo exit code for compilation $? \
             && make install \
 	    && echo exit code for make install $? \
@@ -159,9 +159,9 @@ cat /opt/ao_strip.sh && \
 	    && patch -p1 -s -N < /tmp/myaug.patch \
 	    && mkdir build && cd build \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
-            && make -j3 \
-	    && echo exit code for compilation $? \
+            && make -j3 || { echo 'exachem Compilation Failure'; exit 1; }  \
             && make install \
+            && bash -c "if [[ -f /opt/install/exachem/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi"  \
 	    && echo exit code for make install $? \
 	    && echo git describe --always `git describe --always`  >> /opt/install/info.txt \
 	    && echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt \
