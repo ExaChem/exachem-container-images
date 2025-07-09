@@ -1,0 +1,30 @@
+diff --git a/exachem/common/options/parse_common_options.cpp b/exachem/common/options/parse_common_options.cpp
+index 8123882..0e8dc55 100644
+--- a/exachem/common/options/parse_common_options.cpp
++++ b/exachem/common/options/parse_common_options.cpp
+@@ -17,6 +17,12 @@ std::map<std::string, std::string> get_atom_basis_map(ChemEnv& chem_env, const j
+   for(auto& [element_symbol, basis_string]: jatom_basis.items()) {
+     std::string _basis_string = basis_string;
+     txt_utils::to_lower(_basis_string);
++    if (_basis_string.find("aug") == 0 ){
++      _basis_string = std::string("my") + _basis_string;
++ //     std::cout << "basis modified: " << _basis_string  << std::endl;
++ //   } else {
++ //     std::cout << "aug string not found: " << _basis_string  << std::endl;
++    }
+     atom_basis_map[element_symbol] = _basis_string;
+   }
+   return atom_basis_map;
+@@ -36,6 +42,12 @@ void ParseCommonOptions::parse(ChemEnv& chem_env) {
+   parse_option<std::string>(common_options.dfbasis, jinput["basis"], "df_basisset");
+ 
+   txt_utils::to_lower(common_options.basis);
++    if (common_options.basis.find("aug") == 0 ){
++      common_options.basis = std::string("my") + common_options.basis;
++ //     std::cout << "basis modified: " << common_options.basis  << std::endl;
++ //   } else {
++ //     std::cout << "aug string not found: " << common_options.basis  << std::endl;
++    }
+ 
+   json                               jatom_basis    = jinput["basis"]["atom_basis"];
+   std::map<std::string, std::string> atom_basis_map = get_atom_basis_map(chem_env, jatom_basis);

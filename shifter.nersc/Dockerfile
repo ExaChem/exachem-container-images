@@ -16,6 +16,7 @@ LABEL org.opencontainers.image.licenses "Apache-2.0"
 
 #caching from host cache dir
 COPY Dockerfile cache* /tmp/
+COPY myaug.patch /tmp/
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG USE_OPENMP_VALUE
@@ -49,6 +50,7 @@ RUN           env && if [[ "${CONTAINER}" == shifter ]]; then groupadd -r exache
               useradd  -u 1994 -r -g exachem -c 'Exachem user' -m -d /opt/install/exachem -s /bin/bash exachem ; fi && \
             if [[ "${CONTAINER}" == shifter ]]; then export MYUSER=exachem ; else export MYUSER=root ;fi && \
     mkdir -p /opt \
+    && ls -lart /tmp \
 && { echo "line=\$(grep -hni ecp \$1|head -1|cut -d : -f 1) " ; \
 echo " linem1=\$((line-2)) " ; \
 echo " rm -f az_ecp " ; \
@@ -149,16 +151,17 @@ cat /opt/ao_strip.sh && \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
-            && make -j3 \
+            && make -j3 || { echo 'tamm Compilation Failure'; exit 1; }  \
 	    && echo exit code for compilation $? \
             && make install \
 	    && echo exit code for make install $? \
             && cd /opt/exachem \
+	    && patch -p1 -s -N < /tmp/myaug.patch \
 	    && mkdir build && cd build \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
-            && make -j3 \
-	    && echo exit code for compilation $? \
+            && make -j3 || { echo 'exachem Compilation Failure'; exit 1; }  \
             && make install \
+            && bash -c "if [[ -f /opt/install/exachem/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi"  \
 	    && echo exit code for make install $? \
 	    && echo git describe --always `git describe --always`  >> /opt/install/info.txt \
 	    && echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt \
