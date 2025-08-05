@@ -16,6 +16,7 @@ LABEL org.opencontainers.image.licenses "Apache-2.0"
 
 #caching from host cache dir
 COPY Dockerfile cache* /tmp/
+COPY myaug.patch /tmp/
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG USE_OPENMP_VALUE
@@ -49,6 +50,7 @@ RUN           env && if [[ "${CONTAINER}" == shifter ]]; then groupadd -r exache
               useradd  -u 1994 -r -g exachem -c 'Exachem user' -m -d /opt/install/exachem -s /bin/bash exachem ; fi && \
             if [[ "${CONTAINER}" == shifter ]]; then export MYUSER=exachem ; else export MYUSER=root ;fi && \
     mkdir -p /opt \
+    && ls -lart /tmp \
 && { echo "line=\$(grep -hni ecp \$1|head -1|cut -d : -f 1) " ; \
 echo " linem1=\$((line-2)) " ; \
 echo " rm -f az_ecp " ; \
@@ -92,13 +94,15 @@ cat /opt/ao_strip.sh && \
 	    && echo "FFLAGS_IN is " $FFLAGS_IN \
             && echo "FFLAGS_IN is " $FFLAGS_IN 	>& nvcc.out && cat nvcc.out && rm nvcc.out \
 	    && echo GITHUB_REPOSITORY_OWNER is $GITHUB_REPOSITORY_OWNER \
-	    && wget --progress=dot:giga https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg \
-            && cp cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg \
-            && echo "deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /" |  tee /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.list \
-            &&  wget --progress=dot:giga https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin \
-            && mv cuda-*.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
-	    && apt-get -q=2 update \
-            && apt-get -q=2 -y install cuda-nvcc-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" cuda-cudart-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" cuda-nvml-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR}  \
+            && if [[ $USE_CPU == N ]]; then echo "cuda install" \
+	    ; wget --progress=dot:giga https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-archive-keyring.gpg \
+            ; cp cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg \
+            ; echo "deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /" |  tee /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.list \
+            ;  wget --progress=dot:giga https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin \
+            ; mv cuda-*.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
+	    ; apt-get -q=2 update \
+            ; apt-get -q=2 -y install cuda-nvcc-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" cuda-cudart-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" cuda-nvml-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR}  \
+	    ; rm -f nvcc.out ; nvcc -V >& nvcc.out ; cat nvcc.out ; rm nvcc.out ; fi \
 	    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 1000 \
 	    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$GCC_VERSION" 1000 \
 	    && update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-"$GCC_VERSION" 1000 \
@@ -107,7 +111,6 @@ cat /opt/ao_strip.sh && \
 	    && echo arch is "$arch" \
 	    && arch_dpkg=$(dpkg --print-architecture)  \
 	    && echo 'FC -v ' $("$FC" -v) \
-	    && rm -f nvcc.out && nvcc -V >& nvcc.out && cat nvcc.out && rm nvcc.out \
             && apt-get clean \
 	    && echo 'checking cache #2 ' \
             && if [[ -f /tmp/mpich.tar.bz2 ]]; then cd /usr/local ; tar xjf /tmp/mpich.tar.bz2; rm -rf /tmp/mpich.tar.bz2 ; export FETCHED_MPICH=1; \
@@ -149,16 +152,17 @@ cat /opt/ao_strip.sh && \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
-            && make -j3 \
+            && make -j3 || { echo 'tamm Compilation Failure'; exit 1; }  \
 	    && echo exit code for compilation $? \
             && make install \
 	    && echo exit code for make install $? \
             && cd /opt/exachem \
+	    && patch -p1 -s -N < /tmp/myaug.patch \
 	    && mkdir build && cd build \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \
-            && make -j3 \
-	    && echo exit code for compilation $? \
+            && make -j3 || { echo 'exachem Compilation Failure'; exit 1; }  \
             && make install \
+            && bash -c "if [[ -f /opt/install/exachem/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi"  \
 	    && echo exit code for make install $? \
 	    && echo git describe --always `git describe --always`  >> /opt/install/info.txt \
 	    && echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt \
@@ -176,9 +180,14 @@ cat /opt/ao_strip.sh && \
 	    && wget   --progress=dot:giga -O cc-pwcvtz-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pwcvtz/format/gaussian94/?version=0&elements=5,6,7,8,9,10,13,14,15,16,17,18&optimize_general=true&uncontract_general=true" \
 	    && wget   --progress=dot:giga -O cc-pwcvqz-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pwcvqz/format/gaussian94/?version=0&elements=5,6,7,8,9,10,13,14,15,16,17,18&optimize_general=true&uncontract_general=true" \
 	    && wget   --progress=dot:giga -O cc-pwcv5z-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pwcv5z/format/gaussian94/?version=0&elements=5,6,7,8,9,10,13,14,15,16,17,18&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pcvdz.g94 "https://www.basissetexchange.org/api/basis/cc-pcvdz/format/nwchem/?version=0&elements=3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pcvtz.g94 "https://www.basissetexchange.org/api/basis/cc-pcvtz/format/nwchem/?version=0&elements=3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20&optimize_general=true&uncontract_general=true" \
+	    && wget   --progress=dot:giga -O cc-pcvqz.g94 "https://www.basissetexchange.org/api/basis/cc-pcvqz/format/nwchem/?version=0&elements=3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20&optimize_general=true&uncontract_general=true" \
 	    && wget   --progress=dot:giga -O myaug-cc-pvdz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvdz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
 	    && wget   --progress=dot:giga -O myaug-cc-pvtz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvtz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
 	    && wget  --progress=dot:giga -O myaug-cc-pvqz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O myaug-cc-pv5z.g94 "https://www.basissetexchange.org/api/basis/aug-cc-pv5z/format/nwchem/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O myaug-cc-pv6z.g94 "https://www.basissetexchange.org/api/basis/aug-cc-pv6z/format/nwchem/?version=1&elements=1,2,5,6,7,8,9,10,13,14,15,16,17,18&optimize_general=true&uncontract_general=true" \
 	    && wget   --progress=dot:giga -O  myaug-cc-pwcvdz-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
 	    && wget   --progress=dot:giga -O  myaug-cc-pwcvtz-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
 	    && wget   --progress=dot:giga -O  myaug-cc-pwcvqz-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
