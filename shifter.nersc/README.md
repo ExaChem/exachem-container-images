@@ -19,9 +19,9 @@ https://github.com/ExaChem/exachem/blob/main/inputs/example.json
 The input options are also discussed in the documentation webpage mentioned earlier.
 
 Since getting the JSON formatting right can be an issue, you could check the validity of your json input file with the command
-
-cat "filenamed" | python -m json.tool
-
+```
+cat "filename" | python -m json.tool
+```
 
 ### Slurm script
 ```
