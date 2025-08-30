@@ -146,7 +146,6 @@ cat /opt/ao_strip.sh && \
 	    && echo " USE_CPU is " $USE_CPU \
             && CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES=CC  -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3 " \
 	    && CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_BUILD_TYPE=MinSizeRel " \
-	    && CMAKE_OPTIONS="$CMAKE_OPTIONS -DDFT_CPU=ON " \
             && if [[ $USE_SYSV == Y ]]; then echo "sysv enabled"; CMAKE_OPTIONS+="-DGA_ENABLE_SYSV=ON "; fi \
             && if [[ $USE_CPU == N ]]; then echo "gpu code"; CMAKE_OPTIONS+="-DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=80" ; else echo "cpu code" ;fi \
             && export CMAKE_OPTIONS \
