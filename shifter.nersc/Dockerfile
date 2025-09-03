@@ -252,9 +252,7 @@ cat /opt/ao_strip.sh && \
 && /opt/ao_strip.sh myaug-cc-pwcvqz-pp.ecp \
 && /opt/ao_strip.sh myaug-cc-pwcv5z-pp.ecp  \
 && /opt/ao_strip def2-svp.ecp \
-&& /opt/ao_strip def2-svpp.ecp \
 && /opt/ao_strip def2-svpd.ecp \
-&& /opt/ao_strip def2-svppd.ecp \
 && /opt/ao_strip def2-tzvp.ecp \
 && /opt/ao_strip def2-tzvpp.ecp \
 && /opt/ao_strip def2-tzvpd.ecp \
