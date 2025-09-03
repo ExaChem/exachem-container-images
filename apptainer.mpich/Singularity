@@ -8,6 +8,9 @@ Stage: spython-base
 %labels
 MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 
+%files
+myaug.patch /tmp/
+
 %setup
     #!/bin/bash
     echo "$(readlink /proc/$$/exe) is the shell in use"
@@ -469,6 +472,7 @@ fi
 &&              make install   \
 && 	     echo exit code for TAMM make install $?   \
 &&              cd /opt/exachem   \
+&& patch -p1 -s -N < /tmp/myaug.patch \
 && 	     mkdir build && cd build   \
 && 	     echo ' === ls -l /opt/install/exachem ===' $(ls -l /opt/install/exachem)   \
 && 	     echo ' === ls -l /opt/install/exachem/lib ===' $(ls -l /opt/install/exachem/lib)   \
@@ -579,9 +583,7 @@ ao_strip cc-pwcvtz-pp.ecp
 ao_strip cc-pwcvqz-pp.ecp
 ao_strip cc-pwcv5z-pp.ecp
 ao_strip def2-svp.ecp
-ao_strip def2-svpp.ecp
 ao_strip def2-svpd.ecp
-ao_strip def2-svppd.ecp
 ao_strip def2-tzvp.ecp
 ao_strip def2-tzvpp.ecp
 ao_strip def2-tzvpd.ecp
