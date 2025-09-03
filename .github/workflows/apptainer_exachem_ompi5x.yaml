@@ -144,6 +144,12 @@ jobs:
            cd ${{ matrix.folder }} ;\
         apptainer pull docker://ubuntu:jammy ; \
         fi
+    - name: copy patch
+      run: |
+        pwd
+        ls -lrta
+        cp patches/myaug.patch ${{ matrix.folder }}
+        ls -lrta ${{ matrix.folder }}
     - name: push_false
       id: push_false
       if: ${{ github.event_name == 'pull_request' }}

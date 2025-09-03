@@ -200,6 +200,10 @@ cat /opt/ao_strip.sh && \
 && /opt/ecp_strip.sh cc-pvtz-pp.g94  \
 && /opt/ecp_strip.sh cc-pvqz-pp.g94  \
 && /opt/ecp_strip.sh cc-pv5z-pp.g94  \
+&& /opt/ecp_strip.sh cc-pwcvdz-pp.g94  \
+&& /opt/ecp_strip.sh cc-pwcvtz-pp.g94  \
+&& /opt/ecp_strip.sh cc-pwcvqz-pp.g94  \
+&& /opt/ecp_strip.sh cc-pwcv5z-pp.g94  \
 && /opt/ecp_strip.sh myaug-cc-pvdz-pp.g94  \
 && /opt/ecp_strip.sh myaug-cc-pvtz-pp.g94  \
 && /opt/ecp_strip.sh myaug-cc-pvqz-pp.g94  \
@@ -251,16 +255,16 @@ cat /opt/ao_strip.sh && \
 && /opt/ao_strip.sh myaug-cc-pwcvtz-pp.ecp \
 && /opt/ao_strip.sh myaug-cc-pwcvqz-pp.ecp \
 && /opt/ao_strip.sh myaug-cc-pwcv5z-pp.ecp  \
-&& /opt/ao_strip def2-svp.ecp \
-&& /opt/ao_strip def2-svpd.ecp \
-&& /opt/ao_strip def2-tzvp.ecp \
-&& /opt/ao_strip def2-tzvpp.ecp \
-&& /opt/ao_strip def2-tzvpd.ecp \
-&& /opt/ao_strip def2-tzvppd.ecp \
-&& /opt/ao_strip def2-qzvp.ecp \
-&& /opt/ao_strip def2-qzvpp.ecp \
-&& /opt/ao_strip def2-qzvpd.ecp \
-&& /opt/ao_strip def2-qzvppd.ecp \
+&& /opt/ao_strip.sh def2-svp.ecp \
+&& /opt/ao_strip.sh def2-svpd.ecp \
+&& /opt/ao_strip.sh def2-tzvp.ecp \
+&& /opt/ao_strip.sh def2-tzvpp.ecp \
+&& /opt/ao_strip.sh def2-tzvpd.ecp \
+&& /opt/ao_strip.sh def2-tzvppd.ecp \
+&& /opt/ao_strip.sh def2-qzvp.ecp \
+&& /opt/ao_strip.sh def2-qzvpp.ecp \
+&& /opt/ao_strip.sh def2-qzvpd.ecp \
+&& /opt/ao_strip.sh def2-qzvppd.ecp \
 	    && echo 'caching libint' \
 	    && cd /opt/install/exachem/ \
 	    && if [[ $FETCHED_LIBINT == 1 ]]; then rm -f /opt/cache/libint.tar.bz2 || true; else tar cjvf /opt/cache/libint.tar.bz2 ./include/libint* ./share/libint* ./lib/pkgconfig/libint*.pc ./lib/cmake/libint* ./lib/libint*  || true ; fi  \
