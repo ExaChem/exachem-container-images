@@ -3,6 +3,9 @@ From: ubuntu_jammy.sif
 %labels
 MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 
+%files
+myaug.patch /opt/
+
 %setup
     #!/bin/bash
     echo "$(readlink /proc/$$/exe) is the shell in use"
@@ -276,6 +279,7 @@ cd .. ; rm -rf *tar*gz openmpi-* ucx-$ucx ;fi " \
 &&              make install   \
 && 	     echo exit code for TAMM make install $?   \
 &&              cd /opt/exachem   \
+&& patch -p1 -s -N < /opt/myaug.patch \
 && 	     mkdir build && cd build   \
 && 	     echo ' === ls -l /opt/install/exachem ===' $(ls -l /opt/install/exachem)   \
 && 	     echo ' === ls -l /opt/install/exachem/lib ===' $(ls -l /opt/install/exachem/lib)   \
@@ -295,11 +299,102 @@ cd .. ; rm -rf *tar*gz openmpi-* ucx-$ucx ;fi " \
             && echo 'clean unnecessary source to reduce docker size' \
             && rm  -rf /opt/exachem \
             && rm  -rf /opt/TAMM \
-	    && cd /opt/install/exachem/share/libint/2.9.0/basis/ \
-	    && wget -O aug-cc-pvdz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvdz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
-	    && wget -O aug-cc-pvtz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvtz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
-	    && wget -O aug-cc-pvqz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
-            && echo 'clean unnecessary packages ' \
+	    && cd /opt/install/exachem/share/libint/*/basis/ \
+	    && wget  --progress=dot:giga -O myaug-cc-pvdz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvdz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O myaug-cc-pvtz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvtz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O myaug-cc-pvqz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pwcvdz-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pwcvtz-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pwcvqz-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pwcv5z-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pvdz-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pvtz-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pvqz-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pv5z-pp.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O cc-pwcvdz-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pwcvdz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O cc-pwcvtz-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pwcvtz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O cc-pwcvqz-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pwcvqz-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O cc-pwcv5z-pp.g94 "https://www.basissetexchange.org/api/basis/cc-pwcv5z-pp/format/gaussian94/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true"
+
+ecp_strip()
+{
+line=$(grep -hni ecp $1|head -1|cut -d : -f 1)
+linem1=$((line-2))
+rm -f az_ecp
+head -n $linem1 $1 > az_ecp
+mv az_ecp $1
+}
+
+ecp_strip myaug-cc-pvdz-pp.g94
+ecp_strip myaug-cc-pvtz-pp.g94
+ecp_strip myaug-cc-pvqz-pp.g94
+ecp_strip myaug-cc-pv5z-pp.g94
+ecp_strip myaug-cc-pwcvdz-pp.g94
+ecp_strip myaug-cc-pwcvtz-pp.g94
+ecp_strip myaug-cc-pwcvqz-pp.g94
+ecp_strip myaug-cc-pwcv5z-pp.g94
+ecp_strip cc-pwcvdz-pp.g94
+ecp_strip cc-pwcvtz-pp.g94
+ecp_strip cc-pwcvqz-pp.g94
+ecp_strip cc-pwcv5z-pp.g94
+	    
+
+	     wget  --progress=dot:giga -O  myaug-cc-pwcvdz-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pwcvtz-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pwcvqz-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pwcv5z-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pwcvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pvdz-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pvtz-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pvqz-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O  myaug-cc-pv5z-pp.ecp "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O cc-pwcvdz-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pwcvdz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O cc-pwcvtz-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pwcvtz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O cc-pwcvqz-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pwcvqz-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O cc-pwcv5z-pp.ecp "https://www.basissetexchange.org/api/basis/cc-pwcv5z-pp/format/nwchem/?version=0&elements=29,30,31,32,33,34,35,36,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O def2-svp.ecp     "https://www.basissetexchange.org/api/basis/def2-svp/format/nwchem/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O def2-svpd.ecp    "https://www.basissetexchange.org/api/basis/def2-svpd/format/nwchem/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,57&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O def2-tzvp.ecp    "https://www.basissetexchange.org/api/basis/def2-tzvp/format/nwchem/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O def2-tzvpp.ecp   "https://www.basissetexchange.org/api/basis/def2-tzvpp/format/nwchem/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O def2-tzvppd.ecp  "https://www.basissetexchange.org/api/basis/def2-tzvppd/format/nwchem/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,57&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O def2-tzvpd.ecp   "https://www.basissetexchange.org/api/basis/def2-tzvpd/format/nwchem/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,57&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O def2-qzvp.ecp    "https://www.basissetexchange.org/api/basis/def2-qzvp/format/nwchem/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O def2-qzvpp.ecp   "https://www.basissetexchange.org/api/basis/def2-qzvpp/format/nwchem/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O def2-qzvppd.ecp  "https://www.basissetexchange.org/api/basis/def2-qzvppd/format/nwchem/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,57&optimize_general=true&uncontract_general=true" \
+	    && wget  --progress=dot:giga -O def2-qzvpd.ecp   "https://www.basissetexchange.org/api/basis/def2-qzvpd/format/nwchem/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,57&optimize_general=true&uncontract_general=true" 
+
+ao_strip()
+{
+    line=$(grep -hni ecp $1|head -1|cut -d : -f 1)
+    length=$(wc -l $1 | cut -d ' ' -f 1)
+linem1=$((length-line+1))
+rm -f az_ecp
+tail -n $linem1 $1 > az_ecp
+mv az_ecp $1
+}
+ao_strip myaug-cc-pvdz-pp.ecp
+ao_strip myaug-cc-pvtz-pp.ecp
+ao_strip myaug-cc-pvqz-pp.ecp
+ao_strip myaug-cc-pv5z-pp.ecp
+ao_strip myaug-cc-pwcvdz-pp.ecp
+ao_strip myaug-cc-pwcvtz-pp.ecp
+ao_strip myaug-cc-pwcvqz-pp.ecp
+ao_strip myaug-cc-pwcv5z-pp.ecp
+ao_strip cc-pwcvdz-pp.ecp
+ao_strip cc-pwcvtz-pp.ecp
+ao_strip cc-pwcvqz-pp.ecp
+ao_strip cc-pwcv5z-pp.ecp
+ao_strip def2-svp.ecp
+ao_strip def2-svpd.ecp
+ao_strip def2-tzvp.ecp
+ao_strip def2-tzvpp.ecp
+ao_strip def2-tzvpd.ecp
+ao_strip def2-tzvppd.ecp
+ao_strip def2-qzvp.ecp
+ao_strip def2-qzvpp.ecp
+ao_strip def2-qzvpd.ecp
+ao_strip def2-qzvppd.ecp
+	    
+             echo 'clean unnecessary packages ' \
             && DEBIAN_FRONTEND=noninteractive apt-get -q=2 -y install localepurge \
 	    && echo MANDELETE >  /etc/locale.nopurge \
 	    && echo DONTBOTHERNEWLOCALE >> /etc/locale.nopurge \
