@@ -55,15 +55,12 @@ echo 'GPU=nvidia ' >  gpu.txt  ; fi"
 export `cat ./gpu.txt`
 export `cat ./rocm_version.txt`
 export `cat ./gpu_arch.txt`
-if [ ${GPU} = "nvidia" ]; then
-if [ ${GPU_ARCH} = "90" ]; then export CUDA_VERSION_MAJOR=12 ; export CUDA_VERSION_MINOR=0; \
-else export CUDA_VERSION_MAJOR=11 ; export CUDA_VERSION_MINOR=7 ; fi
-fi
+if [ ${GPU} = "nvidia" ]; then export CUDA_VERSION_MAJOR=12 ; export CUDA_VERSION_MINOR=4;fi
 export ROCM_PATH=/opt/rocm-${ROCM_VERSION}
 if [ ${#ROCM_VERSION} = 3 ]; then export ROCM_PATH="$ROCM_PATH".0; fi
 echo ROCM_PATH is $ROCM_PATH
 echo GPU is $GPU
-export GCC_VERSION=11
+export GCC_VERSION=12
 export EXACHEM_BRANCH=main
 export TAMM_BRANCH=main
 
@@ -298,6 +295,7 @@ cd .. ; rm -rf *tar*gz openmpi-* ucx-$ucx ;fi " \
 	    && echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt \
             && echo 'clean unnecessary source to reduce docker size' \
             && rm  -rf /opt/exachem \
+            && rm  -rf /opt/*patch \
             && rm  -rf /opt/TAMM \
 	    && cd /opt/install/exachem/share/libint/*/basis/ \
 	    && wget  --progress=dot:giga -O myaug-cc-pvdz.g94 "https://www.basissetexchange.org/download_basis/basis/aug-cc-pvdz/format/gaussian94/?version=1&elements=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36&optimize_general=true&uncontract_general=true" \
