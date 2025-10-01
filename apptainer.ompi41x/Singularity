@@ -3,7 +3,7 @@ From: ubuntu_jammy.sif
 %labels
 MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 %files
-myaug.patch /opt/
+#myaug.patch /opt/
 
 %setup
     #!/bin/bash
@@ -258,7 +258,6 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 &&              make install   \
 && 	     echo exit code for TAMM make install $?   \
 &&              cd /opt/exachem   \
-&& patch -p1 -s -N < /opt/myaug.patch \
 && 	     mkdir build && cd build   \
 && 	     echo ' === ls -l /opt/install/exachem ===' $(ls -l /opt/install/exachem)   \
 && 	     echo ' === ls -l /opt/install/exachem/lib ===' $(ls -l /opt/install/exachem/lib)   \
