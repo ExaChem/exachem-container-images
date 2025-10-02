@@ -272,7 +272,7 @@ jobs:
       with:
         path: |
           ~/cache
-        key: ${{ matrix.folder}}-${{ env.exachemversion}}-${{ matrix.mpich }}${{ matrix.ofi }}${{ env.mpich_device }}-exachemcache-v002
+        key: ${{ matrix.folder}}-${{ env.exachemversion}}-${{ matrix.mpich }}${{ matrix.ofi }}${{ env.mpich_device }}${{ env.simd }}-exachemcache-v002
     - name: fetch cache
       if: steps.setup-cache.outputs.cache-hit == 'true'
       run: |
