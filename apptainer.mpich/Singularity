@@ -10,6 +10,8 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 
 %files
 #myaug.patch /opt/
+autogen.sh /opt
+install-autotools.sh /opt
 
 %setup
     #!/bin/bash
@@ -362,9 +364,9 @@ if [ ! -f /opt/mpich/lib/libmpi.a ]; then
     if [ $mpich_major = '3' ]; then
 	echo 'mpich 3 autotools ' 
 	mv autogen.sh autogen.sh.org 
-	wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/autogen.sh 
+	mv /opt/autogen.sh  .
 	chmod +x autogen.sh 
-	wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/install-autotools.sh
+	mv /opt/install-autotools.sh .
 	chmod +x install-autotools.sh 
 	wget https://github.com/pmodels/mpich/commit/3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch 
 	patch -p1 < 3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch 
