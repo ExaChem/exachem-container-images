@@ -116,7 +116,7 @@ jobs:
       with:
         path: |
           ~/cache
-        key: ${{ matrix.folder}}-${{ env.exachemversion}}-exachemcache-v001
+        key: ${{ matrix.folder}}-${{ env.exachemversion}}${{ env.simd }}-exachemcache-v001
     - name: fetch cache
       if: steps.setup-cache.outputs.cache-hit == 'true'
       run: |

@@ -44,17 +44,6 @@ HAVE_TIMEOUT=yes
 if ! $TIMEOUT --version > /dev/null ; then
     HAVE_TIMEOUT=no
 fi
-FTP_OK=yes
-if [ "x$HAVE_TIMEOUT" = xyes ] ; then
-    if ! $TIMEOUT 2 bash -c "</dev/tcp/ftp.gnu.org/21" ; then
-        FTP_OK=no
-        # can we reach our backup URL?
-        if ! $TIMEOUT 2 bash -c "</dev/tcp/github.com/443" ; then
-            echo FAILURE 0
-            exit 1
-        fi
-    fi
-fi
 
 ##########################################
 ### config.guess
@@ -64,7 +53,7 @@ if [ -f config.guess ] ; then
     echo "config.guess already exists! Using existing copy."
 else
     #    ${download} config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'
-    ${download} config.guess 'https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/config.guess'
+    ${download} config.guess 'https://raw.githubusercontent.com/exachem/exachem-container-images/main/apptainer.mpich/config.guess'
 fi
 
 ##########################################
@@ -75,7 +64,7 @@ if [ -f config.sub ] ; then
     echo "config.sub already exists! Using existing copy."
 else
 #    ${download} config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'
-    ${download} config.sub 'https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/config.sub'
+    ${download} config.sub 'https://raw.githubusercontent.com/exachem/exachem-container-images/main/apptainer.mpich/config.sub'
 fi
 
 ##########################################
@@ -87,10 +76,7 @@ TOOL_VERSION=$M4_VERSION
 TDIR=${TOOL}-${TOOL_VERSION}
 FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
-URL=http://ftp.gnu.org/gnu/${TOOL}/${FILE}
-if [ "x$FTP_OK" = "xno" ] ; then
-    URL=https://github.com/edoapra/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
-fi
+URL=https://github.com/exachem/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
 if [ -f ${FILE} ] ; then
     echo ${FILE} already exists! Using existing copy.
 else
@@ -128,10 +114,7 @@ TOOL_VERSION=$AUTOCONF_VERSION
 TDIR=${TOOL}-${TOOL_VERSION}
 FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
-URL=http://ftp.gnu.org/gnu/${TOOL}/${FILE}
-if [ "x$FTP_OK" = "xno" ] ; then
-    URL=https://github.com/edoapra/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
-fi
+URL=https://github.com/exachem/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
 if [ ! -f ${FILE} ] ; then
     ${download} ${FILE} ${URL}
 else
@@ -183,10 +166,7 @@ TOOL_VERSION=$AUTOMAKE_VERSION
 TDIR=${TOOL}-${TOOL_VERSION}
 FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
-URL=http://ftp.gnu.org/gnu/${TOOL}/${FILE}
-if [ "x$FTP_OK" = "xno" ] ; then
-    URL=https://github.com/edoapra/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
-fi
+URL=https://github.com/exachem/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
 if [ ! -f ${FILE} ] ; then
     ${download} ${FILE} ${URL}
 else
@@ -226,10 +206,7 @@ TOOL_VERSION=$LIBTOOL_VERSION
 TDIR=${TOOL}-${TOOL_VERSION}
 FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
-URL=http://ftp.gnu.org/gnu/${TOOL}/${FILE}
-if [ "x$FTP_OK" = "xno" ] ; then
-    URL=https://github.com/edoapra/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
-fi
+URL=https://github.com/exachem/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
 if [ ! -f ${FILE} ] ; then
     ${download} ${FILE} ${URL}
 else

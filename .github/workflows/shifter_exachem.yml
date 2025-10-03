@@ -36,9 +36,16 @@ jobs:
         uses: actions/checkout@v5
       - name: pkg cleanup
         uses: edoapra/ubuntu-pkg-cleanup@main
+      - name: Get Instruction
+        id: get-simd
+        run: |
+          /usr/bin/lscpu
+          curl -LJO https://raw.githubusercontent.com/nwchemgit/nwchem/master/travis/guess_simd.sh
+          chmod +x guess_simd.sh
+          echo "simd=$(./guess_simd.sh)" >> $GITHUB_ENV
       - name:  cache key
         run: |
-          echo "cache_key=${{ matrix.folder }}-${{ matrix.branch }}${{ env.fc }}-cache-v000" >> $GITHUB_ENV
+          echo "cache_key=${{ matrix.folder }}-${{ matrix.branch }}${{ env.fc }}${{ env.simd }}-cache-v000" >> $GITHUB_ENV
       - name: Setup cache
         id: setup-cache
         uses: actions/cache@v4
