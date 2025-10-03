@@ -436,6 +436,7 @@ fi
 && export NO_STOP_MESSAGE=1 \
 && 	     mkdir build && cd build  \
 &&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX="\""/opt/install/exachem"\"" -DMODULES="\""CC"\"""  \
+&& 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3"  \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGCCROOT=/usr" \
 &&           if [ ${CC} = "icx" ]; then echo "intel compilers "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DLINALG_VENDOR=IntelMKL  -DLINALG_PREFIX=${MKLROOT} " ;  fi \
 &&              if [ ${GPU} = "intel_gpu_pvc" ]; then echo "intel_gpu_pvc "; CMAKE_OPTIONS="$CMAKE_OPTIONS  -DUSE_OPENMP=OFF -DTAMM_ENABLE_DPCPP=ON " ; fi \
