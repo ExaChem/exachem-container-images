@@ -451,7 +451,7 @@ fi
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_RUNTIME=${GA_RUNTIME}"  \
 &&              echo "modify ga repository to use" \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_REPO="\""https://github.com/GlobalArrays/ga.git"\"" -DGA_TAG="\""develop"\"""    \
-&& if [ ${GPU} = "intel_gpu_pvc" ]; then  CMAKE_OPTIONS="$CMAKE_OPTIONS  -DTAMM_CXX_FLAGS="\""-mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020"\""" ; fi \
+&& if [ ${GPU} = "intel_gpu_pvc" ]; then  CMAKE_OPTIONS="$CMAKE_OPTIONS  -DTAMM_CXX_FLAGS="\""-mtune=sapphirerapids -ffast-math -ffp-contract=fast -fp-model=fast=2 -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -mllvm -enable-global-offset=false"\"" -DUSE_LIBNUMA=OFF" ; fi \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \
