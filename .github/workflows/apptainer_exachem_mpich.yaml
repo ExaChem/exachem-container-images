@@ -48,7 +48,7 @@ jobs:
             - nvidia_70
             - nvidia_80
           ubuntu:
-            - jammy
+            - noble
           scalapack:
             - y
           elpa:
