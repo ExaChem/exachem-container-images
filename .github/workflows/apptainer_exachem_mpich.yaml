@@ -220,7 +220,7 @@ jobs:
               exachem_branch: main
               tamm_branch: main
               folder: apptainer.mpich
-              scalapack: y
+              scalapack: n
               elpa: n
     steps:
     - name: Get Instruction
