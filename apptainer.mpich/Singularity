@@ -251,9 +251,9 @@ apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-c
 && echo '$$$$$$$$$$$$$$$$$$$$' \
 && echo ' ls -l  ROCM_PATH/lib/libamdhip64.so*' $(ls -l $ROCM_PATH/lib/libamdhip64.so*)   \
 && echo '$$$$$$$$$$$$$$$$$$$$' ; fi \
-&& echo 'FC -v ' `$FC -v`  \
-&& echo 'CC -v ' `$CC -v`  \
-&& echo 'CXX -v ' `$CXX -v` || { echo "CXX not installed"; exit  1; } \
+&& echo 'FC --version ' `$FC --version`  \
+&& echo 'CC -v ' `$CC --version`  \
+&& echo 'CXX -v ' `$CXX --version` || { echo "CXX not installed"; exit  1; } \
 && apt-get clean  \
 && echo 'ls -l /opt/mpich/lib/libmpi.a' $(ls -l /opt/mpich/lib/libmpi.a) || true  \
 && echo FC is $FC
@@ -283,7 +283,7 @@ if [ ! -f /opt/mpich/lib/libmpi.a ]; then
 	cd .. 
 	rm -rf pmix-*.* 
     fi 
-    $FC -v 
+    $FC --version 
     if [ ${MPICH_DEVICE} = ch4:ofi ]; then
 	if [ ${OFI} = builtin ] ; then
 	    echo 'builtin OFI - nothing to download'
