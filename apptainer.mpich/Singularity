@@ -251,9 +251,9 @@ apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-c
 && echo '$$$$$$$$$$$$$$$$$$$$' \
 && echo ' ls -l  ROCM_PATH/lib/libamdhip64.so*' $(ls -l $ROCM_PATH/lib/libamdhip64.so*)   \
 && echo '$$$$$$$$$$$$$$$$$$$$' ; fi \
-&& echo 'FC -v ' `$FC -v`  \
-&& echo 'CC -v ' `$CC -v`  \
-&& echo 'CXX -v ' `$CXX -v` || { echo "CXX not installed"; exit  1; } \
+&& echo 'FC --version ' `$FC --version`  \
+&& echo 'CC -v ' `$CC --version`  \
+&& echo 'CXX -v ' `$CXX --version` || { echo "CXX not installed"; exit  1; } \
 && apt-get clean  \
 && echo 'ls -l /opt/mpich/lib/libmpi.a' $(ls -l /opt/mpich/lib/libmpi.a) || true  \
 && echo FC is $FC
@@ -283,7 +283,7 @@ if [ ! -f /opt/mpich/lib/libmpi.a ]; then
 	cd .. 
 	rm -rf pmix-*.* 
     fi 
-    $FC -v 
+    $FC --version 
     if [ ${MPICH_DEVICE} = ch4:ofi ]; then
 	if [ ${OFI} = builtin ] ; then
 	    echo 'builtin OFI - nothing to download'
@@ -438,7 +438,7 @@ fi
 && export NO_STOP_MESSAGE=1 \
 && 	     mkdir build && cd build  \
 &&              CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX="\""/opt/install/exachem"\"" -DMODULES="\""CC"\"""  \
-&& 	     CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLIS_CONFIG=zen3 -DMARCH_FLAGS=-march=znver3"  \
+&& 	     if [ ${GPU} != "intel_gpu_pvc" ]; then CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLAS_ARCH=zen3 -DMARCH_FLAGS=-march=znver3"; fi  \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGCCROOT=/usr" \
 &&           if [ ${CC} = "icx" ]; then echo "intel compilers "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DLINALG_VENDOR=IntelMKL  -DLINALG_PREFIX=${MKLROOT} " ;  fi \
 &&              if [ ${GPU} = "intel_gpu_pvc" ]; then echo "intel_gpu_pvc "; CMAKE_OPTIONS="$CMAKE_OPTIONS  -DUSE_OPENMP=OFF -DTAMM_ENABLE_DPCPP=ON " ; fi \
@@ -451,7 +451,7 @@ fi
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_RUNTIME=${GA_RUNTIME}"  \
 &&              echo "modify ga repository to use" \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_REPO="\""https://github.com/GlobalArrays/ga.git"\"" -DGA_TAG="\""develop"\"""    \
-&& if [ ${GPU} = "intel_gpu_pvc" ]; then  CMAKE_OPTIONS="$CMAKE_OPTIONS  -DTAMM_CXX_FLAGS="\""-mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020"\""" ; fi \
+&& if [ ${GPU} = "intel_gpu_pvc" ]; then  CMAKE_OPTIONS="$CMAKE_OPTIONS  -DTAMM_CXX_FLAGS="\""-mtune=sapphirerapids -ffast-math -ffp-contract=fast -fp-model=fast=2 -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -mllvm -enable-global-offset=false"\"" -DUSE_LIBNUMA=OFF" ; fi \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \
