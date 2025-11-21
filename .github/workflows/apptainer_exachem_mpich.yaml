@@ -261,7 +261,7 @@ jobs:
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'
     - name: Checkout image source
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         clean: false
     - name: pkg cleanup
