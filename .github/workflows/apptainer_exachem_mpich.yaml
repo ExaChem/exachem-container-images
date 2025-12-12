@@ -261,14 +261,14 @@ jobs:
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'
     - name: Checkout image source
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         clean: false
     - name: pkg cleanup
       uses: edoapra/ubuntu-pkg-cleanup@main
     - name: Setup cache
       id: setup-cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/cache
