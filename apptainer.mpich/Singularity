@@ -486,7 +486,7 @@ fi
 &&   echo "cmake \\" >>doit.sh  \
 &&   echo "$CMAKE_OPTIONS  \\" >> doit.sh ; echo ".. " >>doit.sh  \
 &&    bash doit.sh || { echo "Cmake failure"; exit 1; }  \
-&&             make V=1 VERBOSE=1 -j3 || { echo "Compilation failure"; exit 1; }  \
+&&             make V=1 VERBOSE=1 -j1 || { echo "Compilation failure"; exit 1; }  \
 &&	     echo exit code for compilation $?  \
 &&             make install  \
 &&	     echo exit code for make install $?  \
