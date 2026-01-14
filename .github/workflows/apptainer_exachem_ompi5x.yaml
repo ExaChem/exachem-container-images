@@ -24,7 +24,7 @@ jobs:
             - apptainer.ompi5x
           ompi:
             - 5.0.9
-            - 4.1.6
+            - 4.1.8
           tamm_branch:
             - main
           exachem_branch:
@@ -58,19 +58,19 @@ jobs:
             - gpu: nvidia_70
               ga_runtime: MPI_PROGRESS_RANK
               folder: apptainer.ompi5x
-              ompi: 4.1.6
+              ompi: 4.1.8
               exachem_branch: main
               elpa: N
             - gpu: nvidia_80
               ga_runtime: MPI_PROGRESS_RANK
               folder: apptainer.ompi5x
-              ompi: 4.1.6
+              ompi: 4.1.8
               exachem_branch: main
               elpa: N
             - gpu: nvidia_90
               ga_runtime: MPI_PROGRESS_RANK
               folder: apptainer.ompi5x
-              ompi: 4.1.6
+              ompi: 4.1.8
               exachem_branch: main
               elpa: N
     steps:
