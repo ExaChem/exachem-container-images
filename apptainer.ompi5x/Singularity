@@ -231,6 +231,8 @@ $ompi_options \
  --disable-mpi-java --enable-dlopen --without-cuda  \
  FC=$FC >& ompi_config.log || { echo 'OpenMPI config failure'; tail -500 ompi_config.log; exit 1; } &&\
 tail -50 ompi_config.log && \
+wget https://github.com/open-mpi/ompi/commit/ed05f15b1790899ce9c2f77782f7b67bfb396854.patch -O sshmem_base.patch && \
+if [[ $OMPI == 4.1.8 ]]; then patch -p1 < sshmem_base.patch ; fi && \
 echo 'Compiling openmpi ..........' &&\
 make FC=$FC -j 4 >& make.log|| { echo 'OpenMPI compilation failure'; tail -1500 make.log; exit 1; } && tail -50 make.log                                  && \
 echo 'Installing openmpi ..........' &&\
