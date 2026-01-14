@@ -232,7 +232,7 @@ $ompi_options \
  FC=$FC >& ompi_config.log || { echo 'OpenMPI config failure'; tail -500 ompi_config.log; exit 1; } &&\
 tail -50 ompi_config.log && \
 echo 'Compiling openmpi ..........' &&\
-make FC=$FC -j 4 >& make.log && tail -50 make.log                                  && \
+make FC=$FC -j 4 >& make.log|| { echo 'OpenMPI compilation failure'; tail -1500 make.log; exit 1; } && tail -50 make.log                                  && \
 echo 'Installing openmpi ..........' &&\
 make -j4 install >& makei.log && tail -50 makei.log               && \
 echo 'Cleaning up openmpi ..........' && \
