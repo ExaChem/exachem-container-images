@@ -25,6 +25,8 @@ jobs:
           ompi:
             - 5.0.9
             - 4.1.8
+          ofi:
+            - N
           tamm_branch:
             - main
           exachem_branch:
@@ -33,6 +35,8 @@ jobs:
             - MPI_PROGRESS_RANK
           elpa:
             - N
+          ubuntu:
+            - jammy
           gpu:
             - cpu
             - nvidia_70
@@ -47,32 +51,82 @@ jobs:
               ga_runtime: MPI_RMA
               folder: apptainer.ompi5x
               ompi: 5.0.9
+              ofi: N
               exachem_branch: main
               elpa: Y
+              ubuntu: jammy
+            - gpu: nvidia_70
+              ga_runtime: MPI_PROGRESS_RANK
+              folder: apptainer.ompi5x
+              ompi: 5.0.9
+              ofi: 1.22.0
+              exachem_branch: main
+              elpa: N
+              ubuntu: jammy
+            - gpu: amd_gfx90a_rocm6.2.4
+              ga_runtime: MPI_PROGRESS_RANK
+              folder: apptainer.ompi5x
+              ompi: 5.0.9
+              ofi: 1.22.0
+              exachem_branch: main
+              elpa: N
+              ubuntu: noble
+            - gpu: amd_gfx90a_rocm6.2.4
+              ga_runtime: MPI_PROGRESS_RANK
+              folder: apptainer.ompi5x
+              ompi: 4.1.8
+              ofi: 1.22.0
+              exachem_branch: main
+              elpa: N
+              ubuntu: noble
+            - gpu: cpu
+              ga_runtime: MPI_PROGRESS_RANK
+              folder: apptainer.ompi5x
+              ompi: 5.0.9
+              ofi: 1.22.0
+              exachem_branch: main
+              elpa: N
+              ubuntu: noble
+            - gpu: cpu
+              ga_runtime: MPI_PROGRESS_RANK
+              folder: apptainer.ompi5x
+              ompi: 4.1.8
+              ofi: 1.22.0
+              exachem_branch: main
+              elpa: N
+              ubuntu: noble
             - gpu: nvidia_70
               ga_runtime: MPI_RMA
               folder: apptainer.ompi5x
               ompi: 5.0.9
+              ofi: N
               exachem_branch: main
               elpa: N
+              ubuntu: jammy
             - gpu: nvidia_70
               ga_runtime: MPI_PROGRESS_RANK
               folder: apptainer.ompi5x
               ompi: 4.1.8
+              ofi: N
               exachem_branch: main
               elpa: N
+              ubuntu: jammy
             - gpu: nvidia_80
               ga_runtime: MPI_PROGRESS_RANK
               folder: apptainer.ompi5x
               ompi: 4.1.8
+              ofi: N
               exachem_branch: main
               elpa: N
+              ubuntu: jammy
             - gpu: nvidia_90
               ga_runtime: MPI_PROGRESS_RANK
               folder: apptainer.ompi5x
               ompi: 4.1.8
+              ofi: N
               exachem_branch: main
               elpa: N
+              ubuntu: jammy
     steps:
     - name: Get Instruction
       id: get-simd
@@ -90,6 +144,9 @@ jobs:
         if [[ ${{ matrix.gpu }} !=  nvidia_70 ]]; then
           myversion+=.${{ matrix.gpu }}
         fi
+        if [[ ${{ matrix.ubuntu }} !=  jammy ]]; then
+          myversion+=.${{ matrix.ubuntu }}
+        fi
         echo "exachemversion=$myversion" >> $GITHUB_ENV
         if [[ ${{ matrix.ga_runtime }} !=  MPI_PROGRESS_RANK ]]; then
           net_tag=$(echo ${{ matrix.ga_runtime }} | tr '[:upper:]' '[:lower:]')
@@ -98,9 +155,12 @@ jobs:
         if [[ ${{ matrix.elpa }} ==  Y ]]; then
           echo "elpa=.elpa" >> $GITHUB_ENV
         fi
+        if [[ ${{ matrix.ofi }} !=  N ]]; then
+          echo "ofi=.ofi-"${{ matrix.ofi }} >> $GITHUB_ENV
+        fi
     - name: tag
       run: |
-        echo "$(echo tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}${{ env.ga_runtime}}${{ env.elpa}} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        echo "$(echo tag=oras://ghcr.io/${{ github.repository }}/apptainer${{ env.exachemversion}}${{ env.ga_runtime}}${{ env.elpa}}${{ env.ofi }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
     - name: echo-tag
       run: |
         echo ' the apptainer tag is ' '${{ env.tag }}'
@@ -116,7 +176,7 @@ jobs:
       with:
         path: |
           ~/cache
-        key: ${{ matrix.folder}}-${{ env.exachemversion}}${{ env.simd }}-exachemcache-v001
+        key: ${{ matrix.folder}}-${{ env.exachemversion}}${{ env.simd }}${{ env.ofi }}-exachemcache-v001
     - name: fetch cache
       if: steps.setup-cache.outputs.cache-hit == 'true'
       run: |
@@ -138,18 +198,12 @@ jobs:
         apptainer version
     - name: create sif from docker
       run: |
-        if [  -f ~/cache/ubuntu_jammy.sif ]; then echo "sif found" ; \
-           cp ~/cache/ubuntu_jammy.sif ${{ matrix.folder }}/.
+        if [  -f ~/cache/ubuntu_${{ matrix.ubuntu }}.sif ]; then echo "sif found" ; \
+           cp ~/cache/ubuntu_${{ matrix.ubuntu }}.sif ${{ matrix.folder }}/.
         else
            cd ${{ matrix.folder }} ;\
-        apptainer pull docker://ubuntu:jammy ; \
+        apptainer pull docker://ubuntu:${{ matrix.ubuntu }} ; \
         fi
-    - name: copy patch
-      run: |
-        pwd
-        ls -lrta
-        cp patches/myaug.patch ${{ matrix.folder }}
-        ls -lrta ${{ matrix.folder }}
     - name: push_false
       id: push_false
       if: ${{ github.event_name == 'pull_request' }}
@@ -162,7 +216,7 @@ jobs:
     - name: build an apptainer container
       run: |
         cd ${{ matrix.folder }}
-        MYUSERNAME=${{ github.actor}} EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} GA_RUNTIME=${{ matrix.ga_runtime}} ELPA=${{ matrix.elpa}} MPI_IMPL=ompi OMPI=${{ matrix.ompi }}  apptainer build --fakeroot ${{ matrix.folder }}.simg  Singularity
+        MYUSERNAME=${{ github.actor}} EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}} GA_RUNTIME=${{ matrix.ga_runtime}} ELPA=${{ matrix.elpa}}  MPI_IMPL=ompi OMPI=${{ matrix.ompi }} OFI=${{ matrix.ofi }} apptainer build --build-arg UBUNTU_VERSION=${{ matrix.ubuntu}} --fakeroot ${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |
@@ -189,7 +243,7 @@ jobs:
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem/include || true
         apptainer exec ${{ matrix.folder }}.simg ls -l /opt/install/exachem || true
         apptainer exec ${{ matrix.folder }}.simg tar cjf ~/cache/libint.tar.bz2 /opt/install/exachem/include/libint2/  /opt/install/exachem/include/libint2.hpp /opt/install/exachem/include/libint2.h  /opt/install/exachem/share/libint /opt/install/exachem/lib/cmake/libint2 /opt/install/exachem/lib/libint2.a  /opt/install/exachem/lib/pkgconfig/libint2.pc
-        cp ubuntu_jammy.sif ~/cache/.
+        cp ubuntu_${{ matrix.ubuntu }}.sif ~/cache/.
         echo "cache stored"
         ls -l ~/cache
     - name: ldd check
