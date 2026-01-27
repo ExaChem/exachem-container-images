@@ -22,8 +22,6 @@ jobs:
         matrix:
           folder:
             - apptainer.ompi41x
-          gh_folder:
-            - /mnt
           ga_runtime:
             - MPI_PROGRESS_RANK
           tamm_branch:
@@ -51,7 +49,6 @@ jobs:
             - gpu: nvidia_70
               armci_network: MPI-PR
               folder: apptainer.ompi41x
-              gh_folder: /mnt
               exachem_branch: main
               scalapack: Y
               elpa: N
@@ -59,7 +56,6 @@ jobs:
             - gpu: nvidia_80
               armci_network: MPI-PR
               folder: apptainer.ompi41x
-              gh_folder: /mnt
               exachem_branch: main
               scalapack: Y
               elpa: N
@@ -67,7 +63,6 @@ jobs:
             - gpu: nvidia_90
               armci_network: MPI-PR
               folder: apptainer.ompi41x
-              gh_folder: /mnt
               exachem_branch: main
               scalapack: Y
               elpa: N
@@ -136,25 +131,37 @@ jobs:
         sudo dpkg -i apptainer_${APP_VER}_amd64.deb
         which apptainer
         apptainer version
-    - name: create folder dir under ${{ matrix.gh_folder }}
+    - name: set  env.gh_folder
       run: |
-        sudo mkdir -p ${{ matrix.gh_folder }}/${{ matrix.folder }}
-        sudo chown -R runner:runner ${{ matrix.gh_folder }}/${{ matrix.folder }}
-        rsync -av $GITHUB_WORKSPACE/${{ matrix.folder }}/* ${{ matrix.gh_folder }}/${{ matrix.folder }}/.
+        myfs="/mnt"
+        if mount|grep -q $myfs
+          then
+             echo $myfs filesystem is available
+             echo "gh_folder="$myfs >> $GITHUB_ENV
+        else
+             echo $myfs filesystem is not available
+             echo "gh_folder=/" >> $GITHUB_ENV
+        fi
+    - name: create folder dir under ${{ env.gh_folder }}
+      run: |
+        echo gh_folder is ${{ env.gh_folder }}
+        sudo mkdir -p ${{ env.gh_folder }}/${{ matrix.folder }}
+        sudo chown -R runner:runner ${{ env.gh_folder }}/${{ matrix.folder }}
+        rsync -av $GITHUB_WORKSPACE/${{ matrix.folder }}/* ${{ env.gh_folder }}/${{ matrix.folder }}/.
     - name: create sif from docker
       run: |
         if [  -f ~/cache/ubuntu_jammy.sif ]; then echo "sif found";
-           cp ~/cache/ubuntu_jammy.sif ${{ matrix.gh_folder }}/${{ matrix.folder }}/.
+           cp ~/cache/ubuntu_jammy.sif ${{ env.gh_folder }}/${{ matrix.folder }}/.
         else
-           cd ${{ matrix.gh_folder }}/${{ matrix.folder }} ;\
+           cd ${{ env.gh_folder }}/${{ matrix.folder }} ;\
         apptainer pull docker://ubuntu:jammy ; \
         fi
     - name: copy patch
       run: |
         pwd
         ls -lrta
-        cp patches/myaug.patch ${{ matrix.gh_folder }}/${{ matrix.folder }}
-        ls -lrta ${{ matrix.gh_folder }}/${{ matrix.folder }}
+        cp patches/myaug.patch ${{ env.gh_folder }}/${{ matrix.folder }}
+        ls -lrta ${{ env.gh_folder }}/${{ matrix.folder }}
     - name: push_false
       id: push_false
       if: ${{ github.event_name == 'pull_request' }}
@@ -166,8 +173,8 @@ jobs:
         echo "push_truefalse=true" >> $GITHUB_ENV
     - name: build an apptainer container
       run: |
-        cd ${{ matrix.gh_folder }}/${{ matrix.folder }}
-        MYUSERNAME=${{ github.actor}} EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}}  GA_RUNTIME=${{ matrix.ga_runtime}} SCALAPACK=${{ matrix.scalapack }} ELPA=${{ matrix.elpa}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ matrix.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg  Singularity
+        cd ${{ env.gh_folder }}/${{ matrix.folder }}
+        MYUSERNAME=${{ github.actor}} EXACHEM_BRANCH=${{ matrix.exachem_branch}} TAMM_BRANCH=${{ matrix.tamm_branch}} GPU=${{ matrix.gpu}}  GA_RUNTIME=${{ matrix.ga_runtime}} SCALAPACK=${{ matrix.scalapack }} ELPA=${{ matrix.elpa}} MPI_IMPL=ompi  apptainer build --fakeroot ${{ env.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg  Singularity
     - name: builddate
       id: build-date
       run: |
@@ -178,17 +185,17 @@ jobs:
         echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${{ github.actor }} --password-stdin oras://ghcr.io
         apptainer remote list
         exit_code=0
-        apptainer push ${{ matrix.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:${{ env.date }} || exit_code=$?
-        apptainer push ${{ matrix.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:latest|| exit_code+=$?
+        apptainer push ${{ env.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:${{ env.date }} || exit_code=$?
+        apptainer push ${{ env.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg ${{ env.tag }}:latest|| exit_code+=$?
     - name: store cache
       if: ${{ env.push_truefalse == 'true' }}
       run: |
         mkdir -p ~/cache || true
-        cd ${{ matrix.gh_folder }}/${{ matrix.folder }}
-        apptainer exec ${{ matrix.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg cp -r /opt/ompi ~/cache
-        apptainer exec ${{ matrix.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg ls -l /opt/install/exachem/include || true
-        apptainer exec ${{ matrix.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg ls -l /opt/install/exachem || true
-        apptainer exec ${{ matrix.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg tar cjf ~/cache/libint.tar.bz2 /opt/install/exachem/include/libint2/  /opt/install/exachem/include/libint2.hpp /opt/install/exachem/include/libint2.h  /opt/install/exachem/share/libint /opt/install/exachem/lib/cmake/libint2 /opt/install/exachem/lib/libint2.a  /opt/install/exachem/lib/pkgconfig/libint2.pc
+        cd ${{ env.gh_folder }}/${{ matrix.folder }}
+        apptainer exec ${{ env.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg cp -r /opt/ompi ~/cache
+        apptainer exec ${{ env.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg ls -l /opt/install/exachem/include || true
+        apptainer exec ${{ env.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg ls -l /opt/install/exachem || true
+        apptainer exec ${{ env.gh_folder }}/${{ matrix.folder }}/${{ matrix.folder }}.simg tar cjf ~/cache/libint.tar.bz2 /opt/install/exachem/include/libint2/  /opt/install/exachem/include/libint2.hpp /opt/install/exachem/include/libint2.h  /opt/install/exachem/share/libint /opt/install/exachem/lib/cmake/libint2 /opt/install/exachem/lib/libint2.a  /opt/install/exachem/lib/pkgconfig/libint2.pc
         cp ubuntu_jammy.sif ~/cache/.
         echo "cache stored"
         ls -l ~/cache
@@ -208,7 +215,7 @@ jobs:
     - name: test cpu image with apptainer
       if: ${{ (env.push_truefalse == 'true') && (matrix.gpu == 'cpu') }}
       run: |
-        cd ${{ matrix.gh_folder }}/${{ matrix.folder }}
+        cd ${{ env.gh_folder }}/${{ matrix.folder }}
         pwd
         ls -la
         apptainer pull -F ${{ env.tag }}:${{ env.date }}
