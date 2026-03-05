@@ -275,7 +275,7 @@ then
     echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/'${ROCM_VERSION} ${UBUNTU_CODE} 'main' | tee --append /etc/apt/sources.list.d/rocm.list
     echo cat /etc/apt/sources.list.d/rocm.list
     cat /etc/apt/sources.list.d/rocm.list
-    echo  'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' >e /etc/apt/preferences.d/rocm-pin-600 
+    echo  'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' > /etc/apt/preferences.d/rocm-pin-600 
     apt-get  update -y &&  apt-get -y install hip-dev hipcc hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib rocminfo  hipcc hipblas-dev 
     ls -lrt /opt
     ls -lrt  /opt/rocm* || true
@@ -455,17 +455,23 @@ if [ -n "${MPICH+1}" ]; then
 	if [ $mpich_major = '3' ]; then
 	    wget https://raw.githubusercontent.com/pmodels/mpich/refs/tags/v4.3.2/src/pm/hydra/lib/tools/bootstrap/external/slurm_query_node_list.c 
 	    mv slurm_query_node_list.c src/pm/hydra/tools/bootstrap/external/slurm_query_node_list.c
-	fi 
+	fi
+	FC_short=$(basename -- $FC | cut -d \- -f 1 | sed 's/[0-9]*//g')
+	if [ ${FC_short} = "gfortran" ]
+	then
+	    FFLAGS=-fallow-argument-mismatch
+	    FCFLAGS=-fallow-argument-mismatch
+	fi
+	echo FFLAGS $FFLAGS
 	./configure  --prefix=$MPI_DIR   \
 	$ucx_or_ofi   \
 	$mpich_options \
+	FFLAGS=$FFLAGS FCFLAGS=$FCFLAGS \
 	    --with-device=$MPICH_DEVICE  \
 	    --enable-fortran=all \
 	    --disable-opencl --enable-silent-rules \
 	    --disable-cuda \
 	    --with-xpmem=$MPI_DIR \
-	    FFLAGS=' -fallow-argument-mismatch ' \
-	    FCFLAGS=' -fallow-argument-mismatch ' \
 	    FC=$FC || { echo "MPICH Configuration Failure"; exit 1; }
 	head config.log 
 	tail -300 config.log
