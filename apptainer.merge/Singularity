@@ -7,6 +7,8 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
    UBUNTU_VERSION=jammy
 
 %files
+autogen.sh /opt
+install-autotools.sh /opt
 #exachem_ecpint.patch /opt/
 
 %setup
@@ -19,8 +21,6 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 #    ls -l ${SINGULARITY_ROOTFS}
     rm -f ${SINGULARITY_ROOTFS}/*.txt || true
     bash -c "if [[ -z '${GPU}' ]]; then echo 'GPU=nvidia ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; else echo 'GPU is ${GPU}'; echo 'GPU=${GPU} ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; fi"
-    bash -c "echo 'ELPA is ${ELPA}'; echo 'ELPA=${ELPA} ' >> ${SINGULARITY_ROOTFS}/elpa.txt "
-    cat ${SINGULARITY_ROOTFS}/elpa.txt
     bash -c "if [[ -z '${MPI_IMPL}' ]]; then echo 'MPI_IMPL=mpich ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; else echo 'MPI_IMPL is ${MPI_IMPL}'; echo 'MPI_IMPL=${MPI_IMPL} ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; fi"
     bash -c "if [[ -z '${OMPI}' ]]; then echo 'OMPI=4.1.6 ' >> ${SINGULARITY_ROOTFS}/OMPI.txt ; else echo 'OMPI is ${OMPI}'; echo 'OMPI=${OMPI} ' >> ${SINGULARITY_ROOTFS}/ompi.txt ; fi"
     bash -c "if [[ '${OFI}' != "N" ]]; then echo 'OFI is ${OFI}'; echo 'OFI=${OFI} ' >> ${SINGULARITY_ROOTFS}/ofi.txt ; fi"
@@ -29,6 +29,8 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
     bash -c "if [[ -z '${MPICH_DEVICE}' ]]; then echo 'MPICH_DEVICE=ch4:ofi ' >> ${SINGULARITY_ROOTFS}/mpich_device.txt ; else echo 'MPICH_DEVICE is ${MPICH_DEVICE}'; echo 'MPICH_DEVICE=${MPICH_DEVICE} ' >> ${SINGULARITY_ROOTFS}/mpich_device.txt ; fi"
     bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/tamm_branch.txt ; fi"
     bash -c "if [[ -z '${EXACHEM_BRANCH}' ]]; then echo 'EXACHEM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'EXACHEM_BRANCH is ${EXACHEM_BRANCH}'; echo 'EXACHEM_BRANCH=${EXACHEM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/exachem_branch.txt ; fi"
+    bash -c "if [[ -z '${SCALAPACK}' ]]; then echo 'SCALAPACK=N ' >> ${SINGULARITY_ROOTFS}/myusername.txt ; else echo 'SCALAPACK is ${SCALAPACK}'; echo 'SCALAPACK=${SCALAPACK} ' >> ${SINGULARITY_ROOTFS}/scalapack.txt ; fi"
+    bash -c "if [[ -z '${ELPA}' ]]; then echo 'ELPA=N ' >> ${SINGULARITY_ROOTFS}/myusername.txt ; else echo 'ELPA is ${ELPA}'; echo 'ELPA=${SCALAPACK} ' >> ${SINGULARITY_ROOTFS}/elpa.txt ; fi"
 #    bash -c "if [[ -z '${MYUSERNAME}' ]]; then echo 'MYUSERNAME=edoapra ' >> ${SINGULARITY_ROOTFS}/myusername.txt ; else echo 'MYUSERNAME is ${MYUSERNAME}'; echo 'MYUSERNAME=${MYUSERNAME} ' >> ${SINGULARITY_ROOTFS}/myusername.txt ; fi"
     ls -lrt ${CACHEDIR} || true
     ls -la  ${CACHEDIR}/ || true
@@ -45,7 +47,6 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 echo "$(readlink /proc/$$/exe) is the shell in use"
 #
 export `cat ./gpu.txt`
-export `cat ./elpa.txt`
 bash -o  pipefail -c "if [[ $(echo $GPU | cut -c 1-3)  == 'amd' ]]; then echo gpus is amd;
 echo 'ROCM_VERSION='`echo $GPU | cut -c 16-` > rocm_version.txt ;
 echo 'GPU_ARCH='`echo $GPU | cut -c 5-10` > gpu_arch.txt ;
@@ -56,7 +57,7 @@ echo 'GPU=nvidia ' >  gpu.txt  ; fi"
 export `cat ./gpu.txt`
 export `cat ./rocm_version.txt`
 export `cat ./gpu_arch.txt`
-if [ ${GPU} = "nvidia" ]; then export CUDA_VERSION_MAJOR=12 ; export CUDA_VERSION_MINOR=4;fi
+if [ ${GPU} = "nvidia" ]; then export CUDA_VERSION_MAJOR=12 ; export CUDA_VERSION_MINOR=6;fi
 export ROCM_PATH=/opt/rocm-${ROCM_VERSION}
 if [ ${#ROCM_VERSION} = 3 ]; then export ROCM_PATH="$ROCM_PATH".0; fi
 echo ROCM_PATH is $ROCM_PATH
@@ -73,6 +74,8 @@ export SINGULARITY_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 export `cat ./ga_runtime.txt`
 export `cat ./exachem_branch.txt`
 export `cat ./tamm_branch.txt`
+export `cat ./scalapack.txt`
+export `cat ./elpa.txt`
  if [ ! -f ./mpi_impl.txt ]; then
      echo MPI_IMPL not defined
      exit 1
@@ -256,19 +259,17 @@ apt-get install  -q=2 -y  autoconf automake libtool git
  export UBUNTU_RELEASE=$(lsb_release -r |cut -d : -f 2 | sed 's/\t//') 
  echo UBUNTU_RELEASE is $UBUNTU_RELEASE 
 export unodot=$(echo $UBUNTU_RELEASE | sed 's/\.//')
-if [ $GPU == "nvidia" ]
-then 	    
+if [ $GPU = "nvidia" ]; then 	    
     curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${unodot}/x86_64/cuda-archive-keyring.gpg 
     cp cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg 
-    echo 'deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${unodot}/x86_64/ /' >  /etc/apt/sources.list.d/cuda-ubuntu${unodot}-x86_64.list
+    echo 'deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu'${unodot}'/x86_64/ /' >  /etc/apt/sources.list.d/cuda-ubuntu${unodot}-x86_64.list
     curl -LJO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${unodot}/x86_64/cuda-ubuntu${unodot}.pin
     mv cuda-*.pin /etc/apt/preferences.d/cuda-repository-pin-600
     apt-get  update
     apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-cudart-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} libcublas-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-nvml-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR}
 fi
 
-if [ $GPU = "amd" ]
-then
+if [ $GPU = "amd" ]; then
     mkdir --parents --mode=0755 /etc/apt/keyrings 
     wget --quiet https://repo.radeon.com/rocm/rocm.gpg.key -O - |  gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null
     echo ROCM_VERSION is $ROCM_VERSION
@@ -295,7 +296,7 @@ then
     echo '$$$$$$$$$$$$$$$$$$$$' 
     wget --quiet https://download.amd.com/developer/eula/blis/blis-4-1/aocl-blis-linux-aocc-4.1.0.tar.gz -O - | tar xzf - -C /opt
 fi 
-echo 'FC -v ' `$FC -v` 
+echo 'FC --version ' `$FC --version` 
 echo 'CC -v ' `$CC -v` 
 echo 'CXX -v ' `$CXX -v` || { echo "CXX not installed"; exit  1; }
 apt-get clean 
@@ -305,7 +306,7 @@ if [ $UCX != "N" ]; then
     echo check ucx install 
     echo 'ls -l /opt/mpi/lib/libuct.so' $(ls -l /opt/mpi/lib/libuct.so) || true 
     if [ ! -f /opt/mpi/lib/libuct.so ]; then  
-	$FC -v 
+	$FC --version 
 	wget --progress=dot:giga  https://github.com/openucx/ucx/releases/download/$UCXVTAG/ucx-$UCX.tar.gz -O - | tar xzf - 
 	cd ucx-$UCX 
 	wget https://raw.githubusercontent.com/edoapra/nwchem-singularity/master/nwchem-dev.ompi41x.ifx/ucx_malloc.patch 
@@ -442,13 +443,15 @@ if [ -n "${MPICH+1}" ]; then
     echo check mpich install 
     echo 'ls -l /opt/mpi/lib/libmpich.so' $(ls -l /opt/mpi/lib/libmpich.so) || true 
     if [ ! -f /opt/mpi/lib/libmpich.so ]; then
-	$FC -v
+	$FC --version
 #	if [ $MPICH = aurora ]; then
 #	fi 
 	if [ $mpich_major = '4' ] || [ $mpich_major = '5' ]; then
-	   export mpich_options="$mpich_options $pmix_options --with-hwloc=/usr "
+	   export mpich_options="$mpich_options $pmix_options "
+	   #export mpich_options="$mpich_options $pmix_options --with-hwloc=/usr "
 	else
-	   export mpich_options="$mpich_options --with-hwloc-prefix=/usr "
+	   export mpich_options="$mpich_options "
+	   #export mpich_options="$mpich_options --with-hwloc-prefix=/usr "
 	fi
 	echo ' mpich_options is set to' $mpich_options 
 	wget  --progress=dot:giga https://www.mpich.org/static/downloads/${MPICH_VERSION}/mpich-${MPICH_VERSION}.tar.gz  -O - | tar xzf -   
@@ -456,10 +459,19 @@ if [ -n "${MPICH+1}" ]; then
 	if [ $mpich_major = '3' ]; then
 	    wget https://raw.githubusercontent.com/pmodels/mpich/refs/tags/v4.3.2/src/pm/hydra/lib/tools/bootstrap/external/slurm_query_node_list.c 
 	    mv slurm_query_node_list.c src/pm/hydra/tools/bootstrap/external/slurm_query_node_list.c
+	    echo 'mpich 3 autotools ' 
+	    mv autogen.sh autogen.sh.org 
+	    mv /opt/autogen.sh  .
+	    chmod +x autogen.sh 
+	    mv /opt/install-autotools.sh .
+	    chmod +x install-autotools.sh 
+	    wget https://github.com/pmodels/mpich/commit/3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch 
+	    patch -p1 < 3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch 
+	    cd maint/patches/optional/confdb && rm -f flang.patch &&  wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/flang.patch ; cd ../../../../  ; pwd 
+	    sh ./autogen.sh 
 	fi
 	FC_short=$(basename -- $FC | cut -d \- -f 1 | sed 's/[0-9]*//g')
-	if [ ${FC_short} = "gfortran" ]
-	then
+	if [ ${FC_short} = "gfortran" ]; then
 	    FFLAGS=-fallow-argument-mismatch
 	    FCFLAGS=-fallow-argument-mismatch
 	fi
@@ -472,6 +484,8 @@ if [ -n "${MPICH+1}" ]; then
 	    --enable-fortran=all \
 	    --disable-opencl --enable-silent-rules \
 	    --disable-cuda \
+	    --without-ze  \
+	    --without-hip  \
 	    --with-xpmem=$MPI_DIR \
 	    FC=$FC || { echo "MPICH Configuration Failure"; exit 1; }
 	head config.log 
@@ -513,95 +527,137 @@ git clone -b ${TAMM_BRANCH} --depth 100 https://github.com/NWChemEx/TAMM.git
 cd TAMM  
 export NO_STOP_MESSAGE=1
 mkdir build && cd build 
-CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX=/opt/install/exachem -DMODULES='CC' " 
-CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLAS_ARCH=zen3 -DMARCH_FLAGS=-march=znver3" 
-if [ ${GPU} = "nvidia" ]; then echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}" ; fi 
-if [ ${GPU} = "amd" ]; then echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} -DGCCROOT=/usr " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h; fi  
-if [ ${ELPA} = "Y" ]; then echo "ELPA enabled "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_ELPA=ON" ; fi  
-CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_RUNTIME=${GA_RUNTIME}"
-export CMAKE_OPTIONS
-echo CMAKE_OPTIONS $CMAKE_OPTIONS 
-CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } 
-make -j3 || { echo "TAMM Compilation failure"; 
-	    cat /opt/TAMM/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeOutput.log || true ; 
-            cat /opt/TAMM/build/TAMM_External-prefix/src/TAMM_External-build/GlobalArrays_External-prefix/src/GlobalArrays_External-build/CMakeFiles/CMakeError.log || true; exit 1; } 
-echo exit code for TAMM compilation $?  
+CMAKE_OPTIONS="-DCMAKE_INSTALL_PREFIX="\""/opt/install/exachem"\"" -DMODULES="\""CC"\"""  
+if [ ${GPU} != "intel_gpu_pvc" ]; then
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DBLAS_ARCH=zen3 -DMARCH_FLAGS=-march=znver3"
+fi
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DGCCROOT=/usr" 
+if [ ${CC} = "icx" ]; then
+    echo "intel compilers "
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DLINALG_VENDOR=IntelMKL  -DLINALG_PREFIX=${MKLROOT} "
+fi 
+if [ ${GPU} = "intel_gpu_pvc" ]; then
+    echo "intel_gpu_pvc "; CMAKE_OPTIONS="$CMAKE_OPTIONS  -DUSE_OPENMP=OFF -DTAMM_ENABLE_DPCPP=ON "
+fi 
+if [ ${GPU} = "nvidia" ]; then
+    echo "nvidia gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=${GPU_ARCH}"
+fi  
+if [ ${GPU} = "amd" ]; then
+    echo "amd gpu "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_HIP=ON -DROCM_ROOT=$ROCM_PATH -DGPU_ARCH=${GPU_ARCH} " ; ls -lrt $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/ ; ln -sf $ROCM_PATH/include/rocblas/rocblas.h $ROCM_PATH/include/rocblas.h
+fi  
+export USE_SCALAPACK=OFF 
+if [ ${SCALAPACK} = "y" ]; then
+    echo "SCALAPACK ON"; CMAKE_OPTIONS="$CMAKE_OPTIONS -DUSE_SCALAPACK=ON "; export USE_SCALAPACK=ON
+fi  
+if [ \( ${CC} = "gcc" \) -a \(  ${ELPA} = "y" \) ]; then
+    echo "ELPA ON"; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_ELPA=ON "
+fi 
+if [ \( ${CC} = "amdclang" \) -a \( ${SCALAPACK} = "y" \) ]; then
+    echo "scalapack workaround for clang "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_C_FLAGS_INIT='-Wno-error=implicit-function-declaration' "
+fi  
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_RUNTIME=${GA_RUNTIME}"  
+echo "modify ga repository to use" 
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_REPO="\""https://github.com/GlobalArrays/ga.git"\"" -DGA_TAG="\""develop"\"""    
+if [ ${GPU} = "intel_gpu_pvc" ]; then
+    CMAKE_OPTIONS="$CMAKE_OPTIONS  -DTAMM_CXX_FLAGS="\""-mtune=sapphirerapids -ffast-math -ffp-contract=fast -fp-model=fast=2 -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -mllvm -enable-global-offset=false"\"" -DUSE_LIBNUMA=OFF"
+fi 
+export CMAKE_OPTIONS   
+echo CMAKE_OPTIONS $CMAKE_OPTIONS  
+echo USE_SCALAPACK is set to $USE_SCALAPACK  
+rm -f doit.sh 
+echo   "USE_SCALAPACK=$USE_SCALAPACK CC=$CC CXX=$CXX FC=$FC \\" >>doit.sh  
+echo "cmake \\" >>doit.sh  
+echo "$CMAKE_OPTIONS  \\" >> doit.sh ; echo ".. " >>doit.sh  
+bash doit.sh || { echo "Cmake failure"; exit 1; }  
+make -j3 || { echo "Compilation failure in tamm step";
+              echo cublas $(ls -lrt $CUDA_PATH/lib64/libcublas*) || true ;  echo cublas target $(ls -lrt $CUDA_PATH/targets/x86_64-linux/lib64/libcublas*) ||true ;  echo ls cudapath $(ls -lrt $CUDA_PATH ) || true;  \
+	    cat $(find /opt/TAMM/ -name config.log) || true ; \
+	    cat $(find /opt/TAMM/ -name CMakeCache.txt) || true ; \
+	    cat $(find /opt/TAMM/ -name CMakeOutput.log) || true ; \
+            cat $(find /opt/TAMM/ -name CMakeError.log ) || true; exit 1; } 
+echo exit code for TAMM compilation $?   
 make install  
-echo exit code for TAMM make install $?  
-cd /opt/exachem  
-mkdir build && cd build  
-echo ' === ls -l /opt/install/exachem ===' $(ls -l /opt/install/exachem)  
-echo ' === ls -l /opt/install/exachem/lib ===' $(ls -l /opt/install/exachem/lib)  
-if [ -f /opt/install/exachem/lib/libint2.a ]
-then
-    echo 'found libint cache'
+echo exit code for TAMM make install $?   
+cd /opt/exachem 
+mkdir build && cd build   
+echo ' === ls -l /opt/install/exachem ===' $(ls -l /opt/install/exachem) 
+echo ' === ls -l /opt/install/exachem/lib ===' $(ls -l /opt/install/exachem/lib)   
+if [ -f /opt/install/exachem/include/libint2.h ]; then
+    echo 'found libint cache' 
     mkdir -p /opt/exachem/build/stage/opt || true 
     rsync -av /opt/install /opt/exachem/build/stage/opt/.
-fi 
-export CMAKE_OPTIONS 
-echo CMAKE_OPTIONS $CMAKE_OPTIONS 
-CC="$CC" CXX="$CXX" FC="$FC" cmake  $CMAKE_OPTIONS .. || { echo "Cmake failure"; exit 1; } 
-make V=1 VERBOSE=1 -j2 -l1.5 || { echo "Exachem Compilation failure"; exit 1; } 
-echo exit code for compilation $? 
-make install 
-echo exit code for make install $? 
-bash -c "if [[ -f /opt/install/exachem/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi"  
-echo git describe --always `git describe --always`  >> /opt/install/info.txt
-echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt
-echo 'clean unnecessary source to reduce docker size'
-rm  -rf /opt/exachem
-rm  -rf /opt/*patch
-rm  -rf /opt/TAMM
-echo 'clean unnecessary packages '
-DEBIAN_FRONTEND=noninteractive apt-get -q=2 -y install localepurge
-echo MANDELETE >  /etc/locale.nopurge
-echo DONTBOTHERNEWLOCALE >> /etc/locale.nopurge
-echo en_US.UTF-8 >> /etc/locale.nopurge
-localepurge
-rm -rf /usr/share/doc
-apt-get -q=2 -y purge   patch curl  wget  make git cpp-"$GCC_VERSION" gfortran-"$GCC_VERSION" gcc-"$GCC_VERSION" libicu-dev libpython"$PY_VERSION"-dev libstdc++-"$GCC_VERSION"-dev libc6-dev libgcc-"$GCC_VERSION"-dev libgfortran-"$GCC_VERSION"-dev  || true
-apt-get -q=2 -y install libgfortran5 libgomp1 && apt-get clean
-if [ "$GPU" = nvidia ]
-then
-    apt-get purge -y cuda-cccl-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR"
 fi
-if [ "$GPU" = "amd" ]
-then
-    apt-get  purge -y  cmake git-man openmp-extras \
-     lib32gcc-11-dev  libc6-dev-i386 libx32gcc-11-dev libc6-dev-x32 lib32gcc-11-dev  \
-     lib32asan6 lib32atomic1 lib32gcc-s1 lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++6 lib32ubsan1 libc6-i386 \
-     libc6-x32 libx32asan6 libx32atomic1 libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0 libx32stdc++6 libx32ubsan1 \
-     javascript-common less liberror-perl libjs-jquery libjs-sphinxdoc libjs-underscore libltdl-dev libltdl7 libpython3.10 linux-headers-generic
-    apt-get install -y hip-runtime-amd rocblas openmp-extras-runtime
+export CMAKE_POLICY_VERSION_MINIMUM=3.5 
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_BUILD_TYPE=Release "
+if [ ${GPU} = "intel_gpu_pvc" ]; then
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_CXX_FLAGS="\"" -mtune=sapphirerapids -ffast-math -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -sycl-std=2020"\"""
+fi
+export CMAKE_OPTIONS
+echo CMAKE_OPTIONS $CMAKE_OPTIONS  
+rm -f doit.sh
+echo   " CC=$CC CXX=$CXX FC=$FC \\" >>doit.sh  
+echo "cmake \\" >>doit.sh  
+echo "$CMAKE_OPTIONS  \\" >> doit.sh ; echo ".. " >>doit.sh  
+bash doit.sh || { echo "Cmake failure"; exit 1; } 
+make V=1 VERBOSE=1 -j1 || { echo "Compilation failure"; exit 1; }  
+echo exit code for compilation $?  
+make install  
+echo exit code for make install $?  
+bash -c "if [[ -f /opt/install/exachem/bin/ExaChem ]]; then echo 'Exachem binary created' ; else  echo 'compilation error1'; exit 1; fi"  
+echo git describe --always `git describe --always`  >> /opt/install/info.txt 
+echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt 
+echo 'clean unnecessary source to reduce docker size' 
+rm  -rf /opt/exachem 
+rm  -rf /opt/TAMM 
+echo 'clean unnecessary packages ' 
+DEBIAN_FRONTEND=noninteractive apt-get -q=2 -y install localepurge 
+echo MANDELETE >  /etc/locale.nopurge 
+echo DONTBOTHERNEWLOCALE >> /etc/locale.nopurge 
+echo en_US.UTF-8 >> /etc/locale.nopurge 
+localepurge 
+rm -rf /usr/share/doc 
+apt-get -q=2 -y purge   patch curl  wget  make git cpp-"$GCC_VERSION" gfortran-"$GCC_VERSION" gcc-"$GCC_VERSION" libicu-dev libpython"$PY_VERSION"-dev libstdc++-"$GCC_VERSION"-dev libc6-dev libgcc-"$GCC_VERSION"-dev libgfortran-"$GCC_VERSION"-dev  || true 
+apt-get -q=2 -y install libgfortran5 libgomp1 && apt-get clean 
+if [ "$GPU" = nvidia ]; then
+    rm -rf /usr/local/cuda*; apt-get purge -y cuda-cccl-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcublas-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcufft-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcufft-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcusolver-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcusparse-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libnpp-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" libcurand-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" cuda-nvrtc-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR"  libcufile-dev-"$CUDA_VERSION_MAJOR"-"$CUDA_VERSION_MINOR" || true ; rm -f /usr/local/cuda-*/targets/x86_64-linux/lib/*static*a || true
+    fi
+if [ "$GPU" = "amd" ]; then
+    apt-get  purge -y   git-man openmp-extras \
+    lib32gcc-11-dev  libc6-dev-i386 libx32gcc-11-dev libc6-dev-x32 lib32gcc-11-dev  \
+    lib32asan6 lib32atomic1 lib32gcc-s1 lib32gomp1 lib32itm1 lib32quadmath0 lib32stdc++6 lib32ubsan1 libc6-i386 \
+    libc6-x32 libx32asan6 libx32atomic1 libx32gcc-s1 libx32gomp1 libx32itm1 libx32quadmath0 libx32stdc++6 libx32ubsan1 \
+    javascript-common less liberror-perl libjs-jquery libjs-sphinxdoc libjs-underscore libltdl-dev libltdl7 libpython3.10  
+    apt-get install -y hip-runtime-amd rocblas openmp-extras-runtime rocm-smi-lib
     cd $ROCM_PATH/lib/rocblas/ ; mkdir keep ; mv library/*"$GPU_ARCH"* keep/.  
     rm -rf library ; mv keep library 
-    rm -rf "$ROCM_PATH"/bin  "$ROCM_PATH"/llvm/bin  
-    mkdir -p "$ROCM_PATH"/bin  && ln -sf "$ROCM_PATH"/libexec/rocm_smi/rocm_smi.py "$ROCM_PATH"/bin/rocm-smi
+    ln -sf "$ROCM_PATH"/ /opt/rocm 
+    rm  -f "$ROCM_PATH"/bin/rocm-smi ; ln -sf "$ROCM_PATH"/libexec/rocm_smi/rocm_smi.py "$ROCM_PATH"/bin/rocm-smi
+    rm -rf "$ROCM_PATH"/lib/hipblaslt || true 
+    rm -rf   "$ROCM_PATH"/llvm/bin
 fi
-echo '*** ls -l CC/bin **'
-ls -l /opt/install/exachem/bin/ || true
-echo '*** ldd ***' 
-LD_LIBRARY_PATH=/usr/local/lib:/opt/lib ldd /opt/install/exachem/bin/ExaChem || true
-DEBIAN_FRONTEND=noninteractive apt-get clean -y
-DEBIAN_FRONTEND=noninteractive apt-get -y install localepurge
-echo MANDELETE >  /etc/locale.nopurge
-echo DONTBOTHERNEWLOCALE >> /etc/locale.nopurge
-echo en_US.UTF-8 >> /etc/locale.nopurge
-localepurge
-rm -rf /usr/share/doc  /usr/share/man
-du -sk /opt/*|sort -n
+echo '*** ls -l CC/bin **' 
+ls -l /opt/install/exachem/bin/ || true 
+echo '*** ldd ***'  
+ldd /opt/install/exachem/bin/ExaChem || true 
+DEBIAN_FRONTEND=noninteractive apt-get clean -y 
+DEBIAN_FRONTEND=noninteractive apt-get -y install localepurge 
+echo MANDELETE >  /etc/locale.nopurge 
+echo DONTBOTHERNEWLOCALE >> /etc/locale.nopurge 
+echo en_US.UTF-8 >> /etc/locale.nopurge 
+localepurge 
+rm -rf /usr/share/doc  /usr/share/man 
+rm -rf /opt/exachem/build 
+rm -rf /opt/*patch  
+du -sk /opt/*|sort -n 
+echo "dddddddddddd"  
+dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 50 
 echo "dddddddddddd" 
-dpkg-query -Wf '${Installed-Sizet${Package}\n' | sort -n | tail -n 50 \
-echo "dddddddddddd"
- du -sk /tmp/* || true
- ls -lart /tmp ||true
-ls -Rlart  /opt/install/exachem || true
+du -sk /tmp/* || true 
+ls -lart /tmp ||true
+ls -Rlart  /opt/install/exachem || true 
 ls -lart  /opt/install/exachem/include || true
 ls -lart  /opt/install/exachem || true 
 
-#&&  apt-get  -y purge cmake git  gcc-11  g++-11  gfortran-11  libstdc++-11-dev  libgcc-11-dev git
-#&& apt-get -y install libgcc-s1 libgfortran5 \
-#&& apt-get -y autoremove && apt-get clean
 
 
 
@@ -610,8 +666,8 @@ ls -lart  /opt/install/exachem || true
 %environment
 export MPI_DIR=/opt/mpi
 export SINGULARITY_MPI_DIR=$MPI_DIR
-export CUDA_VERSION_MAJOR=11 
-export CUDA_VERSION_MINOR=7
+export CUDA_VERSION_MAJOR=12
+export CUDA_VERSION_MINOR=6
 export PATH=/opt/install/exachem/bin:$MPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin/:$PATH
 export LD_LIBRARY_PATH=$MPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPI_DIR/lib:"$ROCM_PATH"/lib:$LD_LIBRARY_PATH:
 export SINGULARITYENV_APPEND_PATH=/opt/install/exachem/bin:$MPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin
