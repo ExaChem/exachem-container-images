@@ -14,14 +14,8 @@ if [ ! -d ${TOP}/bin ] ; then
     mkdir ${TOP}/bin
 fi
 
-download=""
-if wget --version > /dev/null ; then
-    download="wget -O"
-else
-    if curl --version > /dev/null ; then
-        download="curl -o"
-    fi
-fi
+download="curl -o"
+
 if [ "x${download}" = x ] ; then
     echo "failed to determine download agent"
     exit 1
@@ -76,7 +70,7 @@ TOOL_VERSION=$M4_VERSION
 TDIR=${TOOL}-${TOOL_VERSION}
 FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
-URL=https://github.com/exachem/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
+URL=file:////opt/${FILE}
 if [ -f ${FILE} ] ; then
     echo ${FILE} already exists! Using existing copy.
 else
@@ -114,7 +108,7 @@ TOOL_VERSION=$AUTOCONF_VERSION
 TDIR=${TOOL}-${TOOL_VERSION}
 FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
-URL=https://github.com/exachem/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
+URL=file:////opt/${FILE}
 if [ ! -f ${FILE} ] ; then
     ${download} ${FILE} ${URL}
 else
@@ -166,7 +160,7 @@ TOOL_VERSION=$AUTOMAKE_VERSION
 TDIR=${TOOL}-${TOOL_VERSION}
 FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
-URL=https://github.com/exachem/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
+URL=file:////opt/${FILE}
 if [ ! -f ${FILE} ] ; then
     ${download} ${FILE} ${URL}
 else
@@ -206,7 +200,7 @@ TOOL_VERSION=$LIBTOOL_VERSION
 TDIR=${TOOL}-${TOOL_VERSION}
 FILE=${TDIR}.tar.gz
 BIN=${TOP}/bin/${TOOL}
-URL=https://github.com/exachem/exachem-container-images/blob/main/apptainer.mpich/${FILE}?raw=true
+URL=file:////opt/${FILE}
 if [ ! -f ${FILE} ] ; then
     ${download} ${FILE} ${URL}
 else

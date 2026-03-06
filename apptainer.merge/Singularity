@@ -9,6 +9,12 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
 %files
 autogen.sh /opt
 install-autotools.sh /opt
+autoconf-2.69.tar.gz /opt
+automake-1.15.tar.gz /opt
+libtool-2.4.4.tar.gz /opt
+m4-1.4.19.tar.gz     /opt
+config.sub           /opt
+config.guess         /opt
 #exachem_ecpint.patch /opt/
 
 %setup
@@ -23,21 +29,25 @@ install-autotools.sh /opt
     bash -c "if [[ -z '${GPU}' ]]; then echo 'GPU=nvidia ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; else echo 'GPU is ${GPU}'; echo 'GPU=${GPU} ' >> ${SINGULARITY_ROOTFS}/gpu.txt ; fi"
     bash -c "if [[ -z '${MPI_IMPL}' ]]; then echo 'MPI_IMPL=mpich ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; else echo 'MPI_IMPL is ${MPI_IMPL}'; echo 'MPI_IMPL=${MPI_IMPL} ' >> ${SINGULARITY_ROOTFS}/mpi_impl.txt ; fi"
     bash -c "if [[ -z '${OMPI}' ]]; then echo 'OMPI=4.1.6 ' >> ${SINGULARITY_ROOTFS}/OMPI.txt ; else echo 'OMPI is ${OMPI}'; echo 'OMPI=${OMPI} ' >> ${SINGULARITY_ROOTFS}/ompi.txt ; fi"
-    bash -c "if [[ '${OFI}' != "N" ]]; then echo 'OFI is ${OFI}'; echo 'OFI=${OFI} ' >> ${SINGULARITY_ROOTFS}/ofi.txt ; fi"
+#    bash -c "if [[ '${OFI}' != "N" ]]; then echo 'OFI is ${OFI}'; echo 'OFI=${OFI} ' >> ${SINGULARITY_ROOTFS}/ofi.txt ; fi"
+#    bash -c "if [[ '${UCX}' != "N" ]]; then echo 'UCX is ${UCX}'; echo 'UCX=${UCX} ' >> ${SINGULARITY_ROOTFS}/ucx.txt ; fi"
+    bash -c "if [  -z ${PMIX} ]; then  echo 'PMIX=N' > ${SINGULARITY_ROOTFS}/pmix.txt; else echo 'PMIX=${PMIX} ' >> ${SINGULARITY_ROOTFS}/pmix.txt ; fi"
+    bash -c "if [  -z ${UCX} ]; then  echo 'UCX=N'   > ${SINGULARITY_ROOTFS}/ucx.txt;  else echo 'UCX=${UCX} ' >> ${SINGULARITY_ROOTFS}/ucx.txt ; fi"
+    bash -c "if [  -z ${OFI} ]; then  echo 'OFI=N'   > ${SINGULARITY_ROOTFS}/ofi.txt;  else echo 'OFI=${OFI} ' >> ${SINGULARITY_ROOTFS}/ofi.txt ; fi"
     bash -c "if [[ -z '${GA_RUNTIME}' ]]; then echo 'GA_RUNTIME=MPI_2SIDED ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; else echo 'GA_RUNTIME is ${GA_RUNTIME}'; echo 'GA_RUNTIME=${GA_RUNTIME} ' >> ${SINGULARITY_ROOTFS}/ga_runtime.txt ; fi"
     bash -c "if [[ -z '${MPICH}' ]]; then echo 'MPICH=3.4.2 ' >> ${SINGULARITY_ROOTFS}/mpich.txt ; else echo 'MPICH is ${MPICH}'; echo 'MPICH=${MPICH} ' >> ${SINGULARITY_ROOTFS}/mpich.txt ; fi"
     bash -c "if [[ -z '${MPICH_DEVICE}' ]]; then echo 'MPICH_DEVICE=ch4:ofi ' >> ${SINGULARITY_ROOTFS}/mpich_device.txt ; else echo 'MPICH_DEVICE is ${MPICH_DEVICE}'; echo 'MPICH_DEVICE=${MPICH_DEVICE} ' >> ${SINGULARITY_ROOTFS}/mpich_device.txt ; fi"
     bash -c "if [[ -z '${TAMM_BRANCH}' ]]; then echo 'TAMM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'TAMM_BRANCH is ${TAMM_BRANCH}'; echo 'TAMM_BRANCH=${TAMM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/tamm_branch.txt ; fi"
     bash -c "if [[ -z '${EXACHEM_BRANCH}' ]]; then echo 'EXACHEM_BRANCH=main ' >> ${SINGULARITY_ROOTFS}/branch.txt ; else echo 'EXACHEM_BRANCH is ${EXACHEM_BRANCH}'; echo 'EXACHEM_BRANCH=${EXACHEM_BRANCH} ' >> ${SINGULARITY_ROOTFS}/exachem_branch.txt ; fi"
     bash -c "if [[ -z '${SCALAPACK}' ]]; then echo 'SCALAPACK=N ' >> ${SINGULARITY_ROOTFS}/myusername.txt ; else echo 'SCALAPACK is ${SCALAPACK}'; echo 'SCALAPACK=${SCALAPACK} ' >> ${SINGULARITY_ROOTFS}/scalapack.txt ; fi"
-    bash -c "if [[ -z '${ELPA}' ]]; then echo 'ELPA=N ' >> ${SINGULARITY_ROOTFS}/myusername.txt ; else echo 'ELPA is ${ELPA}'; echo 'ELPA=${SCALAPACK} ' >> ${SINGULARITY_ROOTFS}/elpa.txt ; fi"
+    bash -c "if [[ -z '${ELPA}' ]]; then echo 'ELPA=N ' >> ${SINGULARITY_ROOTFS}/myusername.txt ; else echo 'ELPA is ${ELPA}'; echo 'ELPA=${ELPA} ' >> ${SINGULARITY_ROOTFS}/elpa.txt ; fi"
 #    bash -c "if [[ -z '${MYUSERNAME}' ]]; then echo 'MYUSERNAME=edoapra ' >> ${SINGULARITY_ROOTFS}/myusername.txt ; else echo 'MYUSERNAME is ${MYUSERNAME}'; echo 'MYUSERNAME=${MYUSERNAME} ' >> ${SINGULARITY_ROOTFS}/myusername.txt ; fi"
     ls -lrt ${CACHEDIR} || true
     ls -la  ${CACHEDIR}/ || true
-    ls -la  ${CACHEDIR}/ompi || true
-    ls -la  ${CACHEDIR}/ompi/lib || true
+    ls -la  ${CACHEDIR}/mpi || true
+    ls -la  ${CACHEDIR}/mpi/lib || true
     ls -la  ${CACHEDIR}/libint.tar.bz2 || true
-    bash -c "if [[  -f ${CACHEDIR}/ompi/lib/libmpi.so ]]; then mkdir -p ${SINGULARITY_ROOTFS}/opt ;rsync -a ${CACHEDIR}/ompi ${SINGULARITY_ROOTFS}/opt/. ; echo ompi/ucx cache fetched ;fi"
+    bash -c "if [[  -f ${CACHEDIR}/mpi/lib/libmpi.so ]]; then mkdir -p ${SINGULARITY_ROOTFS}/opt ;rsync -a ${CACHEDIR}/mpi ${SINGULARITY_ROOTFS}/opt/. ; echo mpi cache fetched ;fi"
     bash -c "if [[  -f ${CACHEDIR}/libint.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libint.tar.bz2; echo libint cache fetched ;fi"
     ls -lrta ${SINGULARITY_ROOTFS}/opt  ||true
 
@@ -57,7 +67,12 @@ echo 'GPU=nvidia ' >  gpu.txt  ; fi"
 export `cat ./gpu.txt`
 export `cat ./rocm_version.txt`
 export `cat ./gpu_arch.txt`
-if [ ${GPU} = "nvidia" ]; then export CUDA_VERSION_MAJOR=12 ; export CUDA_VERSION_MINOR=6;fi
+if [ ${GPU} = "nvidia" ]; then
+   export CUDA_VERSION_MAJOR=12 ; export CUDA_VERSION_MINOR=6
+   export CUDA_ROOT=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"
+   export CUDA_INSTALL_PATH=${CUDA_ROOT}
+   export CUDA_PATH=${CUDA_ROOT}
+fi
 export ROCM_PATH=/opt/rocm-${ROCM_VERSION}
 if [ ${#ROCM_VERSION} = 3 ]; then export ROCM_PATH="$ROCM_PATH".0; fi
 echo ROCM_PATH is $ROCM_PATH
@@ -65,10 +80,12 @@ echo GPU is $GPU
 export GCC_VERSION=12
 export EXACHEM_BRANCH=main
 export TAMM_BRANCH=main
+export DEBIAN_FRONTEND=noninteractive 
 
-
-export PATH=$MPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
-export LD_LIBRARY_PATH=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPI_DIR/lib:"$ROCM_PATH"/lib
+export MPI_DIR=/opt/mpi
+export OMPI_DIR=/opt/mpi
+export PATH=$MPI_DIR/bin:$CUDA_ROOT/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"$ROCM_PATH"/bin
+export LD_LIBRARY_PATH=$CUDA_ROOT/lib64:/usr/local/lib:$MPI_DIR/lib:"$ROCM_PATH"/lib
 export SINGULARITY_PATH=$PATH
 export SINGULARITY_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 export `cat ./ga_runtime.txt`
@@ -91,8 +108,6 @@ export `cat ./elpa.txt`
 	 export `cat ./ompi.txt`
 	 echo OMPI is $OMPI
      fi
-     export OMPI_DIR=/opt/mpi
-     export MPI_DIR=/opt/mpi
      export ompi_prefix=openmpi-$OMPI
      echo ompi_prefix is $ompi_prefix 
      export ompi_major=$(echo $OMPI | cut -d . -f1) 
@@ -146,12 +161,17 @@ export `cat ./elpa.txt`
 	 export mpich_options=' '
      fi 
      if [ $MPICH = aurora ]; then
-	 export mpich_options=$mpich_options' --disable-maintainer-mode --with-pm=no --enable-romio --with-slurm=no --with-pmi=pmix --with-pmix=/opt/mpi '
+	 export mpich_options=$mpich_options' --disable-maintainer-mode --with-pm=no --with-slurm=no --with-pmi=pmix --with-pmix=/opt/mpi '
      fi
      echo mpich_options are $mpich_options
      ompi_major=-1
      ompi_minor=-1
  fi
+ if [  -f ./pmix.txt ]; then
+     echo cat pmix `cat ./pmix.txt`
+     export `cat ./pmix.txt`
+     echo PMIX is $PMIX
+ fi	  
  if [  -f ./ucx.txt ]; then
      echo cat ucx `cat ./ucx.txt`
      export `cat ./ucx.txt`
@@ -242,12 +262,12 @@ apt-get -y install -y coreutils  tar libnl-3-200 libnl-route-3-200 libgomp1 libn
  libnuma-dev libslurm-dev libpmi2-0-dev  libnl-3-dev libnl-route-3-dev udev \
  librdmacm-dev librdmacm1 rdma-core libibverbs-dev  ibverbs-providers \
  libhwloc-dev  librte-common-mlx5-2* librte-net-mlx5-2* librte-compress-mlx5-2* librte-crypto-mlx5-2* librte-regex-mlx5-2* librte-vdpa-mlx5-2* \
- pkg-config gawk  software-properties-common linux-headers-generic lsb-release 
+ pkg-config gawk  software-properties-common linux-headers-generic lsb-release  lua5.3
 if [ $ompi_major = '5' ]
 then
     apt-get -y install -y libpmix-bin libpmix-dev libpmix2
 else
-    apt-get -y install -y libpmi2-0-dev libpmi0-dev
+    apt-get -y install -y libpmi2-0-dev
 fi 
 apt-get install -q=2 -y  gcc-"$GCC_VERSION"  g++-"$GCC_VERSION" gfortran-"$GCC_VERSION" libgfortran-"$GCC_VERSION"-dev  make ssh patch curl rsync wget git file  bzip2 tar gnupg2 cmake 
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$GCC_VERSION" 100
@@ -267,6 +287,7 @@ if [ $GPU = "nvidia" ]; then
     mv cuda-*.pin /etc/apt/preferences.d/cuda-repository-pin-600
     apt-get  update
     apt-get  -y install cuda-nvcc-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-cudart-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} libcublas-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-libraries-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR} cuda-nvml-dev-${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR}
+    ln -sf $CUDA_PATH/targets/x86_64-linux/lib $CUDA_PATH/targets/x86_64-linux/lib64
 fi
 
 if [ $GPU = "amd" ]; then
@@ -418,6 +439,8 @@ if [ -n "${OMPI+1}" ]; then
     if [ ! -f /opt/mpi/lib/libmpi.so ]; then
 	wget  --progress=dot:giga https://download.open-mpi.org/release/open-mpi/v$ompi_major.$ompi_minor/openmpi-$OMPI.tar.gz  -O - | tar xzf -
 	cd $ompi_prefix                                                       
+	wget https://github.com/open-mpi/ompi/commit/ed05f15b1790899ce9c2f77782f7b67bfb396854.patch -O sshmem_base.patch 
+	if [ $OMPI = 4.1.8 ]; then patch -p1 < sshmem_base.patch ; fi 
 	./configure  --prefix=${MPI_DIR} \
 	$ucx_or_ofi   \
 		     $ompi_options \
@@ -436,7 +459,9 @@ if [ -n "${OMPI+1}" ]; then
 	cd .. ; rm -rf *tar*gz openmpi-* ucx-*
     else
 	echo using cached OMPI installation
+	echo 'mpif90 is $(ls -lrt $MPI_DIR/bin/mpif90)'
     fi
+    $MPI_DIR/bin/mpif90 -show || { echo "OMPI mpif90 missing"; exit 1; }
 fi
 
 if [ -n "${MPICH+1}" ]; then
@@ -468,7 +493,8 @@ if [ -n "${MPICH+1}" ]; then
 	    wget https://github.com/pmodels/mpich/commit/3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch 
 	    patch -p1 < 3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch 
 	    cd maint/patches/optional/confdb && rm -f flang.patch &&  wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/flang.patch ; cd ../../../../  ; pwd 
-	    sh ./autogen.sh 
+	    sh ./autogen.sh
+	    rm -f /opt/*tar*gz /opt/config.*
 	fi
 	FC_short=$(basename -- $FC | cut -d \- -f 1 | sed 's/[0-9]*//g')
 	if [ ${FC_short} = "gfortran" ]; then
@@ -482,8 +508,7 @@ if [ -n "${MPICH+1}" ]; then
 	FFLAGS=$FFLAGS FCFLAGS=$FCFLAGS \
 	    --with-device=$MPICH_DEVICE  \
 	    --enable-fortran=all \
-	    --disable-opencl --enable-silent-rules \
-	    --disable-cuda \
+	    --enable-silent-rules \
 	    --without-ze  \
 	    --without-hip  \
 	    --with-xpmem=$MPI_DIR \
@@ -495,7 +520,10 @@ if [ -n "${MPICH+1}" ]; then
 	cd .. ; rm -rf *tar*gz mpich*
     else
 	echo using cached MPICH installation
+	echo 'mpif90 is $(ls -lrt $MPI_DIR/bin/mpif90)'
     fi
+    mpif90 -show || { echo "MPICH mpif90 missing"; exit 1; }
+    ldd /opt/mpi/lib/libmpifort.so
 fi
 cd $ORGPWD
 
@@ -503,15 +531,17 @@ cd $ORGPWD
  echo '********'  
  export PATH=$MPI_DIR/bin:$PATH
  export LD_LIBRARY_PATH=$MPI_DIR/lib:$LD_LIBRARY_PATH
-
-echo ' check ucx'
-echo ' /opt/mpi/bin/ucx_info -v ' `/opt/mpi/bin/ucx_info -v|| true`
-echo ' ucx Transports' `/opt/mpi/bin/ucx_info  -d |grep Transport |cut -c 19- || true`
-echo '********'
-export PATH=$MPI_DIR/bin:$PATH
-export LD_LIBRARY_PATH=$MPI_DIR/lib:$LD_LIBRARY_PATH
-export PATH=$PATH:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64
+wget https://raw.githubusercontent.com/pmodels/mpich/refs/heads/main/examples/f90/pi3f90.f90
+mpif90 pi3f90.f90 -o pi.x
+ldd pi.x
+rm -f in.txt
+cat > in.txt << EOF
+10
+0
+EOF
+./pi.x < in.txt
+export PATH=$PATH:/usr/local/$CUDA_ROOT/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/$CUDA_ROOT/lib64
 export PATH=$PATH:"$ROCM_PATH"/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$ROCM_PATH"/lib
 if [ $(command -v mpicc) ]; then echo mpicc present; else echo mpicc missing; exit 1; fi 
@@ -568,7 +598,11 @@ rm -f doit.sh
 echo   "USE_SCALAPACK=$USE_SCALAPACK CC=$CC CXX=$CXX FC=$FC \\" >>doit.sh  
 echo "cmake \\" >>doit.sh  
 echo "$CMAKE_OPTIONS  \\" >> doit.sh ; echo ".. " >>doit.sh  
-bash doit.sh || { echo "Cmake failure"; exit 1; }  
+bash doit.sh || { echo "Cmake failure"; 
+	    cat $(find /opt/TAMM/ -name config.log) || true ; \
+	    cat $(find /opt/TAMM/ -name CMakeCache.txt) || true ; \
+	    cat $(find /opt/TAMM/ -name CMakeOutput.log) || true ; \
+            cat $(find /opt/TAMM/ -name CMakeError.log ) || true; exit 1; } 
 make -j3 || { echo "Compilation failure in tamm step";
               echo cublas $(ls -lrt $CUDA_PATH/lib64/libcublas*) || true ;  echo cublas target $(ls -lrt $CUDA_PATH/targets/x86_64-linux/lib64/libcublas*) ||true ;  echo ls cudapath $(ls -lrt $CUDA_PATH ) || true;  \
 	    cat $(find /opt/TAMM/ -name config.log) || true ; \
@@ -668,10 +702,9 @@ export MPI_DIR=/opt/mpi
 export SINGULARITY_MPI_DIR=$MPI_DIR
 export CUDA_VERSION_MAJOR=12
 export CUDA_VERSION_MINOR=6
-export PATH=/opt/install/exachem/bin:$MPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin/:$PATH
-export LD_LIBRARY_PATH=$MPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPI_DIR/lib:"$ROCM_PATH"/lib:$LD_LIBRARY_PATH:
-export SINGULARITYENV_APPEND_PATH=/opt/install/exachem/bin:$MPI_DIR/bin:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/bin:"$ROCM_PATH"/bin
-export SINGULARITYENV_APPEND_LD_LIBRARY_PATH=$MPI_DIR/lib:/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"/lib64:/usr/local/lib:$MPI_DIR/lib:$ROCM_PATH/lib
+export CUDA_ROOT=/usr/local/cuda-"$CUDA_VERSION_MAJOR"."$CUDA_VERSION_MINOR"
+export PATH=/opt/install/exachem/bin:$MPI_DIR/bin:$CUDA_ROOT/bin:"$ROCM_PATH"/bin/:$PATH
+export LD_LIBRARY_PATH=$MPI_DIR/lib:$CUDA_ROOT/lib64:/usr/local/lib:$MPI_DIR/lib:"$ROCM_PATH"/lib:$LD_LIBRARY_PATH:
 export COMEX_MAX_NB_OUTSTANDING=12
 export SINGULARITY_COMEX_MAX_NB_OUTSTANDING=12
 #%runscript
