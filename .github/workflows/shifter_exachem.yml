@@ -141,7 +141,7 @@ jobs:
           cp patches/myaug.patch shifter.nersc
           ls -lrta shifter.nersc
       - name: build_docker
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         env:
           DOCKER_BUILD_SUMMARY: false
         with:
