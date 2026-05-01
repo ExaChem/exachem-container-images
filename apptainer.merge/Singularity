@@ -332,7 +332,7 @@ if [ $UCX != "N" ]; then
 	cd ucx-$UCX 
 	wget https://raw.githubusercontent.com/edoapra/nwchem-singularity/master/nwchem-dev.ompi41x.ifx/ucx_malloc.patch 
 	wget https://raw.githubusercontent.com/edoapra/nwchem-singularity/master/nwchem-dev.ompi5x/ucx1181_malloc.patch 
-	if [ $UCX = 1.14.1 ] || [ $UCX = 1.15.0 ]; then
+	if [ $UCX = 1.14.1 ] || [ $UCX = 1.15.0 ] || [ $UCX = 1.16.0 ]; then
 	    patch -p0 < ./ucx_malloc.patch
 	else
 	    patch -p0 < ./ucx1181_malloc.patch
@@ -420,6 +420,20 @@ if [ $PMIX != "N" ]; then
 	rm -rf pmix-*.*
     fi
 fi
+#installing knem
+echo 'ls -l /opt/mpi/include/knem_io.h' $(ls -l /opt/mpi/include/knem_io.h) || true
+if [ ! -f /opt/mpi/include/knem_io.h ]; then
+    export knem=1.1.4
+    export ktag=$(dpkg-query -s linux-headers-generic|egrep Dep|cut -d " " -f 2 | sed -e s'/linux-headers-//')
+    echo ktag is $ktag
+    ls /lib/modules/$ktag  || true
+    wget https://gitlab.inria.fr/knem/knem/uploads//4a43e3eb860cda2bbd5bf5c7c04a24b6/knem-$knem.tar.gz -O - | tar xzf - 
+    cd knem-$knem
+    echo 'ktag is $ktag'
+    ./configure --prefix=$OMPI_DIR --with-linux-build=/lib/modules/$ktag/build --with-linux-release=$ktag
+    make install-includeHEADERS || { echo "KNEM Installation h Failure"; exit 1; }
+    make install-pkgconfigDATA  || { echo "KNEM Installation p Failure"; exit 1; }
+fi
 #installing xpmem
 echo 'ls -l /opt/mpi/lib/libxpmem.so' $(ls -l /opt/mpi/lib/libxpmem.so) || true
 if [ ! -f /opt/mpi/lib/libxpmem.so ]; then
@@ -445,6 +459,7 @@ if [ -n "${OMPI+1}" ]; then
 	$ucx_or_ofi   \
 		     $ompi_options \
 		     --with-xpmem=$MPI_DIR \
+		     --with-knem=$MPI_DIR \
 		     $pmix_otions \
 		     --enable-mpi1-compatibility --with-slurm --without-tm --without-lsf  \
 		     --without-sge --without-lustre --disable-memchecker \
