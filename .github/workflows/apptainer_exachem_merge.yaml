@@ -155,6 +155,20 @@ jobs:
               folder: apptainer.merge
               scalapack: y
               elpa: y
+            - ompi: 5.0.10
+              mpi_impl: ompi
+              mpich_device: ch4:ucx
+              ofi: N
+              ucx: 1.17.0
+              cc: gcc
+              ga_runtime: MPI_PROGRESS_RANK
+              ubuntu: noble
+              gpu: nvidia_80
+              exachem_branch: main
+              tamm_branch: main
+              folder: apptainer.merge
+              scalapack: y
+              elpa: y
             - mpich: 4.2.3
               mpi_impl: mpich
               mpich_device: ch4:ofi
