@@ -47,8 +47,12 @@ config.guess         /opt
     ls -la  ${CACHEDIR}/mpi || true
     ls -la  ${CACHEDIR}/mpi/lib || true
     ls -la  ${CACHEDIR}/libint.tar.bz2 || true
+    ls -la  ${CACHEDIR}/libxc.tar.bz2 || true
+    ls -la  ${CACHEDIR}/libelpa.tar.bz2 || true
     bash -c "if [[  -f ${CACHEDIR}/mpi/lib/libmpi.so ]]; then mkdir -p ${SINGULARITY_ROOTFS}/opt ;rsync -a ${CACHEDIR}/mpi ${SINGULARITY_ROOTFS}/opt/. ; echo mpi cache fetched ;fi"
     bash -c "if [[  -f ${CACHEDIR}/libint.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libint.tar.bz2; echo libint cache fetched ;fi"
+    bash -c "if [[  -f ${CACHEDIR}/libxc.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libxc.tar.bz2; echo libxc cache fetched ;fi"
+    bash -c "if [[  -f ${CACHEDIR}/libelpa.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libelpa.tar.bz2; echo libelpa cache fetched ;fi"
     ls -lrta ${SINGULARITY_ROOTFS}/opt  ||true
 
 %post 

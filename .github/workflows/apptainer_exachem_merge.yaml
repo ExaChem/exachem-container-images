@@ -273,6 +273,9 @@ jobs:
         if [[ -f ~/cache/libxc.tar.bz2 ]]; then \
         echo "libxc cache present" ; \
         fi
+        if [[ -f ~/cache/libelpa.tar.bz2 ]]; then \
+        echo "libelpa cache present" ; \
+        fi
     - name: Install apptainer
       env:
         APP_VER: 1.4.5
