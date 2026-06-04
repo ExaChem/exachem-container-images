@@ -15,6 +15,7 @@ libtool-2.4.4.tar.gz /opt
 m4-1.4.19.tar.gz     /opt
 config.sub           /opt
 config.guess         /opt
+maxsteps.patch       /opt
 #exachem_ecpint.patch /opt/
 
 %setup
@@ -645,6 +646,7 @@ echo exit code for TAMM compilation $?
 make install  
 echo exit code for TAMM make install $?   
 cd /opt/exachem 
+patch -p0  < /opt/maxsteps.patch
 mkdir build && cd build   
 echo ' === ls -l /opt/install/exachem ===' $(ls -l /opt/install/exachem) 
 echo ' === ls -l /opt/install/exachem/lib ===' $(ls -l /opt/install/exachem/lib)   
