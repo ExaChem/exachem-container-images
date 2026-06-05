@@ -1,0 +1,11 @@
+--- exachem/task/geometry_optimizer.cpp.org	2026-06-04 16:25:28.900831364 -0700
++++ exachem/task/geometry_optimizer.cpp	2026-06-04 16:25:43.196931886 -0700
+@@ -16,7 +16,7 @@
+                                            std::string ec_arg2) {
+   using RowVectorXd = Eigen::RowVectorXd;
+ 
+-  const int    max_steps = 20;
++  const int    max_steps = 300;
+   const double grad_tol  = 4.5e-4;
+ 
+   const int   natoms3 = atoms.size() * 3;

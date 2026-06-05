@@ -15,6 +15,7 @@ libtool-2.4.4.tar.gz /opt
 m4-1.4.19.tar.gz     /opt
 config.sub           /opt
 config.guess         /opt
+maxsteps.patch       /opt
 #exachem_ecpint.patch /opt/
 
 %setup
@@ -47,8 +48,12 @@ config.guess         /opt
     ls -la  ${CACHEDIR}/mpi || true
     ls -la  ${CACHEDIR}/mpi/lib || true
     ls -la  ${CACHEDIR}/libint.tar.bz2 || true
+    ls -la  ${CACHEDIR}/libxc.tar.bz2 || true
+    ls -la  ${CACHEDIR}/libelpa.tar.bz2 || true
     bash -c "if [[  -f ${CACHEDIR}/mpi/lib/libmpi.so ]]; then mkdir -p ${SINGULARITY_ROOTFS}/opt ;rsync -a ${CACHEDIR}/mpi ${SINGULARITY_ROOTFS}/opt/. ; echo mpi cache fetched ;fi"
     bash -c "if [[  -f ${CACHEDIR}/libint.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libint.tar.bz2; echo libint cache fetched ;fi"
+    bash -c "if [[  -f ${CACHEDIR}/libxc.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libxc.tar.bz2; echo libxc cache fetched ;fi"
+    bash -c "if [[  -f ${CACHEDIR}/libelpa.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libelpa.tar.bz2; echo libelpa cache fetched ;fi"
     ls -lrta ${SINGULARITY_ROOTFS}/opt  ||true
 
 %post 
@@ -641,6 +646,7 @@ echo exit code for TAMM compilation $?
 make install  
 echo exit code for TAMM make install $?   
 cd /opt/exachem 
+#patch -p0  < /opt/maxsteps.patch
 mkdir build && cd build   
 echo ' === ls -l /opt/install/exachem ===' $(ls -l /opt/install/exachem) 
 echo ' === ls -l /opt/install/exachem/lib ===' $(ls -l /opt/install/exachem/lib)   
