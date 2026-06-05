@@ -646,7 +646,7 @@ echo exit code for TAMM compilation $?
 make install  
 echo exit code for TAMM make install $?   
 cd /opt/exachem 
-patch -p0  < /opt/maxsteps.patch
+#patch -p0  < /opt/maxsteps.patch
 mkdir build && cd build   
 echo ' === ls -l /opt/install/exachem ===' $(ls -l /opt/install/exachem) 
 echo ' === ls -l /opt/install/exachem/lib ===' $(ls -l /opt/install/exachem/lib)   
