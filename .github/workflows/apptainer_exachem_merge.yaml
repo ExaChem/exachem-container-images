@@ -5,6 +5,7 @@ on:
     paths-ignore:
       - apptainer.ompi41x
       - apptainer.ompi5x
+      - apptainer.mpich
       - shifter.nersc
   schedule:
     - cron: '0 0 * * SUN'
