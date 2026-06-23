@@ -246,7 +246,7 @@ jobs:
         echo " the apptainer tag is  ${{ env.tag }}"
         echo " the cache tag is ${{ env.cache_tag }}"
     - name: Checkout image source
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         clean: false
     - name: pkg cleanup
