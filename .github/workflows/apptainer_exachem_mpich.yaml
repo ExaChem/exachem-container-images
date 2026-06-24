@@ -392,7 +392,19 @@ jobs:
       run: |
         pwd
         ls -la
-        APPTAINER_DISABLE_CACHE=True apptainer pull -F ${{ env.tag }}:${{ env.date }}
+        export APPTAINER_DISABLE_CACHE=True
+        attempts=0
+        max_attempts=3
+        until  apptainer pull -F ${{ env.tag }}:${{ env.date }}  > /dev/null ; do
+            if [  "$attempts" -gt $max_attempts ]; then
+                echo "pull failed after $max_attempts attempts"
+                exit 1
+            else
+                echo "pull failed. sleeping for 5s"
+                sleep 5s
+                attempts+=1
+            fi
+        done
         sudo apt-get install -y openmpi-bin libmpich-dev mpich
         mpirun --version || true
         ldd `which mpirun`
@@ -402,7 +414,19 @@ jobs:
       run: |
         pwd
         ls -la
-        APPTAINER_DISABLE_CACHE=True apptainer pull -F ${{ env.tag }}:${{ env.date }}
+        export APPTAINER_DISABLE_CACHE=True
+        attempts=0
+        max_attempts=3
+        until  apptainer pull -F ${{ env.tag }}:${{ env.date }}  > /dev/null ; do
+            if [  "$attempts" -gt $max_attempts ]; then
+                echo "pull failed after $max_attempts attempts"
+                exit 1
+            else
+                echo "pull failed. sleeping for 5s"
+                sleep 5s
+                attempts+=1
+            fi
+        done
         sudo apt-get install -y openmpi-bin libmpich-dev mpich
         if [[ ${{ matrix.mpich }} == aurora ]]; then
            export MPIRUN_PATH=`which mpirun.openmpi`
