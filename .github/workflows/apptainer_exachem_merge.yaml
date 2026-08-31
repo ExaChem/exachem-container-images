@@ -281,6 +281,13 @@ jobs:
            cd ~/cache_libint ;\
            wget --connect-timeout=55 --tries=3 --waitretry=15 https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2026.02.002/elpa-2026.02.002.tar.gz ; \
         fi
+        if [  -f ~/cache_libint/eigen_master.tar.gz ]; then echo "eigen source tar found" ; \
+           cp ~/cache_libint/eigen_master.tar.gz ${{ matrix.folder }}/.
+        else
+           mkdir -p ~/cache_libint
+           cd ~/cache_libint ;\
+           wget https://github.com/eigen-mirror/eigen/archive/refs/heads/master.tar.gz -O eigen_master.tar.gz ; \
+        fi
     - name: check source caches
       run: |
         ls -lart ~/cache_libint || true
@@ -291,6 +298,10 @@ jobs:
         if [[ -f ~/cache_libint/elpa-2026.02.002.tar.gz ]]; then echo  "elpa source tar cache present"
         else
           echo "elpa source tar not found"
+        fi
+        if [[ -f ~/cache_libint/eigen_master.tar.gz ]]; then echo  "eigen source tar cache present"
+        else
+          echo "eigen source tar not found"
         fi
     - name: Setup cache
       id: setup-cache
