@@ -12,12 +12,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: list caches
-        uses: edoapra/wipe-cache@main
-        with:
-          dry-run: 'true'
-      - name: clear caches
-        if: ${{ github.actor == github.repository_owner }}
-        uses: edoapra/wipe-cache@main
-        with:
-          dry-run: 'false'
+      - name: Clear all caches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          #gh cache delete --all --repo ${{ github.repository }}
+          ids=$(gh cache list -R ${{ github.repository }} --limit 100 --json id,key | jq -r --arg pattern "libint" '.[] | select(.key | test($pattern) | not) | .id')
+          if [ -n "$ids" ]; then
+            echo "deleting cache $ids"
+            echo "$ids" | xargs -I {} gh cache delete {} -R ${{ github.repository }}
+          else
+            echo "No matching caches found to delete."
+          fi
