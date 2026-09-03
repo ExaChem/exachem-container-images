@@ -62,6 +62,7 @@ maxsteps.patch       /opt
     bash -c "if [[  -f ${CACHEDIR}/libelpa.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libelpa.tar.bz2; echo libelpa cache fetched ;fi"
     bash -c "if [[  -f ${CACHELIBINTDIR}/libint-2.13.1.tar.xz ]]; then cp ${CACHELIBINTDIR}/libint-2.13.1.tar.xz ${SINGULARITY_ROOTFS}/opt/.; echo libint source tar cache fetched ;fi"
     bash -c "if [[  -f ${CACHELIBINTDIR}/elpa-2026.02.002.tar.gz ]]; then cp ${CACHELIBINTDIR}/elpa-2026.02.002.tar.gz ${SINGULARITY_ROOTFS}/opt/.; echo elpa source tar cache fetched ;fi"
+    bash -c "if [[  -f ${CACHELIBINTDIR}/eigen_master.tar.gz ]]; then cp ${CACHELIBINTDIR}/eigen_master.tar.gz ${SINGULARITY_ROOTFS}/opt/.; echo eigen source tar cache fetched ;fi"
     ls -lrta ${SINGULARITY_ROOTFS}/opt  ||true
 
 %post 
@@ -543,7 +544,7 @@ if [ -n "${MPICH+1}" ]; then
 	    patch -p1 < 3d351d49a07b401a35cb0e9b76fb077edca64eb9.patch 
 	    cd maint/patches/optional/confdb && rm -f flang.patch &&  wget https://raw.githubusercontent.com/edoapra/exachem-container-images/main/apptainer.mpich/flang.patch ; cd ../../../../  ; pwd 
 	    sh ./autogen.sh
-	    rm -f /opt/*tar*gz /opt/config.*
+#	    rm -f /opt/*tar*gz /opt/config.*
 	fi
 	FC_short=$(basename -- $FC | cut -d \- -f 1 | sed 's/[0-9]*//g')
 	if [ ${FC_short} = "gfortran" ]; then
@@ -646,7 +647,7 @@ if [ \( ${CC} = "amdclang" \) -a \( ${SCALAPACK} = "y" \) ]; then
 fi  
 CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_RUNTIME=${GA_RUNTIME}"  
 echo "modify ga repository to use" 
-CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_REPO="\""https://github.com/GlobalArrays/ga.git"\"" -DGA_TAG="\""develop"\"""    
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_URL="\""https://github.com/GlobalArrays/ga.git"\"" -DGA_TAG="\""develop"\"""    
 if [ ${GPU} = "intel_gpu_pvc" ]; then
     CMAKE_OPTIONS="$CMAKE_OPTIONS  -DTAMM_CXX_FLAGS="\""-mtune=sapphirerapids -ffast-math -ffp-contract=fast -fp-model=fast=2 -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -mllvm -enable-global-offset=false"\"" -DUSE_LIBNUMA=OFF"
 fi 
@@ -688,8 +689,9 @@ if [ ${GPU} = "intel_gpu_pvc" ]; then
 fi
 #CMAKE_OPTIONS="$CMAKE_OPTIONS -DDCMSB_TAG=develop"
 #cache libint tar source
-CMAKE_OPTIONS="$CMAKE_OPTIONS -DLIBINT_TAR_URL=/opt/libint-2.13.1.tar.xz"
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DLIBINT_URL=/opt/libint-2.13.1.tar.xz"
 CMAKE_OPTIONS="$CMAKE_OPTIONS -DELPA_URL=/opt/elpa-2026.02.002.tar.gz"
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DEIGEN_URL=/opt/eigen_master.tar.gz"
 export CMAKE_OPTIONS
 echo CMAKE_OPTIONS $CMAKE_OPTIONS  
 rm -f doit.sh
@@ -705,6 +707,7 @@ bash -c "if [[ -f /opt/install/exachem/bin/ExaChem ]]; then echo 'Exachem binary
 echo git describe --always `git describe --always`  >> /opt/install/info.txt 
 echo git rev-parse HEAD git `git rev-parse HEAD` >> /opt/install/info.txt 
 echo 'clean unnecessary source to reduce docker size' 
+rm -f /opt/*tar*gz /opt/config.*
 rm  -rf /opt/exachem 
 rm  -rf /opt/TAMM 
 echo 'clean unnecessary packages ' 

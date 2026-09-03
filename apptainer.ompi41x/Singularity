@@ -11,6 +11,7 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
     env|egrep SHELL
     ls -la  ${GITHUB_WORKSPACE}
     export CACHEDIR=${GITHUB_WORKSPACE}/../../../cache
+    export CACHELIBINTDIR=${GITHUB_WORKSPACE}/../../../cache_libint
 #    echo '@@@ ls -l $SINGULARITY_ROOTFS'
 #    ls -l ${SINGULARITY_ROOTFS}
     rm -f ${SINGULARITY_ROOTFS}/*.txt || true
@@ -30,6 +31,9 @@ MAINTAINER  Edoardo Apra <edoardo.apra@pnnl.gov>
     ls -la  ${CACHEDIR}/libint.tar.bz2 || true
     bash -c "if [[  -f ${CACHEDIR}/ompi/lib/libmpi.so ]]; then mkdir -p ${SINGULARITY_ROOTFS}/opt ;rsync -a ${CACHEDIR}/ompi ${SINGULARITY_ROOTFS}/opt/. ; echo ompi/ucx cache fetched ;fi"
     bash -c "if [[  -f ${CACHEDIR}/libint.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libint.tar.bz2; echo libint cache fetched ;fi"
+    bash -c "if [[  -f ${CACHELIBINTDIR}/libint-2.13.1.tar.xz ]]; then cp ${CACHELIBINTDIR}/libint-2.13.1.tar.xz ${SINGULARITY_ROOTFS}/opt/.; echo libint source tar cache fetched ;fi"
+    bash -c "if [[  -f ${CACHELIBINTDIR}/elpa-2026.02.002.tar.gz ]]; then cp ${CACHELIBINTDIR}/elpa-2026.02.002.tar.gz ${SINGULARITY_ROOTFS}/opt/.; echo elpa source tar cache fetched ;fi"
+    bash -c "if [[  -f ${CACHELIBINTDIR}/eigen_master.tar.gz ]]; then cp ${CACHELIBINTDIR}/eigen_master.tar.gz ${SINGULARITY_ROOTFS}/opt/.; echo eigen source tar cache fetched ;fi"
     ls -lrta ${SINGULARITY_ROOTFS}/opt  ||true
 
 %post 
@@ -241,6 +245,9 @@ cd .. ; rm -rf *tar*gz $ompi-prefix ucx-$ucx ;fi " \
 &&              if [ \( ${CC} = "amdclang" \) -a \( ${SCALAPACK} = "Y" \) ]; then echo "scalapack workaround for clang "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_C_FLAGS_INIT='-Wno-error=implicit-function-declaration' 	" ; fi  \
 &&              if [ ${ELPA} = "Y" ]; then echo "ELPA enabled "; CMAKE_OPTIONS="$CMAKE_OPTIONS -DTAMM_ENABLE_ELPA=ON" ; fi  \
 &&              CMAKE_OPTIONS="$CMAKE_OPTIONS -DGA_RUNTIME=${GA_RUNTIME}"  \
+&& CMAKE_OPTIONS="$CMAKE_OPTIONS -DLIBINT_URL=/opt/libint-2.13.1.tar.xz" \
+&& CMAKE_OPTIONS="$CMAKE_OPTIONS -DELPA_URL=/opt/elpa-2026.02.002.tar.gz" \
+&& CMAKE_OPTIONS="$CMAKE_OPTIONS -DEIGEN_URL=/opt/eigen_master.tar.gz" \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \

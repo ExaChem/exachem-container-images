@@ -7,15 +7,16 @@ FROM $UBUNTU_TAG
 
 LABEL maintainer="Edoardo Apra <edoardo.apra@pnnl.gov>"
 
-LABEL org.opencontainers.image.description "Exachem CC"$CONTAINER"image built with Mpich 4.0"
+LABEL org.opencontainers.image.description="Exachem CC"$CONTAINER"image built with Mpich 4.0"
 
 #LABEL org.opencontainers.image.source "https://github.com/Exachem/exachem-container-images"
 
-LABEL org.opencontainers.image.licenses "Apache-2.0"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
 
 
 #caching from host cache dir
-COPY Dockerfile cache* /tmp/
+COPY Dockerfile cache /tmp/
+COPY cache_libint /opt/
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG USE_OPENMP_VALUE
@@ -50,6 +51,7 @@ RUN           env && if [[ "${CONTAINER}" == shifter ]]; then groupadd -r exache
             if [[ "${CONTAINER}" == shifter ]]; then export MYUSER=exachem ; else export MYUSER=root ;fi && \
     mkdir -p /opt \
     && ls -lart /tmp \
+    && ls -lart /opt \
 && { echo "line=\$(grep -hni ecp \$1|head -1|cut -d : -f 1) " ; \
 echo " linem1=\$((line-2)) " ; \
 echo " rm -f az_ecp " ; \
@@ -147,6 +149,9 @@ cat /opt/ao_strip.sh && \
 	    && CMAKE_OPTIONS="$CMAKE_OPTIONS -DCMAKE_BUILD_TYPE=MinSizeRel " \
             && if [[ $USE_SYSV == Y ]]; then echo "sysv enabled"; CMAKE_OPTIONS+="-DGA_ENABLE_SYSV=ON "; fi \
             && if [[ $USE_CPU == N ]]; then echo "gpu code"; CMAKE_OPTIONS+="-DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=80" ; else echo "cpu code" ;fi \
+&& CMAKE_OPTIONS="$CMAKE_OPTIONS -DLIBINT_URL=/opt/libint-2.13.1.tar.xz" \
+&& CMAKE_OPTIONS="$CMAKE_OPTIONS -DELPA_URL=/opt/elpa-2026.02.002.tar.gz" \
+&& CMAKE_OPTIONS="$CMAKE_OPTIONS -DEIGEN_URL=/opt/eigen_master.tar.gz" \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \

@@ -10,6 +10,8 @@ on:
   workflow_call:
 
 jobs:
+  build_source_caches:
+    uses: ./.github/workflows/create_source_caches.yaml
   build_image:
     runs-on: ubuntu-22.04
     permissions:
@@ -105,6 +107,28 @@ jobs:
         clean: false
     - name: pkg cleanup
       uses: edoapra/ubuntu-pkg-cleanup@main
+    - name: Setup libint source cache
+      id: setup-libinttar-cache
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/cache_libint
+        key: libint_2131
+    - name: check source caches
+      run: |
+        ls -lart ~/cache_libint || true
+        if [[ -f ~/cache_libint/libint-2.13.1.tar.xz ]]; then echo  "libint source tar cache present"
+        else
+          echo "libint source tar not found"
+        fi
+        if [[ -f ~/cache_libint/elpa-2026.02.002.tar.gz ]]; then echo  "elpa source tar cache present"
+        else
+          echo "elpa source tar not found"
+        fi
+        if [[ -f ~/cache_libint/eigen_master.tar.gz ]]; then echo  "eigen source tar cache present"
+        else
+          echo "eigen source tar not found"
+        fi
     - name: Setup cache
       id: setup-cache
       uses: actions/cache@v6

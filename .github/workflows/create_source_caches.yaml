@@ -1,0 +1,65 @@
+name: create_source_caches
+
+on:
+  schedule:
+    - cron: '0 0 * * SUN'
+  pull_request:
+  repository_dispatch:
+    types: [backend_automation]
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  create_cache:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+    - name: Setup libint source cache
+      id: setup-libinttar-cache
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/cache_libint
+        key: libint_2131
+    - name: create source tar caches
+      run: |
+        if [  -f ~/cache_libint/libint-2.13.1.tar.xz ]; then
+           echo "libint source tar found" 
+        else
+           mkdir -p ~/cache_libint
+           cd ~/cache_libint ;\
+           wget https://github.com/ExaChem/exachem-support/raw/refs/heads/main/libint/libint-2.13.1.tar.xz ; \
+        fi
+        if [  -f ~/cache_libint/elpa-2026.02.002.tar.gz ]; then
+           echo "elpa source tar found" 
+        else
+           mkdir -p ~/cache_libint
+           cd ~/cache_libint ;\
+           wget --connect-timeout=55 --tries=3 --waitretry=15 https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2026.02.002/elpa-2026.02.002.tar.gz ; \
+        fi
+        if [  -f ~/cache_libint/eigen_master.tar.gz ]; then
+           echo "eigen source tar found"
+        else
+           mkdir -p ~/cache_libint
+           cd ~/cache_libint ;\
+           wget https://github.com/eigen-mirror/eigen/archive/refs/heads/master.tar.gz -O eigen_master.tar.gz ; \
+        fi
+    - name: check source caches
+      run: |
+        ls -lart ~/cache_libint || true
+        if [[ -f ~/cache_libint/libint-2.13.1.tar.xz ]]; then echo  "libint source tar cache present"
+        else
+          echo "libint source tar not found"
+        fi
+        if [[ -f ~/cache_libint/elpa-2026.02.002.tar.gz ]]; then echo  "elpa source tar cache present"
+        else
+          echo "elpa source tar not found"
+        fi
+        if [[ -f ~/cache_libint/eigen_master.tar.gz ]]; then echo  "eigen source tar cache present"
+        else
+          echo "eigen source tar not found"
+        fi
