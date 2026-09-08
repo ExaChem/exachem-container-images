@@ -318,10 +318,13 @@ if [ $GPU = "amd" ]; then
     echo ROCM_VERSION is $ROCM_VERSION
     echo UBUNTU_CODE is $UBUNTU_CODE
     echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/'${ROCM_VERSION} ${UBUNTU_CODE} 'main' | tee --append /etc/apt/sources.list.d/rocm.list
+    bash -o  pipefail -c " echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' | tee /etc/apt/preferences.d/rocm-pin-600"
     echo cat /etc/apt/sources.list.d/rocm.list
     cat /etc/apt/sources.list.d/rocm.list
-    echo  'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' > /etc/apt/preferences.d/rocm-pin-600 
-    apt-get  update -y &&  apt-get -y install hip-dev hipcc hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib rocminfo  hipcc hipblas-dev librocsolver-dev
+    echo cat /etc/apt/preferences.d/rocm-pin-600
+    cat /etc/apt/preferences.d/rocm-pin-600
+    apt-get  update -y && apt-get -y install rocm-hip-runtime-dev  rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib    hipblas-dev rocsolver-dev
+#    apt-get  update -y &&  apt-get -y install hip-dev hipcc hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib rocminfo  hipcc hipblas-dev librocsolver-dev
     ls -lrt /opt
     ls -lrt  /opt/rocm* || true
     echo "$GPU_ARCH" >> $ROCM_PATH/bin/target.lst
