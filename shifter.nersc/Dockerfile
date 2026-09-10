@@ -151,7 +151,7 @@ cat /opt/ao_strip.sh && \
             && if [[ $USE_CPU == N ]]; then echo "gpu code"; CMAKE_OPTIONS+="-DTAMM_ENABLE_CUDA=ON -DGPU_ARCH=80" ; else echo "cpu code" ;fi \
 && CMAKE_OPTIONS="$CMAKE_OPTIONS -DLIBINT_URL=/opt/libint-2.13.1.tar.xz" \
 && CMAKE_OPTIONS="$CMAKE_OPTIONS -DELPA_URL=/opt/elpa-2026.02.002.tar.gz" \
-&& CMAKE_OPTIONS="$CMAKE_OPTIONS -DEIGEN_URL=/opt/eigen_master.tar.gz" \
+&& CMAKE_OPTIONS="$CMAKE_OPTIONS -DEIGEN_URL=/opt/eigen.tar.gz" \
             && export CMAKE_OPTIONS \
 	    && echo CMAKE_OPTIONS $CMAKE_OPTIONS \
 	    && CC=gcc CXX=g++ FC=gfortran cmake  $CMAKE_OPTIONS .. \

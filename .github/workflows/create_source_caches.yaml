@@ -46,7 +46,9 @@ jobs:
         else
            mkdir -p ~/cache_libint
            cd ~/cache_libint ;\
-           wget https://github.com/eigen-mirror/eigen/archive/refs/heads/master.tar.gz -O eigen_master.tar.gz ; \
+           curl -LJO https://raw.githubusercontent.com/NWChemEx/CMakeBuild/refs/heads/main/cmake/build_external/dep_versions.cmake
+           eig_hash=$(grep EIGEN_GIT_TAG dep_versions.cmake|head -1|cut -d ' ' -f 2|sed 's/)//') ; \
+           curl -L https://github.com/eigen-mirror/eigen/archive/${eig_hash}.tar.gz > eigen.tar.gz ; \
         fi
     - name: check source caches
       run: |
@@ -59,7 +61,7 @@ jobs:
         else
           echo "elpa source tar not found"
         fi
-        if [[ -f ~/cache_libint/eigen_master.tar.gz ]]; then echo  "eigen source tar cache present"
+        if [[ -f ~/cache_libint/eigen.tar.gz ]]; then echo  "eigen source tar cache present"
         else
           echo "eigen source tar not found"
         fi

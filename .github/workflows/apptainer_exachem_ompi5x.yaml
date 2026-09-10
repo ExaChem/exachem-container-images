@@ -190,7 +190,7 @@ jobs:
         else
           echo "elpa source tar not found"
         fi
-        if [[ -f ~/cache_libint/eigen_master.tar.gz ]]; then echo  "eigen source tar cache present"
+        if [[ -f ~/cache_libint/eigen.tar.gz ]]; then echo  "eigen source tar cache present"
         else
           echo "eigen source tar not found"
         fi
