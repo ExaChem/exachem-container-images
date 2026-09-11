@@ -13,6 +13,7 @@ jobs:
   build_source_caches:
     uses: ./.github/workflows/create_source_caches.yaml
   shifter_job:
+    needs: [build_source_caches]
     permissions:
       contents: read
       packages: write

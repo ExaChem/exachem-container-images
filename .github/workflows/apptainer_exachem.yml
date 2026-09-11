@@ -13,6 +13,7 @@ jobs:
   build_source_caches:
     uses: ./.github/workflows/create_source_caches.yaml
   build_image:
+    needs: [build_source_caches]
     runs-on: ubuntu-22.04
     permissions:
       contents: read
