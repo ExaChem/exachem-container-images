@@ -49,7 +49,7 @@ install-autotools.sh /opt
     bash -c "if [[  -f ${CACHEDIR}/libelpa.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libelpa.tar.bz2; echo libelpa cache fetched ;fi"
     bash -c "if [[  -f ${CACHELIBINTDIR}/libint-2.13.1.tar.xz ]]; then cp ${CACHELIBINTDIR}/libint-2.13.1.tar.xz ${SINGULARITY_ROOTFS}/opt/.; echo libint source tar cache fetched ;fi"
     bash -c "if [[  -f ${CACHELIBINTDIR}/elpa-2026.02.002.tar.gz ]]; then cp ${CACHELIBINTDIR}/elpa-2026.02.002.tar.gz ${SINGULARITY_ROOTFS}/opt/.; echo elpa source tar cache fetched ;fi"
-    bash -c "if [[  -f ${CACHELIBINTDIR}/eigen_master.tar.gz ]]; then cp ${CACHELIBINTDIR}/eigen_master.tar.gz ${SINGULARITY_ROOTFS}/opt/.; echo eigen source tar cache fetched ;fi"
+    bash -c "if [[  -f ${CACHELIBINTDIR}/eigen.tar.gz ]]; then cp ${CACHELIBINTDIR}/eigen.tar.gz ${SINGULARITY_ROOTFS}/opt/.; echo eigen source tar cache fetched ;fi"
     ls -lrta ${SINGULARITY_ROOTFS}/opt  ||true
 
 %post 
@@ -473,7 +473,7 @@ fi
 && if [ ${GPU} = "intel_gpu_pvc" ]; then  CMAKE_OPTIONS="$CMAKE_OPTIONS  -DTAMM_CXX_FLAGS="\""-mtune=sapphirerapids -ffast-math -ffp-contract=fast -fp-model=fast=2 -fsycl -fsycl-device-code-split=per_kernel -fsycl-targets=intel_gpu_pvc -mllvm -enable-global-offset=false"\"" -DUSE_LIBNUMA=OFF" ; fi \
 && CMAKE_OPTIONS="$CMAKE_OPTIONS -DLIBINT_URL=/opt/libint-2.13.1.tar.xz" \
 && CMAKE_OPTIONS="$CMAKE_OPTIONS -DELPA_URL=/opt/elpa-2026.02.002.tar.gz" \
-&& CMAKE_OPTIONS="$CMAKE_OPTIONS -DEIGEN_URL=/opt/eigen_master.tar.gz" \
+&& CMAKE_OPTIONS="$CMAKE_OPTIONS -DEIGEN_URL=/opt/eigen.tar.gz" \
 &&              export CMAKE_OPTIONS   \
 && 	     echo CMAKE_OPTIONS $CMAKE_OPTIONS  \
 && 	     echo USE_SCALAPACK is set to $USE_SCALAPACK  \

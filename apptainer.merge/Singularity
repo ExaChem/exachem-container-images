@@ -62,7 +62,7 @@ maxsteps.patch       /opt
     bash -c "if [[  -f ${CACHEDIR}/libelpa.tar.bz2 ]]; then cd ${SINGULARITY_ROOTFS}/ ; tar xvjf ${CACHEDIR}/libelpa.tar.bz2; echo libelpa cache fetched ;fi"
     bash -c "if [[  -f ${CACHELIBINTDIR}/libint-2.13.1.tar.xz ]]; then cp ${CACHELIBINTDIR}/libint-2.13.1.tar.xz ${SINGULARITY_ROOTFS}/opt/.; echo libint source tar cache fetched ;fi"
     bash -c "if [[  -f ${CACHELIBINTDIR}/elpa-2026.02.002.tar.gz ]]; then cp ${CACHELIBINTDIR}/elpa-2026.02.002.tar.gz ${SINGULARITY_ROOTFS}/opt/.; echo elpa source tar cache fetched ;fi"
-    bash -c "if [[  -f ${CACHELIBINTDIR}/eigen_master.tar.gz ]]; then cp ${CACHELIBINTDIR}/eigen_master.tar.gz ${SINGULARITY_ROOTFS}/opt/.; echo eigen source tar cache fetched ;fi"
+    bash -c "if [[  -f ${CACHELIBINTDIR}/eigen.tar.gz ]]; then cp ${CACHELIBINTDIR}/eigen.tar.gz ${SINGULARITY_ROOTFS}/opt/.; echo eigen source tar cache fetched ;fi"
     ls -lrta ${SINGULARITY_ROOTFS}/opt  ||true
 
 %post 
@@ -318,10 +318,13 @@ if [ $GPU = "amd" ]; then
     echo ROCM_VERSION is $ROCM_VERSION
     echo UBUNTU_CODE is $UBUNTU_CODE
     echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/'${ROCM_VERSION} ${UBUNTU_CODE} 'main' | tee --append /etc/apt/sources.list.d/rocm.list
+    bash -o  pipefail -c " echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' | tee /etc/apt/preferences.d/rocm-pin-600"
     echo cat /etc/apt/sources.list.d/rocm.list
     cat /etc/apt/sources.list.d/rocm.list
-    echo  'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' > /etc/apt/preferences.d/rocm-pin-600 
-    apt-get  update -y &&  apt-get -y install hip-dev hipcc hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib rocminfo  hipcc hipblas-dev librocsolver-dev
+    echo cat /etc/apt/preferences.d/rocm-pin-600
+    cat /etc/apt/preferences.d/rocm-pin-600
+    apt-get  update -y && apt-get -y install rocm-hip-runtime-dev  rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib    hipblas-dev rocsolver-dev
+#    apt-get  update -y &&  apt-get -y install hip-dev hipcc hip-runtime-amd rocm-llvm rocm-device-libs rocblas-dev openmp-extras rocm-smi-lib rocminfo  hipcc hipblas-dev librocsolver-dev
     ls -lrt /opt
     ls -lrt  /opt/rocm* || true
     echo "$GPU_ARCH" >> $ROCM_PATH/bin/target.lst
@@ -691,7 +694,7 @@ fi
 #cache libint tar source
 CMAKE_OPTIONS="$CMAKE_OPTIONS -DLIBINT_URL=/opt/libint-2.13.1.tar.xz"
 CMAKE_OPTIONS="$CMAKE_OPTIONS -DELPA_URL=/opt/elpa-2026.02.002.tar.gz"
-CMAKE_OPTIONS="$CMAKE_OPTIONS -DEIGEN_URL=/opt/eigen_master.tar.gz"
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DEIGEN_URL=/opt/eigen.tar.gz"
 export CMAKE_OPTIONS
 echo CMAKE_OPTIONS $CMAKE_OPTIONS  
 rm -f doit.sh

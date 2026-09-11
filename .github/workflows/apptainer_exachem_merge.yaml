@@ -18,6 +18,7 @@ jobs:
   build_source_caches:
     uses: ./.github/workflows/create_source_caches.yaml
   build_image:
+    needs: [build_source_caches]
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -96,12 +97,12 @@ jobs:
               cc: gcc
               ga_runtime: MPI_PROGRESS_RANK
               ubuntu: noble
-              gpu: amd_gfx90a_rocm6.4.3
+              gpu: amd_gfx90a_rocm7.2.4
               exachem_branch: main
               tamm_branch: main
               folder: apptainer.merge
               scalapack: y
-              elpa: n
+              elpa: y
             - ompi: 4.1.8
               mpi_impl: ompi
               mpich_device: ch4:ofi
@@ -278,7 +279,7 @@ jobs:
         else
           echo "elpa source tar not found"
         fi
-        if [[ -f ~/cache_libint/eigen_master.tar.gz ]]; then echo  "eigen source tar cache present"
+        if [[ -f ~/cache_libint/eigen.tar.gz ]]; then echo  "eigen source tar cache present"
         else
           echo "eigen source tar not found"
         fi
