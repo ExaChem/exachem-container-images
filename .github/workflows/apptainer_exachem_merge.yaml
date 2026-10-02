@@ -313,6 +313,7 @@ jobs:
       env:
         APP_VER: 1.4.5
       run: |
+        sudo apt-get update
         sudo apt-get install -y  libfuse2 libseccomp2 zlib1g uidmap squashfs-tools squashfuse fuse2fs fuse-overlayfs fakeroot
         wget -q  https://github.com/apptainer/apptainer/releases/download/v${APP_VER}/apptainer_${APP_VER}_amd64.deb  -O apptainer.deb
         wget -q  https://github.com/apptainer/apptainer/releases/download/v${APP_VER}/apptainer-suid_${APP_VER}_amd64.deb  -O apptainers.deb
