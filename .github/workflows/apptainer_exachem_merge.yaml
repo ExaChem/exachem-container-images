@@ -229,6 +229,34 @@ jobs:
               folder: apptainer.merge
               scalapack: y
               elpa: n
+            - ompi: 5.0.11
+              mpi_impl: ompi
+              mpich_device: ch4:ofi
+              ofi: N
+              ucx: 1.18.1
+              cc: gcc
+              ga_runtime: MPI_RMA
+              ubuntu: noble
+              gpu: nvidia_70
+              exachem_branch: main
+              tamm_branch: main
+              folder: apptainer.merge
+              scalapack: y
+              elpa: n
+            - ompi: 5.0.11
+              mpi_impl: ompi
+              mpich_device: ch4:ofi
+              ofi: N
+              ucx: 1.18.1
+              cc: gcc
+              ga_runtime: MPI_RMA
+              ubuntu: noble
+              gpu: nvidia_80
+              exachem_branch: main
+              tamm_branch: main
+              folder: apptainer.merge
+              scalapack: y
+              elpa: n
     steps:
     - name: Get Instruction
       id: get-simd
