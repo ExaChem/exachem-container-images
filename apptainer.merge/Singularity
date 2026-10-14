@@ -589,7 +589,7 @@ cd $ORGPWD
         export OMPI_MCA_btl_vader_single_copy_mechanism=none
         export OMPI_MCA_smsc=^knem
 
-wget https://raw.githubusercontent.com/pmodels/mpich/refs/heads/main/examples/f90/pi3f90.f90
+wget https://raw.githubusercontent.com/pmodels/mpich/refs/tags/v5.0.2/examples/f90/pi3f90.f90
 mpif90 pi3f90.f90 -o pi.x
 ldd pi.x
 rm -f in.txt
